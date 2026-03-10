@@ -149,6 +149,44 @@ const DeviceMockup: React.FC<{
   );
 };
 
+// Simplified weighted SVG donut for mini views
+const MiniWeightedWheel: React.FC<{ size: number; strokeW: number }> = ({ size, strokeW }) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const mid = (size - strokeW) / 2;
+  const circ = 2 * Math.PI * mid;
+  const gap = 2;
+  const totalGap = gap * demoData.universes.length;
+  const usable = circ - totalGap;
+  const totalWeight = demoData.universes.reduce((s, u) => s + u.weight, 0);
+  let offset = 0;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={cx} cy={cy} r={mid} fill="none" stroke={colors.slate[100]} strokeWidth={strokeW} />
+      {demoData.universes.map((u) => {
+        const arc = (u.weight / totalWeight) * usable;
+        const rot = -90 + (offset / circ) * 360;
+        offset += arc + gap;
+        return (
+          <circle
+            key={u.id}
+            cx={cx}
+            cy={cy}
+            r={mid}
+            fill="none"
+            stroke={u.color}
+            strokeWidth={strokeW - 1}
+            strokeDasharray={`${arc} ${circ - arc}`}
+            strokeLinecap="butt"
+            transform={`rotate(${rot}, ${cx}, ${cy})`}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
 // Mini results view for tablet
 const MiniResultsView: React.FC = () => (
   <div style={{ padding: 16 }}>
@@ -175,20 +213,9 @@ const MiniResultsView: React.FC = () => (
         <span style={{ fontFamily: fonts.inter, fontWeight: 700, fontSize: 16, color: colors.scoring.red }}>57</span>
       </div>
     </div>
-    {/* Mini wheel */}
+    {/* Mini weighted wheel */}
     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-      <div
-        style={{
-          width: 100,
-          height: 100,
-          borderRadius: 50,
-          border: `16px solid ${colors.slate[100]}`,
-          borderTopColor: colors.scoring.green,
-          borderRightColor: colors.scoring.red,
-          borderBottomColor: colors.scoring.darkRed,
-          borderLeftColor: colors.scoring.amber,
-        }}
-      />
+      <MiniWeightedWheel size={100} strokeW={16} />
     </div>
     {/* Mini cards */}
     {demoData.universes.slice(0, 3).map((u) => (
@@ -219,19 +246,7 @@ const MiniWheelView: React.FC = () => (
     <span style={{ fontFamily: fonts.inter, fontWeight: 600, fontSize: 11, color: colors.slate[900], marginBottom: 12 }}>
       Mon diagnostic
     </span>
-    <div
-      style={{
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        border: `18px solid ${colors.slate[100]}`,
-        borderTopColor: colors.scoring.green,
-        borderRightColor: colors.scoring.red,
-        borderBottomColor: colors.scoring.darkRed,
-        borderLeftColor: colors.scoring.amber,
-        marginBottom: 12,
-      }}
-    />
+    <MiniWeightedWheel size={120} strokeW={18} />
     <div
       style={{
         width: 44,
@@ -241,6 +256,7 @@ const MiniWheelView: React.FC = () => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        marginTop: 12,
       }}
     >
       <span style={{ fontFamily: fonts.inter, fontWeight: 700, fontSize: 14, color: colors.scoring.red }}>57</span>

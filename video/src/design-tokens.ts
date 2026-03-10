@@ -36,10 +36,6 @@ export const colors = {
     50: '#fef2f2',
     700: '#b91c1c',
   },
-  rose: {
-    400: '#fb7185',
-    200: '#fecdd3',
-  },
 } as const;
 
 export const fonts = {

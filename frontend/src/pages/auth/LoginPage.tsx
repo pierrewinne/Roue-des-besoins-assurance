@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../../components/ui/Button.tsx'
 import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'client' | 'advisor'>('client')
@@ -65,146 +66,225 @@ export default function LoginPage() {
     }
   }
 
-  if (signupPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-elevated border border-slate-200 p-8 text-center">
-          <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
-            <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Compte créé</h2>
-          <p className="text-slate-500 mb-6 text-sm leading-relaxed">
-            Un email de confirmation a été envoyé à <span className="font-medium text-slate-700">{email}</span>.
-            Cliquez sur le lien pour activer votre compte.
-          </p>
-          <button
-            onClick={() => { setSignupPending(false); setAuthMode('login') }}
-            className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
-          >
-            Retour à la connexion
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (magicLinkSent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-elevated border border-slate-200 p-8 text-center">
-          <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
-            <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">V&eacute;rifiez votre bo&icirc;te mail</h2>
-          <p className="text-slate-500 mb-6 text-sm leading-relaxed">
-            Un lien de connexion a été envoyé à <span className="font-medium text-slate-700">{email}</span>.
-            Cliquez sur le lien pour accéder à votre espace.
-          </p>
-          <button
-            onClick={() => setMagicLinkSent(false)}
-            className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
-          >
-            Utiliser une autre adresse
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const isConfirmation = signupPending || magicLinkSent
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
-      <div className="max-w-[420px] w-full">
-        <div className="text-center mb-10">
-          <div className="w-14 h-14 bg-primary-700 rounded-xl flex items-center justify-center mx-auto mb-5">
-            <span className="text-white font-bold text-xl">RB</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Roue des Besoins</h1>
-          <p className="text-slate-500 mt-2 text-sm">Diagnostic assurance personnalisé</p>
-        </div>
+    <div className="min-h-screen flex">
+      {/* ── Left panel: brand + wheel (desktop only) ── */}
+      <div className="hidden lg:flex lg:w-[52%] bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex-col items-center justify-center p-12 relative overflow-hidden">
+        {/* Subtle radial spotlight */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.03) 0%, transparent 60%)' }}
+        />
 
-        <div className="flex rounded-lg bg-slate-100 p-1 mb-8">
-          <button
-            onClick={() => { setMode('client'); setAuthMode('login') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-              mode === 'client'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Client
-          </button>
-          <button
-            onClick={() => { setMode('advisor'); setAuthMode('login') }}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-              mode === 'advisor'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Conseiller
-          </button>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-elevated border border-slate-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 bg-rose-50 text-rose-700 text-sm rounded-lg ring-1 ring-rose-600/10">
-                {error}
-              </div>
-            )}
-
-            {authMode === 'signup' && (
-              <div className="grid grid-cols-2 gap-3">
-                <Input label="Prénom" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                <Input label="Nom" type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
-              </div>
-            )}
-
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              placeholder="votre@email.com"
-            />
-
-            {(mode === 'advisor' || authMode === 'signup') && (
-              <Input
-                label="Mot de passe"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-              />
-            )}
-
-            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-              {isSubmitting ? 'Chargement...' :
-                mode === 'client' && authMode === 'login' ? 'Recevoir le lien de connexion' :
-                authMode === 'signup' ? 'Créer un compte' : 'Se connecter'}
-            </Button>
-
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
-              >
-                {authMode === 'login' ? 'Créer un compte' : 'J\'ai déjà un compte'}
-              </button>
+        <div className="relative z-10 max-w-md w-full">
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-3 mb-14">
+            <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
+              <span className="text-white font-bold text-sm">RB</span>
             </div>
-          </form>
+            <span className="text-white/70 font-semibold tracking-tight">Roue des Besoins</span>
+          </div>
+
+          {/* Wheel diagram */}
+          <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" />
+
+          {/* Value proposition */}
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-white mb-3 leading-snug">
+              Évaluez et optimisez votre
+              <br />
+              couverture d'assurance
+            </h2>
+            <p className="text-primary-200 text-sm leading-relaxed mb-10 max-w-xs mx-auto">
+              Un diagnostic personnalisé en quelques minutes pour identifier vos besoins réels.
+            </p>
+
+            {/* Benefits */}
+            <div className="flex items-center justify-center gap-6 text-xs">
+              <span className="flex items-center gap-1.5 text-primary-300">
+                <Icon name="shield-check" size={15} strokeWidth={1.5} />
+                4 univers
+              </span>
+              <span className="w-px h-3 bg-white/10" />
+              <span className="flex items-center gap-1.5 text-primary-300">
+                <Icon name="badge-check" size={15} strokeWidth={1.5} />
+                Recommandations
+              </span>
+              <span className="w-px h-3 bg-white/10" />
+              <span className="flex items-center gap-1.5 text-primary-300">
+                <Icon name="document" size={15} strokeWidth={1.5} />
+                Rapport PDF
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-4 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <Icon name="lock" size={14} strokeWidth={2} />
-            Connexion sécurisée
+        {/* Bottom trust */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+          <span className="flex items-center gap-1.5 text-[11px] text-primary-400/50">
+            <Icon name="lock" size={12} strokeWidth={1.5} />
+            Données chiffrées et confidentielles
           </span>
-          <span className="text-slate-300">&middot;</span>
-          <span>Données confidentielles</span>
+        </div>
+      </div>
+
+      {/* ── Right panel: form ── */}
+      <div className="flex-1 flex flex-col bg-white min-h-screen">
+        {/* Mobile hero band */}
+        {!isConfirmation && (
+          <div className="lg:hidden bg-gradient-to-b from-primary-950 to-primary-900 px-6 pt-10 pb-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
+                <span className="text-white font-bold text-xs">RB</span>
+              </div>
+              <span className="text-white/70 font-medium text-sm">Roue des Besoins</span>
+            </div>
+            <NeedsWheel className="w-48 mx-auto mb-5" />
+            <p className="text-primary-200 text-xs">Diagnostic assurance personnalisé</p>
+          </div>
+        )}
+
+        {/* Form area */}
+        <div className="flex-1 flex items-center justify-center px-6 py-12">
+          <div className="w-full max-w-sm">
+            {signupPending ? (
+              <div className="text-center">
+                <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Compte créé</h2>
+                <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+                  Un email de confirmation a été envoyé à{' '}
+                  <span className="font-medium text-slate-700">{email}</span>.
+                  Cliquez sur le lien pour activer votre compte.
+                </p>
+                <button
+                  onClick={() => { setSignupPending(false); setAuthMode('login') }}
+                  className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                >
+                  Retour à la connexion
+                </button>
+              </div>
+            ) : magicLinkSent ? (
+              <div className="text-center">
+                <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-900 mb-2">Vérifiez votre boîte mail</h2>
+                <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+                  Un lien de connexion a été envoyé à{' '}
+                  <span className="font-medium text-slate-700">{email}</span>.
+                  Cliquez sur le lien pour accéder à votre espace.
+                </p>
+                <button
+                  onClick={() => setMagicLinkSent(false)}
+                  className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                >
+                  Utiliser une autre adresse
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Form header */}
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold text-slate-900 mb-1.5">
+                    {mode === 'advisor'
+                      ? 'Espace conseiller'
+                      : authMode === 'signup'
+                        ? 'Créez votre compte'
+                        : 'Accédez à votre espace'}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {mode === 'advisor'
+                      ? 'Connectez-vous pour gérer vos clients.'
+                      : authMode === 'signup'
+                        ? 'Créez un compte pour démarrer votre diagnostic.'
+                        : 'Recevez un lien de connexion sécurisé par email.'}
+                  </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="p-3 bg-rose-50 text-rose-700 text-sm rounded-lg ring-1 ring-rose-600/10">
+                      {error}
+                    </div>
+                  )}
+
+                  {authMode === 'signup' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input label="Prénom" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                      <Input label="Nom" type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
+                    </div>
+                  )}
+
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    placeholder="votre@email.com"
+                  />
+
+                  {(mode === 'advisor' || authMode === 'signup') && (
+                    <Input
+                      label="Mot de passe"
+                      type="password"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                    />
+                  )}
+
+                  <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                    {isSubmitting
+                      ? 'Chargement...'
+                      : mode === 'client' && authMode === 'login'
+                        ? 'Recevoir mon lien de connexion'
+                        : authMode === 'signup'
+                          ? 'Créer mon compte'
+                          : 'Se connecter'}
+                  </Button>
+
+                  <div className="text-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                      className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                    >
+                      {authMode === 'login' ? 'Créer un compte' : 'J\'ai déjà un compte'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Mode switch */}
+                <div className="mt-10 pt-6 border-t border-slate-100 text-center">
+                  {mode === 'client' ? (
+                    <button
+                      type="button"
+                      onClick={() => { setMode('advisor'); setAuthMode('login'); setError(''); setPassword('') }}
+                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      Vous êtes conseiller ?{' '}
+                      <span className="font-medium text-primary-700">Accès professionnel</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setMode('client'); setAuthMode('login'); setError(''); setPassword('') }}
+                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <Icon name="chevron-left" size={14} strokeWidth={2} />
+                      Retour à l'accès client
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

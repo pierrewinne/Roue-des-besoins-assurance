@@ -23,12 +23,17 @@ export const Scene1_Opening: React.FC = () => {
 
   // Phase 3: Chaotic icons (frames 120-270)
   const iconNames = ['file-text', 'table', 'clock', 'clipboard', 'folder', 'file-spreadsheet', 'briefcase', 'list-checks', 'calculator', 'hash'];
+  // Grid-based positions spread across full canvas with jitter
+  const gridPositions = [
+    { x: 200, y: 120 }, { x: 600, y: 80 }, { x: 1000, y: 140 }, { x: 1400, y: 100 }, { x: 1680, y: 160 },
+    { x: 120, y: 420 }, { x: 500, y: 480 }, { x: 860, y: 380 }, { x: 1200, y: 460 }, { x: 1560, y: 400 },
+  ];
   const iconPositions = iconNames.map((_, i) => ({
-    x: 200 + Math.sin(i * 2.3) * 500 + Math.cos(i * 1.7) * 200,
-    y: 150 + Math.cos(i * 1.9) * 250 + Math.sin(i * 3.1) * 100,
-    delay: 120 + i * 8,
+    x: gridPositions[i].x + Math.sin(i * 2.3) * 60,
+    y: gridPositions[i].y + Math.cos(i * 1.9) * 40,
+    delay: 120 + i * 6,
     rotation: (i * 37) % 360 - 180,
-    scale: 0.7 + (i % 3) * 0.3,
+    scale: 1.0 + (i % 3) * 0.3,
   }));
 
   // Phase 4: Fade to white (frames 270-300)
@@ -154,14 +159,14 @@ export const Scene1_Opening: React.FC = () => {
                   position: 'absolute',
                   left: pos.x,
                   top: pos.y + drift,
-                  opacity: iconAnim.opacity * 0.7,
+                  opacity: iconAnim.opacity * 0.9,
                   transform: `translateY(${iconAnim.translateY}px) rotate(${pos.rotation * 0.3}deg)`,
                 }}
               >
                 <LucideIcon
                   name={iconNames[i]}
-                  size={Math.round(36 * pos.scale)}
-                  color={colors.slate[400]}
+                  size={Math.round(64 * pos.scale)}
+                  color="rgba(255,255,255,0.75)"
                   strokeWidth={1.5}
                 />
               </div>

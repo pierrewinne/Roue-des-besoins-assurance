@@ -40,12 +40,19 @@ export const InsuranceWheel: React.FC<InsuranceWheelProps> = ({
   // Cumulative rotation offset for each segment
   let cumulativeAngle = 0;
 
+  // Add padding for labels when showLabels is true
+  const pad = showLabels && size > 200 ? 60 : 0;
+  const svgW = size + pad * 2;
+  const svgH = size + pad * 2;
+  const offsetX = pad;
+  const offsetY = pad;
+
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={svgW} height={svgH} viewBox={`0 0 ${svgW} ${svgH}`} style={{ overflow: 'visible' }}>
       {/* Background circle (empty state) */}
       <circle
-        cx={cx}
-        cy={cy}
+        cx={cx + offsetX}
+        cy={cy + offsetY}
         r={midRadius}
         fill="none"
         stroke={colors.slate[100]}
@@ -54,18 +61,6 @@ export const InsuranceWheel: React.FC<InsuranceWheelProps> = ({
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })}
-      />
-
-      {/* White stroke ring for segment separation */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={midRadius}
-        fill="none"
-        stroke="white"
-        strokeWidth={strokeWidth + 2}
-        strokeDasharray={`${gap} ${(circumference - gap * demoData.universes.length) / demoData.universes.length}`}
-        opacity={0}
       />
 
       {/* Animated weighted segments */}
@@ -89,9 +84,12 @@ export const InsuranceWheel: React.FC<InsuranceWheelProps> = ({
         // Label position at the midpoint of this segment's arc
         const labelAngleDeg = -90 + ((cumulativeAngle + segment.arc / 2) / circumference) * 360;
         const labelAngle = (labelAngleDeg * Math.PI) / 180;
-        const labelRadius = outerRadius + (size > 250 ? 28 : 18);
-        const lx = cx + labelRadius * Math.cos(labelAngle);
-        const ly = cy + labelRadius * Math.sin(labelAngle);
+        // Push small segments' labels further out to avoid clipping
+        const minLabelOffset = size > 250 ? 28 : 18;
+        const labelOffset = segment.arc < usableArc * 0.15 ? minLabelOffset + 14 : minLabelOffset;
+        const labelRadius = outerRadius + labelOffset;
+        const lx = cx + offsetX + labelRadius * Math.cos(labelAngle);
+        const ly = cy + offsetY + labelRadius * Math.sin(labelAngle);
 
         // Advance cumulative angle for next segment (arc + gap)
         cumulativeAngle += segment.arc + gap;
@@ -111,34 +109,41 @@ export const InsuranceWheel: React.FC<InsuranceWheelProps> = ({
           <g key={segment.id}>
             {/* Segment arc */}
             <circle
-              cx={cx}
-              cy={cy}
+              cx={cx + offsetX}
+              cy={cy + offsetY}
               r={midRadius}
               fill="none"
               stroke={segment.color}
               strokeWidth={strokeWidth - 2}
               strokeDasharray={`${visibleArc} ${circumference - visibleArc}`}
               strokeLinecap="butt"
-              transform={`rotate(${rotation}, ${cx}, ${cy})`}
+              transform={`rotate(${rotation}, ${cx + offsetX}, ${cy + offsetY})`}
               style={{ transition: 'none' }}
             />
 
             {/* Label */}
-            {labelOpacity > 0 && (
-              <text
-                x={lx}
-                y={ly}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fill={segment.color}
-                fontFamily={fonts.inter}
-                fontWeight={600}
-                fontSize={labelFontSize}
-                opacity={labelOpacity}
-              >
-                {segment.label}
-              </text>
-            )}
+            {labelOpacity > 0 && (() => {
+              // Dynamic text anchor: left-side labels anchor end, right-side anchor start
+              const isLeft = lx < cx + offsetX;
+              const isCenter = Math.abs(lx - (cx + offsetX)) < 20;
+              const anchor = isCenter ? 'middle' : isLeft ? 'end' : 'start';
+              const labelText = segment.arc < usableArc * 0.15 ? segment.label.split(' ')[0] : segment.label;
+              return (
+                <text
+                  x={lx}
+                  y={ly}
+                  textAnchor={anchor}
+                  dominantBaseline="central"
+                  fill={segment.color}
+                  fontFamily={fonts.inter}
+                  fontWeight={600}
+                  fontSize={labelFontSize}
+                  opacity={labelOpacity}
+                >
+                  {labelText}
+                </text>
+              );
+            })()}
           </g>
         );
       })}

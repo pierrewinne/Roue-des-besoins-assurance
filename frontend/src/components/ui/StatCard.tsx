@@ -3,7 +3,7 @@ import Icon from './Icon.tsx'
 import Card from './Card.tsx'
 
 const colorMap = {
-  indigo: { text: 'text-primary-700', bg: 'bg-primary-50 ring-1 ring-primary-700/10' },
+  primary: { text: 'text-primary-700', bg: 'bg-primary-50 ring-1 ring-primary-700/10' },
   emerald: { text: 'text-emerald-600', bg: 'bg-emerald-50 ring-1 ring-emerald-600/10' },
   amber: { text: 'text-amber-600', bg: 'bg-amber-50 ring-1 ring-amber-600/10' },
   rose: { text: 'text-rose-600', bg: 'bg-rose-50 ring-1 ring-rose-600/10' },

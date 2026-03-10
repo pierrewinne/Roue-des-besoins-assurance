@@ -121,6 +121,25 @@ export const Scene5_Questionnaire: React.FC = () => {
               <span style={{ fontFamily: fonts.inter, fontWeight: 600, fontSize: 18, color: colors.slate[900] }}>
                 Roue des Besoins
               </span>
+              <div style={{ flex: 1 }} />
+              {frame > 45 && (
+                <div
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: 6,
+                    backgroundColor: colors.primary[100],
+                    border: `1px solid ${colors.primary[400]}20`,
+                    opacity: interpolate(frame, [45, 55], [0, 1], {
+                      extrapolateLeft: 'clamp',
+                      extrapolateRight: 'clamp',
+                    }),
+                  }}
+                >
+                  <span style={{ fontFamily: fonts.inter, fontWeight: 500, fontSize: 12, color: colors.primary[400] }}>
+                    Client
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={{ padding: '24px 32px' }}>

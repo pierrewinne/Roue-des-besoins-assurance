@@ -73,7 +73,7 @@ export default function AdvisorDashboard() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-        <StatCard icon="users" value={clients.length} label="Clients" color="indigo" />
+        <StatCard icon="users" value={clients.length} label="Clients" color="primary" />
         <StatCard icon="badge-check" value={clients.filter(c => c.latest_diagnostic).length} label="Diagnostics réalisés" color="emerald" />
         <StatCard icon="alert-triangle" value={clients.filter(c => c.latest_diagnostic && c.latest_diagnostic.global_score > 50).length} label="Actions requises" color="amber" />
       </div>

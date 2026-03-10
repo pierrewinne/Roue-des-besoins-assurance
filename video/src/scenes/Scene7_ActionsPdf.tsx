@@ -83,7 +83,7 @@ export const Scene7_ActionsPdf: React.FC = () => {
                       width: 5,
                       height: 20,
                       borderRadius: 3,
-                      backgroundColor: j < action.priority ? colors.rose[400] : colors.rose[200],
+                      backgroundColor: j < action.priority ? colors.scoring.red : `${colors.scoring.red}30`,
                       opacity: priorityFill > (j / 5) * 100 ? 1 : 0.3,
                     }}
                   />
