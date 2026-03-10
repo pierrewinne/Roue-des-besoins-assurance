@@ -7,7 +7,7 @@ export default function AdvisorLayout() {
   const location = useLocation()
 
   const navItems = [
-    { path: '/advisor', label: 'Tableau de bord' },
+    { path: '/conseiller/dashboard', label: 'Tableau de bord' },
   ]
 
   return (
@@ -15,7 +15,7 @@ export default function AdvisorLayout() {
       <header className="sticky top-0 z-50 bg-white border-b border-grey-200 shadow-header">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <Link to="/advisor" className="flex items-center gap-3">
+            <Link to="/conseiller/dashboard" className="flex items-center gap-3">
               <div className="w-8 h-8 bg-primary-700 rounded-md flex items-center justify-center">
                 <span className="text-white font-bold text-sm">RB</span>
               </div>

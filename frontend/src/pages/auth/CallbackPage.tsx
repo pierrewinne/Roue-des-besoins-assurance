@@ -5,14 +5,15 @@ import Spinner from '../../components/ui/Spinner.tsx'
 
 export default function CallbackPage() {
   const navigate = useNavigate()
-  const { user, isLoading } = useAuth()
+  const { user, profile, isLoading } = useAuth()
   const [timedOut, setTimedOut] = useState(false)
 
   useEffect(() => {
-    if (!isLoading && user) {
-      navigate('/dashboard', { replace: true })
+    if (!isLoading && user && profile) {
+      const target = profile.role === 'advisor' ? '/conseiller/dashboard' : '/dashboard'
+      navigate(target, { replace: true })
     }
-  }, [user, isLoading, navigate])
+  }, [user, profile, isLoading, navigate])
 
   useEffect(() => {
     const timer = setTimeout(() => setTimedOut(true), 10000)

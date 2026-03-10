@@ -16,8 +16,9 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   isLoading: boolean
+  profileError: boolean
   signInWithEmail: (email: string, password: string) => Promise<void>
-  signUpWithEmail: (email: string, password: string, role: 'client' | 'advisor', firstName?: string, lastName?: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>
   signInWithMagicLink: (email: string) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -29,15 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [profileError, setProfileError] = useState(false)
 
   async function fetchProfile(userId: string) {
+    setProfileError(false)
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
     if (error) {
-      console.error('Erreur chargement profil:', error.message)
+      setProfile(null)
+      setProfileError(true)
       return
     }
     setProfile(data)
@@ -73,12 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.user) await fetchProfile(data.user.id)
   }
 
-  async function signUpWithEmail(email: string, password: string, role: 'client' | 'advisor', firstName?: string, lastName?: string) {
+  async function signUpWithEmail(email: string, password: string, firstName?: string, lastName?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { role, first_name: firstName, last_name: lastName },
+        data: { role: 'client', first_name: firstName, last_name: lastName },
       },
     })
     if (error) throw error
@@ -103,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, isLoading, signInWithEmail, signUpWithEmail, signInWithMagicLink, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, isLoading, profileError, signInWithEmail, signUpWithEmail, signInWithMagicLink, signOut }}>
       {children}
     </AuthContext.Provider>
   )

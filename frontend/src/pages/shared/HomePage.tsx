@@ -119,9 +119,14 @@ export default function HomePage() {
             </div>
             <span className="text-white/70 font-bold text-sm tracking-tight">Roue des Besoins</span>
           </div>
-          <Link to="/login" className="text-sm font-bold text-white/60 hover:text-white transition-colors duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)]">
-            Connexion
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/conseiller" className="text-sm text-white/30 hover:text-white/60 transition-colors duration-300">
+              Espace conseiller
+            </Link>
+            <Link to="/login" className="text-sm font-bold text-white/60 hover:text-white transition-colors duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)]">
+              Connexion
+            </Link>
+          </div>
         </nav>
 
         {/* Main hero content: split layout */}

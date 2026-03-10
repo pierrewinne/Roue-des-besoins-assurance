@@ -16,29 +16,58 @@ interface PastDiagnostic {
 }
 
 export default function ClientDashboard() {
-  const { profile } = useAuth()
+  const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
   const [diagnostics, setDiagnostics] = useState<PastDiagnostic[]>([])
   const [hasIncomplete, setHasIncomplete] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     async function load() {
-      const { data: diags } = await supabase
-        .from('diagnostics')
-        .select('id, global_score, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5)
-      if (diags) setDiagnostics(diags)
+      if (!user) return
 
-      const { data: incomplete } = await supabase
-        .from('questionnaire_responses')
-        .select('id')
-        .eq('completed', false)
-        .limit(1)
+      const [{ data: diags }, { data: incomplete }] = await Promise.all([
+        supabase
+          .from('diagnostics')
+          .select('id, global_score, created_at')
+          .eq('profile_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('questionnaire_responses')
+          .select('id')
+          .eq('profile_id', user.id)
+          .eq('completed', false)
+          .limit(1),
+      ])
+      if (diags) setDiagnostics(diags)
       setHasIncomplete(!!incomplete?.length)
     }
     load()
-  }, [])
+  }, [user])
+
+  async function handleExportData() {
+    const { data, error } = await supabase.rpc('export_my_data')
+    if (error) return
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mes-donnees-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeleting(true)
+    const { error } = await supabase.rpc('delete_my_data')
+    if (!error) {
+      await signOut()
+      navigate('/login', { replace: true })
+    }
+    setIsDeleting(false)
+  }
 
   return (
     <div>
@@ -91,6 +120,55 @@ export default function ClientDashboard() {
             </div>
           )}
         </Card>
+      </div>
+
+      {/* GDPR: Data management */}
+      <div className="mt-10 pt-6 border-t border-grey-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-grey-400">Vos donnees personnelles</h3>
+            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos donnees (RGPD).</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportData}
+            >
+              Exporter mes donnees
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[#d9304c] border-[#d9304c]/20 hover:bg-[#ffeef1]"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Supprimer mon compte
+            </Button>
+          </div>
+        </div>
+
+        {showDeleteConfirm && (
+          <div className="mt-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
+            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irreversible</p>
+            <p className="text-xs text-grey-400 mb-4">
+              Toutes vos donnees seront definitivement supprimees : profil, questionnaires, diagnostics et actions recommandees.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="bg-[#d9304c] hover:bg-[#99172d]"
+                disabled={isDeleting}
+                onClick={handleDeleteAccount}
+              >
+                {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+                Annuler
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

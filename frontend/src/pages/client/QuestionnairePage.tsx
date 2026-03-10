@@ -72,6 +72,7 @@ export default function QuestionnairePage() {
         .from('questionnaire_responses')
         .update({ responses: answers, updated_at: new Date().toISOString() })
         .eq('id', responseId)
+        .eq('profile_id', user.id)
     } else {
       const { data } = await supabase
         .from('questionnaire_responses')
@@ -103,6 +104,7 @@ export default function QuestionnairePage() {
         .from('questionnaire_responses')
         .update({ responses: state.answers, completed: true })
         .eq('id', responseId)
+        .eq('profile_id', user.id)
     } else {
       const { data } = await supabase
         .from('questionnaire_responses')

@@ -1,51 +1,76 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Suspense, lazy } from 'react'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext.tsx'
-import HomePage from './pages/shared/HomePage.tsx'
-import LoginPage from './pages/auth/LoginPage.tsx'
-import CallbackPage from './pages/auth/CallbackPage.tsx'
+import Spinner from './components/ui/Spinner.tsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.tsx'
-import ClientLayout from './components/layout/ClientLayout.tsx'
-import AdvisorLayout from './components/layout/AdvisorLayout.tsx'
-import ClientDashboard from './pages/client/ClientDashboard.tsx'
-import QuestionnairePage from './pages/client/QuestionnairePage.tsx'
-import ResultsPage from './pages/client/ResultsPage.tsx'
-import AdvisorDashboard from './pages/advisor/AdvisorDashboard.tsx'
-import ClientDetailPage from './pages/advisor/ClientDetailPage.tsx'
-import NotFoundPage from './pages/shared/NotFoundPage.tsx'
+
+// Eagerly loaded: main landing page (first paint)
+import HomePage from './pages/shared/HomePage.tsx'
+
+// Lazy loaded: everything behind auth or secondary routes
+const AdvisorHomePage = lazy(() => import('./pages/advisor/AdvisorHomePage.tsx'))
+const ClientLoginPage = lazy(() => import('./pages/auth/ClientLoginPage.tsx'))
+const AdvisorLoginPage = lazy(() => import('./pages/auth/AdvisorLoginPage.tsx'))
+const CallbackPage = lazy(() => import('./pages/auth/CallbackPage.tsx'))
+const ClientLayout = lazy(() => import('./components/layout/ClientLayout.tsx'))
+const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard.tsx'))
+const QuestionnairePage = lazy(() => import('./pages/client/QuestionnairePage.tsx'))
+const ResultsPage = lazy(() => import('./pages/client/ResultsPage.tsx'))
+const AdvisorLayout = lazy(() => import('./components/layout/AdvisorLayout.tsx'))
+const AdvisorDashboard = lazy(() => import('./pages/advisor/AdvisorDashboard.tsx'))
+const ClientDetailPage = lazy(() => import('./pages/advisor/ClientDetailPage.tsx'))
+const NotFoundPage = lazy(() => import('./pages/shared/NotFoundPage.tsx'))
 
 function AuthRedirect() {
   const { profile } = useAuth()
-  if (profile?.role === 'advisor') return <Navigate to="/advisor" replace />
+  if (profile?.role === 'advisor') return <Navigate to="/conseiller/dashboard" replace />
   return <Navigate to="/dashboard" replace />
+}
+
+function LegacyClientRedirect() {
+  const { clientId } = useParams<{ clientId: string }>()
+  return <Navigate to={`/conseiller/clients/${clientId}`} replace />
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/callback" element={<CallbackPage />} />
+      <Suspense fallback={<Spinner className="min-h-screen" />}>
+        <Routes>
+          {/* ── Parcours 1: Client ── */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<ClientLoginPage />} />
+          <Route path="/auth/callback" element={<CallbackPage />} />
 
-        {/* Authenticated routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/app" element={<AuthRedirect />} />
-
-          <Route element={<ClientLayout />}>
-            <Route path="/dashboard" element={<ClientDashboard />} />
-            <Route path="/questionnaire" element={<QuestionnairePage />} />
-            <Route path="/results/:diagnosticId" element={<ResultsPage />} />
+          <Route element={<ProtectedRoute requiredRole="client" />}>
+            <Route element={<ClientLayout />}>
+              <Route path="/dashboard" element={<ClientDashboard />} />
+              <Route path="/questionnaire" element={<QuestionnairePage />} />
+              <Route path="/results/:diagnosticId" element={<ResultsPage />} />
+            </Route>
           </Route>
 
-          <Route element={<AdvisorLayout />}>
-            <Route path="/advisor" element={<AdvisorDashboard />} />
-            <Route path="/advisor/clients/:clientId" element={<ClientDetailPage />} />
-          </Route>
-        </Route>
+          {/* ── Parcours 2: Conseiller ── */}
+          <Route path="/conseiller" element={<AdvisorHomePage />} />
+          <Route path="/conseiller/login" element={<AdvisorLoginPage />} />
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          <Route element={<ProtectedRoute requiredRole="advisor" />}>
+            <Route element={<AdvisorLayout />}>
+              <Route path="/conseiller/dashboard" element={<AdvisorDashboard />} />
+              <Route path="/conseiller/clients/:clientId" element={<ClientDetailPage />} />
+            </Route>
+          </Route>
+
+          {/* Legacy redirects */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/app" element={<AuthRedirect />} />
+          </Route>
+          <Route path="/advisor" element={<Navigate to="/conseiller" replace />} />
+          <Route path="/advisor/clients/:clientId" element={<LegacyClientRedirect />} />
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   )
 }

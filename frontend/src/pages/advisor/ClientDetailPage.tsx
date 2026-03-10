@@ -45,7 +45,7 @@ export default function ClientDetailPage() {
         .single()
 
       if (!relation) {
-        navigate('/advisor', { replace: true })
+        navigate('/conseiller/dashboard', { replace: true })
         return
       }
 
@@ -118,7 +118,7 @@ export default function ClientDetailPage() {
       <PageHeader
         title={`${clientProfile?.first_name || ''} ${clientProfile?.last_name || ''}`}
         subtitle={subtitle}
-        backLink={{ to: '/advisor', label: 'Retour au tableau de bord' }}
+        backLink={{ to: '/conseiller/dashboard', label: 'Retour au tableau de bord' }}
         actions={
           diagnostic ? (
             <PdfDownloadButton

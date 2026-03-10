@@ -99,7 +99,7 @@ export default function AdvisorDashboard() {
             {filtered.map(client => (
               <Link
                 key={client.client_id}
-                to={`/advisor/clients/${client.client_id}`}
+                to={`/conseiller/clients/${client.client_id}`}
                 className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-primary-50/30 rounded-lg transition-colors duration-300 group"
               >
                 <div className="flex items-center gap-3">

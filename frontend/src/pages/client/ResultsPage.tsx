@@ -36,10 +36,17 @@ export default function ResultsPage() {
         .eq('profile_id', user.id)
         .single()
 
+      // Only fetch actions if diagnostic belongs to current user
+      if (!diag) {
+        setLoading(false)
+        return
+      }
+
       const { data: actionsData } = await supabase
         .from('actions')
         .select('*')
         .eq('diagnostic_id', diagnosticId)
+        .eq('profile_id', user.id)
         .order('priority', { ascending: false })
 
       if (diag) {
