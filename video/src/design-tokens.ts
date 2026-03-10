@@ -58,7 +58,7 @@ export const demoData = {
     {
       id: 'auto',
       label: 'Auto / Mobilité',
-      icon: '🚗',
+      icon: 'car',
       score: 15,
       needLevel: 'low' as const,
       color: colors.scoring.green,
@@ -71,7 +71,7 @@ export const demoData = {
     {
       id: 'objets_valeur',
       label: 'Objets de valeur',
-      icon: '💎',
+      icon: 'gem',
       score: 40,
       needLevel: 'moderate' as const,
       color: colors.scoring.amber,
@@ -84,7 +84,7 @@ export const demoData = {
     {
       id: 'habitation',
       label: 'Habitation',
-      icon: '🏠',
+      icon: 'home',
       score: 60,
       needLevel: 'high' as const,
       color: colors.scoring.red,
@@ -97,7 +97,7 @@ export const demoData = {
     {
       id: 'prevoyance',
       label: 'Prévoyance',
-      icon: '🛡️',
+      icon: 'shield',
       score: 85,
       needLevel: 'critical' as const,
       color: colors.scoring.darkRed,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../../components/ui/Button.tsx'
@@ -14,9 +14,16 @@ export default function LoginPage() {
   const [lastName, setLastName] = useState('')
   const [error, setError] = useState('')
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [signupPending, setSignupPending] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { signInWithEmail, signUpWithEmail, signInWithMagicLink } = useAuth()
+  const { user, profile, isLoading, signInWithEmail, signUpWithEmail, signInWithMagicLink } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate(profile?.role === 'advisor' ? '/advisor' : '/dashboard', { replace: true })
+    }
+  }, [user, profile, isLoading, navigate])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -27,7 +34,7 @@ export default function LoginPage() {
       if (mode === 'client') {
         if (authMode === 'signup') {
           await signUpWithEmail(email, password, 'client', firstName, lastName)
-          navigate('/dashboard')
+          setSignupPending(true)
         } else {
           await signInWithMagicLink(email)
           setMagicLinkSent(true)
@@ -35,16 +42,50 @@ export default function LoginPage() {
       } else {
         if (authMode === 'signup') {
           await signUpWithEmail(email, password, 'advisor', firstName, lastName)
+          setSignupPending(true)
         } else {
           await signInWithEmail(email, password)
         }
-        navigate('/advisor')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      const msg = err instanceof Error ? err.message : ''
+      if (msg.includes('Database error') || msg.includes('unexpected_failure')) {
+        setError('Service momentanément indisponible. Veuillez réessayer dans quelques instants.')
+      } else if (msg.includes('Invalid login credentials')) {
+        setError('Email ou mot de passe incorrect.')
+      } else if (msg.includes('User already registered')) {
+        setError('Un compte existe déjà avec cet email.')
+      } else if (msg.includes('Password should be')) {
+        setError('Le mot de passe doit contenir au moins 6 caractères.')
+      } else {
+        setError(msg || 'Une erreur est survenue')
+      }
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (signupPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-elevated border border-slate-200 p-8 text-center">
+          <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
+            <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Compte créé</h2>
+          <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+            Un email de confirmation a été envoyé à <span className="font-medium text-slate-700">{email}</span>.
+            Cliquez sur le lien pour activer votre compte.
+          </p>
+          <button
+            onClick={() => { setSignupPending(false); setAuthMode('login') }}
+            className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+          >
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (magicLinkSent) {

@@ -31,11 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
+    if (error) {
+      console.error('Erreur chargement profil:', error.message)
+      return
+    }
     setProfile(data)
   }
 
@@ -62,12 +66,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function signInWithEmail(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+    setSession(data.session)
+    setUser(data.user)
+    if (data.user) await fetchProfile(data.user.id)
   }
 
   async function signUpWithEmail(email: string, password: string, role: 'client' | 'advisor', firstName?: string, lastName?: string) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -75,6 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     })
     if (error) throw error
+    if (data.session) {
+      setSession(data.session)
+      setUser(data.user)
+      if (data.user) await fetchProfile(data.user.id)
+    }
   }
 
   async function signInWithMagicLink(email: string) {
