@@ -79,6 +79,36 @@ export const QUESTIONS: Question[] = [
     ],
   },
 
+  {
+    id: 'incomeSource',
+    block: 'personal',
+    label: 'Combien de personnes contribuent aux revenus de votre foyer ?',
+    helpText: 'Cette information nous aide \u00e0 \u00e9valuer la vuln\u00e9rabilit\u00e9 financi\u00e8re de votre foyer en cas d\u2019impr\u00e9vu.',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'one', label: 'Une seule personne' },
+      { value: 'two', label: 'Deux personnes' },
+      { value: 'more', label: 'Plus de deux personnes' },
+    ],
+  },
+  {
+    id: 'lifeEvent',
+    block: 'personal',
+    label: 'Avez-vous un \u00e9v\u00e9nement de vie pr\u00e9vu dans les 12 prochains mois ?',
+    helpText: 'Les changements de situation sont souvent l\u2019occasion de faire le point sur sa protection.',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'none', label: 'Aucun' },
+      { value: 'marriage', label: 'Mariage / PACS' },
+      { value: 'birth', label: 'Naissance pr\u00e9vue' },
+      { value: 'property', label: 'Achat immobilier' },
+      { value: 'move', label: 'D\u00e9m\u00e9nagement' },
+      { value: 'retirement', label: 'D\u00e9part en retraite' },
+    ],
+  },
+
   // === Block B: Situation patrimoniale ===
   {
     id: 'incomeRange',

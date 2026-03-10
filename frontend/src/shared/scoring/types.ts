@@ -24,4 +24,5 @@ export interface RecommendedAction {
   priority: number      // 1-5, 5 = highest
   title: string
   description: string
+  productName?: string  // Baloise product name
 }

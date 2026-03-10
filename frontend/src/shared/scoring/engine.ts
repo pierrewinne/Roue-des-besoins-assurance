@@ -38,6 +38,8 @@ function computeHabitationScore(answers: Answers): UniverseScore {
   if (isOwner) exposure = Math.max(exposure, 1.5)
   const hasOtherProperties = answers.hasOtherProperties as boolean | undefined
   if (hasOtherProperties) exposure = 2
+  const lifeEventHab = answers.lifeEvent as string | undefined
+  if (lifeEventHab === 'property' || lifeEventHab === 'move') exposure = 2
 
   // Coverage
   let coverage = 2
@@ -61,7 +63,9 @@ function computePrevoyanceScore(answers: Answers): UniverseScore {
   const hasMortgage = answers.hasMortgage as boolean | undefined
   if (hasMortgage) exposure = Math.min(exposure + 0.5, 2)
   const ageRange = answers.ageRange as string | undefined
-  if (ageRange === '30-50' && familyStatus === 'family') exposure = 2
+  if ((ageRange === '30-40' || ageRange === '40-50') && familyStatus === 'family') exposure = 2
+  const lifeEvent = answers.lifeEvent as string | undefined
+  if (lifeEvent === 'birth' || lifeEvent === 'marriage') exposure = Math.min(exposure + 0.5, 2)
 
   // Coverage
   let coverage = 2

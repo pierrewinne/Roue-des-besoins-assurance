@@ -81,9 +81,10 @@ export default function ResultsPage() {
 
   const scoreColor = getScoreColorClass(diagnostic.globalScore)
 
-  const scoreLabel = diagnostic.globalScore <= 25 ? 'Couverture adaptée' :
-                     diagnostic.globalScore <= 50 ? 'Points d\'attention identifiés' :
-                     'Lacunes significatives identifiées'
+  const scoreLabel = diagnostic.globalScore <= 25 ? 'Votre protection est bien adaptée à votre situation' :
+                     diagnostic.globalScore <= 50 ? 'Quelques points méritent votre attention' :
+                     diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées' :
+                     'Votre situation nécessite une action rapide'
 
   const scoreBg = diagnostic.globalScore <= 25 ? 'bg-emerald-50 ring-emerald-600/10' :
                   diagnostic.globalScore <= 50 ? 'bg-amber-50 ring-amber-600/10' :
@@ -107,13 +108,13 @@ export default function ResultsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <Card className="text-center">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ring-1 text-xs font-medium mb-6 ${scoreBg} ${scoreColor}`}>
-              {scoreLabel}
+            <div className={`px-4 py-2.5 rounded-xl ring-1 mb-6 ${scoreBg}`}>
+              <p className={`text-sm font-semibold ${scoreColor}`}>{scoreLabel}</p>
             </div>
             <div className="mb-4">
               <ScoreGauge score={diagnostic.globalScore} size={160} />
             </div>
-            <p className="text-sm text-slate-500 mb-6">Score global de besoin</p>
+            <p className="text-xs text-slate-400 mb-6">Score de besoin : {diagnostic.globalScore}/100</p>
             <div ref={wheelRef}>
               <InsuranceWheel diagnostic={diagnostic} size={280} />
             </div>

@@ -39,6 +39,11 @@ export default function ActionList({ actions, showType = false }: ActionListProp
                 )}
               </div>
               <p className="text-sm text-slate-500 leading-relaxed">{action.description}</p>
+              {action.productName && (
+                <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
+                  {action.productName}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0 pt-1">
               {Array.from({ length: 5 }).map((_, j) => (

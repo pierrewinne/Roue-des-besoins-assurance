@@ -6,6 +6,12 @@ import PdfClientReport from './PdfClientReport.tsx'
 import PdfAdvisorReport from './PdfAdvisorReport.tsx'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 
+interface AdvisorInfo {
+  name: string
+  email?: string
+  phone?: string
+}
+
 interface PdfDownloadButtonProps {
   diagnostic: DiagnosticResult
   type: 'client' | 'advisor'
@@ -13,9 +19,10 @@ interface PdfDownloadButtonProps {
   clientEmail?: string
   answers?: Record<string, unknown>
   wheelRef?: React.RefObject<HTMLDivElement | null>
+  advisor?: AdvisorInfo
 }
 
-export default function PdfDownloadButton({ diagnostic, type, clientName, clientEmail, answers, wheelRef }: PdfDownloadButtonProps) {
+export default function PdfDownloadButton({ diagnostic, type, clientName, clientEmail, answers, wheelRef, advisor }: PdfDownloadButtonProps) {
   const [generating, setGenerating] = useState(false)
 
   const handleDownload = useCallback(async () => {
@@ -36,7 +43,7 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       }
 
       const doc = type === 'client'
-        ? <PdfClientReport diagnostic={diagnostic} clientName={clientName} wheelImageUri={wheelImageUri} />
+        ? <PdfClientReport diagnostic={diagnostic} clientName={clientName} wheelImageUri={wheelImageUri} advisor={advisor} />
         : <PdfAdvisorReport diagnostic={diagnostic} clientName={clientName} clientEmail={clientEmail} answers={answers} wheelImageUri={wheelImageUri} />
 
       const blob = await pdf(doc).toBlob()
@@ -53,7 +60,7 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
     } finally {
       setGenerating(false)
     }
-  }, [diagnostic, type, clientName, clientEmail, answers, wheelRef])
+  }, [diagnostic, type, clientName, clientEmail, answers, wheelRef, advisor])
 
   return (
     <Button
