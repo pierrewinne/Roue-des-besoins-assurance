@@ -112,15 +112,10 @@ body {
   opacity: 1;
 }
 
-/* Wheel glow */
-.hero-wheel-glow {
-  background: radial-gradient(circle, rgba(148, 227, 212, 0.08) 0%, rgba(184, 178, 255, 0.04) 40%, transparent 70%);
-}
-
-/* Wheel float */
+/* Wheel float — subtle breathing */
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 .hero-wheel-float {
   animation: hero-float 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
@@ -135,24 +130,75 @@ body {
   animation: hero-pulse 2.5s ease-in-out infinite;
 }
 
-/* Scroll indicator */
-@keyframes hero-scroll-bounce {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(4px); opacity: 1; }
-}
-.hero-scroll-dot {
-  animation: hero-scroll-bounce 2s ease-in-out infinite;
-}
-.hero-scroll-hint {
-  animation: bal-fade-in 1s ease both;
-  animation-delay: 1.5s;
-  opacity: 0;
-}
-
 /* Hero title stagger */
 .hero-title {
   animation: bal-fade-in 800ms cubic-bezier(0.25, 0.8, 0.5, 1) both;
   animation-delay: 200ms;
+}
+
+/* ═══════════════════════════════════════════
+   Interactive wheel — segment interactions
+   ═══════════════════════════════════════════ */
+
+/* Segment group transitions */
+.wheel-segment {
+  transition: opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+/* Segment path hover/active transitions */
+.wheel-segment-path {
+  transition:
+    fill 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    stroke 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    stroke-width 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+/* Hover: brighten segment slightly (only when no segment is active or hovering own) */
+.wheel-segment:hover .wheel-segment-path {
+  fill: rgba(255,255,255,0.12);
+}
+
+/* Active segment glow pulse */
+@keyframes wheel-glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.wheel-segment-glow {
+  animation: wheel-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Ambient glow behind entire wheel */
+.wheel-ambient-glow {
+  transition: background 500ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+/* Hint text fade */
+@keyframes wheel-hint-fade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+.wheel-hint-text {
+  animation: wheel-hint-fade 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   Detail panel — slide open / close
+   ═══════════════════════════════════════════ */
+.wheel-detail-panel {
+  overflow: hidden;
+  transition:
+    max-height 400ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.wheel-detail-open {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.wheel-detail-closed {
+  max-height: 0;
+  opacity: 0;
 }
 
 /* ═══════════════════════════════════════════
@@ -176,13 +222,29 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .hero-wheel-float,
   .hero-pulse-dot,
-  .hero-scroll-dot,
-  .hero-scroll-hint,
-  .hero-title {
+  .hero-title,
+  .wheel-segment-glow,
+  .wheel-hint-text {
     animation: none !important;
   }
   .hero-wheel-float { transform: none; }
-  .hero-scroll-hint { opacity: 1; }
+
+  .wheel-segment,
+  .wheel-segment-path,
+  .wheel-ambient-glow,
+  .wheel-detail-panel {
+    transition: none !important;
+  }
+
+  .wheel-detail-open {
+    max-height: 300px;
+    opacity: 1;
+  }
+
+  .wheel-detail-closed {
+    max-height: 0;
+    opacity: 0;
+  }
 
   .reveal {
     opacity: 1 !important;
