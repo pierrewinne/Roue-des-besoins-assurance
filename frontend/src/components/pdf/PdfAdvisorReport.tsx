@@ -96,7 +96,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             </View>
             {Object.entries(diagnostic.universeScores).map(([key, score]) => (
               <View key={key} style={styles.tableRow}>
-                <Text style={{ ...styles.tableCell, width: '50%' }}>{UNIVERSE_LABELS[key]}{!score.active ? ' (d\u00e9sactiv\u00e9)' : ''}</Text>
+                <Text style={{ ...styles.tableCell, width: '50%' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}{!score.active ? ' (d\u00e9sactiv\u00e9)' : ''}</Text>
                 <Text style={{ ...styles.tableCell, width: '25%' }}>{diagnostic.weightings[key as Universe]}%</Text>
                 <Text style={{ ...styles.tableCell, width: '25%', color: NEED_COLORS[score.needLevel] }}>{score.active ? `${score.needScore}/100` : '\u2014'}</Text>
               </View>
@@ -117,7 +117,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           {activeUniverses.map(([key, score]) => (
             <View key={key} style={{ ...styles.universeCard, borderLeftColor: NEED_COLORS[score.needLevel] }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{UNIVERSE_LABELS[key]}</Text>
+                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</Text>
                 <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: NEED_COLORS[score.needLevel] }}>
                   {score.needScore}/100
                 </Text>

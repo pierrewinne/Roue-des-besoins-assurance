@@ -18,7 +18,7 @@ export default function WheelLegend({ diagnostic, showScores = false }: WheelLeg
             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-primary-700">{UNIVERSE_LABELS[key]}</span>
+                <span className="text-sm font-bold text-primary-700">{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</span>
                 {showScores && (
                   <span className="text-sm font-bold tabular-nums" style={{ color }}>{score.needScore}/100</span>
                 )}

@@ -91,7 +91,7 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
             <View key={key} style={styles.universeRow}>
               <View style={{ ...styles.universeIndicator, backgroundColor: NEED_COLORS[score.needLevel] }} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.universeName}>{UNIVERSE_LABELS[key]}</Text>
+                <Text style={styles.universeName}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</Text>
                 <Text style={styles.universeMessage}>{NEED_MESSAGES[score.needLevel]}</Text>
               </View>
             </View>
