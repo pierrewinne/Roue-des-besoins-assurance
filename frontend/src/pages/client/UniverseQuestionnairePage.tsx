@@ -22,24 +22,20 @@ export default function UniverseQuestionnairePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
-  const [responseId, setResponseId] = useState<string | null>(null)
+  const responseIdRef = useRef<string | null>(null)
   const [completedUniverses, setCompletedUniverses] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
+  const validUniverse = isValidUniverse(universeParam)
+  const universe: Universe = validUniverse ? universeParam : 'auto'
+
+  // Cleanup timeout on unmount
   useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
-
-  // Validate universe param
-  if (!isValidUniverse(universeParam)) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  const universe: Universe = universeParam
-  const visibleQuestions = getVisibleUniverseQuestions(universe, answers)
-  const labels = UNIVERSE_WHEEL_LABELS[universe]
 
   // Load existing questionnaire
   useEffect(() => {
+    if (!validUniverse) return
     async function load() {
       if (!user) return
       const { data } = await supabase
@@ -53,58 +49,82 @@ export default function UniverseQuestionnairePage() {
 
       if (data) {
         setAnswers((data.responses as Record<string, unknown>) || {})
-        setResponseId(data.id)
+        responseIdRef.current = data.id
+        responseIdRef.current = data.id
         setCompletedUniverses((data.completed_universes as Record<string, boolean>) || {})
-        // If profil not done, redirect
         if (!data.profil_completed) {
           navigate('/questionnaire/profil', { replace: true })
           return
         }
       } else {
-        // No questionnaire started
         navigate('/questionnaire/profil', { replace: true })
       }
     }
     load()
-  }, [user, navigate])
+  }, [user, navigate, validUniverse])
 
-  // Auto-save
-  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>, rid: string | null) => {
-    if (!user || !rid) return
-    await supabase
+  // Auto-save with error handling (ANO-06)
+  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
+    if (!user || !validUniverse) return
+    const rid = responseIdRef.current
+    if (!rid) return
+    const { error } = await supabase
       .from('questionnaire_responses')
       .update({ responses: newAnswers, updated_at: new Date().toISOString() })
       .eq('id', rid)
       .eq('profile_id', user.id)
-  }, [user])
+    if (error) console.error('Auto-save failed:', error)
+  }, [user, validUniverse])
 
   function handleAnswer(questionId: string, value: unknown) {
     const newAnswers = { ...answers, [questionId]: value }
     setAnswers(newAnswers)
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers, responseId), 1500)
+    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
+  }
+
+  async function flushAndNavigate(path: string) {
+    if (saveTimeout.current) {
+      clearTimeout(saveTimeout.current)
+      saveTimeout.current = undefined
+    }
+    await saveAnswers(answers)
+    navigate(path)
   }
 
   async function handleCompleteUniverse() {
-    if (!user || !responseId) return
+    if (!user || !responseIdRef.current) return
     setSaving(true)
 
     const newCompleted = { ...completedUniverses, [universe]: true }
-    await supabase
+    const { error } = await supabase
       .from('questionnaire_responses')
       .update({
         responses: answers,
         completed_universes: newCompleted,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', responseId)
+      .eq('id', responseIdRef.current)
       .eq('profile_id', user.id)
+
+    if (error) {
+      console.error('Save failed:', error)
+      setSaving(false)
+      return
+    }
 
     setCompletedUniverses(newCompleted)
     setSaving(false)
     navigate('/dashboard')
   }
 
+  // Conditional render AFTER all hooks (ANO-03)
+  if (!validUniverse) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  const visibleQuestions = getVisibleUniverseQuestions(universe, answers)
+  const labels = UNIVERSE_WHEEL_LABELS[universe]
   const isValid = isUniverseComplete(universe, answers)
 
   // Build wheel states for sidebar
@@ -116,8 +136,8 @@ export default function UniverseQuestionnairePage() {
       universeStates[u] = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
       completedCount++
     } else if (u === universe) {
-      const progress = getUniverseProgress(u, answers)
-      universeStates[u] = { status: 'in_progress', progress: progress.total > 0 ? progress.answered / progress.total : 0 }
+      const prog = getUniverseProgress(u, answers)
+      universeStates[u] = { status: 'in_progress', progress: prog.total > 0 ? prog.answered / prog.total : 0 }
     } else {
       universeStates[u] = { status: 'available' }
     }
@@ -127,8 +147,8 @@ export default function UniverseQuestionnairePage() {
     <div>
       <PageHeader
         title={`${labels.lines[0]} ${labels.lines[1]}`}
-        subtitle="Repondez aux questions pour analyser ce domaine."
-        backLink={{ to: '/dashboard', label: 'Retour a la roue' }}
+        subtitle="R\u00e9pondez aux questions pour analyser ce domaine."
+        backLink={{ to: '/dashboard', label: 'Retour \u00e0 la roue' }}
       />
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -146,13 +166,13 @@ export default function UniverseQuestionnairePage() {
 
               {visibleQuestions.length === 0 && (
                 <p className="text-sm text-grey-400 text-center py-8">
-                  Ce domaine ne necessite pas de questions supplementaires selon votre profil.
+                  Ce domaine ne n\u00e9cessite pas de questions suppl\u00e9mentaires selon votre profil.
                 </p>
               )}
             </div>
 
             <div className="flex justify-between mt-10 pt-6 border-t border-grey-100">
-              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+              <Button variant="outline" onClick={() => flushAndNavigate('/dashboard')}>
                 Retour
               </Button>
               <Button onClick={handleCompleteUniverse} disabled={!isValid || saving} size="lg">
@@ -175,7 +195,7 @@ export default function UniverseQuestionnairePage() {
               className="w-full max-w-[220px] mx-auto"
               onUniverseClick={(u) => {
                 if (u !== universe && !completedUniverses[u]) {
-                  navigate(`/questionnaire/${u}`)
+                  flushAndNavigate(`/questionnaire/${u}`)
                 }
               }}
             />

@@ -1,7 +1,15 @@
 import { useRef, useEffect } from 'react'
 import type { Universe, NeedLevel } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
-import { UNIVERSE_WHEEL_COLORS, UNIVERSE_WHEEL_LABELS, UNIVERSE_ICONS, UNIVERSE_ORDER, UNIVERSE_ANGLES } from '../../lib/constants.ts'
+import { UNIVERSE_WHEEL_COLORS, UNIVERSE_WHEEL_LABELS, UNIVERSE_ICONS, UNIVERSE_ORDER, UNIVERSE_ANGLES, NEED_BADGE_LABELS } from '../../lib/constants.ts'
+
+/* ─── Aria status labels (ANO-13) ─── */
+const STATUS_ARIA: Record<string, string> = {
+  locked: 'Verrouill\u00e9 \u2014 Compl\u00e9tez votre profil',
+  available: 'Disponible \u2014 Cliquez pour commencer',
+  in_progress: 'En cours',
+  completed: 'Compl\u00e9t\u00e9',
+}
 
 /* ─── Geometry (viewBox 500×500) ─── */
 const CX = 250
@@ -122,7 +130,7 @@ export default function DiagnosticWheel({
   }, [])
 
   return (
-    <svg viewBox="0 0 500 500" className={className} role="img" aria-label="Roue des besoins - diagnostic interactif">
+    <svg viewBox="0 0 500 500" className={className} role={onUniverseClick ? 'group' : 'img'} aria-label="Roue des besoins - diagnostic interactif">
       <title>Roue des besoins</title>
       <defs>
         {/* Universe gradients */}
@@ -256,7 +264,7 @@ export default function DiagnosticWheel({
         return (
           <g
             key={universe}
-            className={`${segmentClass} focus:outline-none focus-visible:outline-none`}
+            className={segmentClass}
             style={{
               cursor: isClickable ? 'pointer' : 'default',
               outline: 'none',
@@ -266,7 +274,7 @@ export default function DiagnosticWheel({
             onClick={() => isClickable && onUniverseClick?.(universe)}
             role={isClickable ? 'button' : undefined}
             tabIndex={isClickable ? 0 : undefined}
-            aria-label={`${labels.lines[0]} ${labels.lines[1]} - ${state.status === 'completed' ? `Score: ${state.score}/100` : state.status}`}
+            aria-label={`${labels.lines[0]} ${labels.lines[1]} - ${state.status === 'completed' && state.needLevel ? `${STATUS_ARIA.completed}, score : ${state.score} sur 100, ${NEED_BADGE_LABELS[state.needLevel]}` : STATUS_ARIA[state.status]}`}
             onKeyDown={isClickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onUniverseClick?.(universe) } } : undefined}
           >
             {/* Active glow */}

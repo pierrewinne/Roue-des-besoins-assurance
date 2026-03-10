@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { supabase } from '../../lib/supabase.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
@@ -12,7 +13,7 @@ export default function ProfilPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
-  const [responseId, setResponseId] = useState<string | null>(null)
+  const responseIdRef = useRef<string | null>(null)
   const [saving, setSaving] = useState(false)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -36,8 +37,8 @@ export default function ProfilPage() {
 
       if (data) {
         setAnswers((data.responses as Record<string, unknown>) || {})
-        setResponseId(data.id)
-        // If profil already done, go to dashboard
+        responseIdRef.current = data.id
+        responseIdRef.current = data.id
         if (data.profil_completed) {
           navigate('/dashboard', { replace: true })
           return
@@ -47,22 +48,31 @@ export default function ProfilPage() {
     load()
   }, [user, navigate])
 
-  // Auto-save debounced
-  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>, rid: string | null) => {
+  // Auto-save debounced with error handling (ANO-06)
+  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
     if (!user) return
+    const rid = responseIdRef.current
     if (rid) {
-      await supabase
+      const { error } = await supabase
         .from('questionnaire_responses')
         .update({ responses: newAnswers, updated_at: new Date().toISOString() })
         .eq('id', rid)
         .eq('profile_id', user.id)
+      if (error) console.error('Auto-save failed:', error)
     } else {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('questionnaire_responses')
         .insert({ profile_id: user.id, responses: newAnswers })
         .select('id')
         .single()
-      if (data) setResponseId(data.id)
+      if (error) {
+        console.error('Auto-save failed:', error)
+        return
+      }
+      if (data) {
+        responseIdRef.current = data.id
+        responseIdRef.current = data.id
+      }
     }
   }, [user])
 
@@ -70,27 +80,35 @@ export default function ProfilPage() {
     const newAnswers = { ...answers, [questionId]: value }
     setAnswers(newAnswers)
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers, responseId), 1500)
+    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
   }
 
   async function handleComplete() {
     if (!user) return
     setSaving(true)
 
-    let rid = responseId
+    // Flush pending debounce
+    if (saveTimeout.current) {
+      clearTimeout(saveTimeout.current)
+      saveTimeout.current = undefined
+    }
+
+    const rid = responseIdRef.current
     if (rid) {
-      await supabase
+      const { error } = await supabase
         .from('questionnaire_responses')
         .update({ responses: answers, profil_completed: true, updated_at: new Date().toISOString() })
         .eq('id', rid)
         .eq('profile_id', user.id)
+      if (error) { console.error('Save failed:', error); setSaving(false); return }
     } else {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('questionnaire_responses')
         .insert({ profile_id: user.id, responses: answers, profil_completed: true })
         .select('id')
         .single()
-      rid = data?.id ?? null
+      if (error) { console.error('Save failed:', error); setSaving(false); return }
+      if (data) responseIdRef.current = data.id
     }
 
     setSaving(false)
@@ -103,7 +121,7 @@ export default function ProfilPage() {
     <div>
       <PageHeader
         title="Votre profil"
-        subtitle="Quelques questions pour mieux vous connaitre avant d'explorer vos besoins."
+        subtitle="Quelques questions pour mieux vous conna\u00eetre avant d'explorer vos besoins."
       />
 
       <div className="max-w-2xl mx-auto">
@@ -121,7 +139,7 @@ export default function ProfilPage() {
 
           <div className="flex justify-end mt-10 pt-6 border-t border-grey-100">
             <Button onClick={handleComplete} disabled={!isValid || saving} size="lg">
-              {saving ? 'Enregistrement...' : 'Decouvrir ma roue'}
+              {saving ? 'Enregistrement...' : 'D\u00e9couvrir ma roue'}
             </Button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext.tsx'
 import Spinner from './components/ui/Spinner.tsx'
+import ErrorBoundary from './components/ui/ErrorBoundary.tsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.tsx'
 
 // Eagerly loaded: main landing page (first paint)
@@ -14,7 +15,7 @@ const AdvisorLoginPage = lazy(() => import('./pages/auth/AdvisorLoginPage.tsx'))
 const CallbackPage = lazy(() => import('./pages/auth/CallbackPage.tsx'))
 const ClientLayout = lazy(() => import('./components/layout/ClientLayout.tsx'))
 const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard.tsx'))
-const QuestionnairePage = lazy(() => import('./pages/client/QuestionnairePage.tsx'))
+// QuestionnairePage removed — old flow replaced by ProfilPage + UniverseQuestionnairePage
 const ResultsPage = lazy(() => import('./pages/client/ResultsPage.tsx'))
 const AdvisorLayout = lazy(() => import('./components/layout/AdvisorLayout.tsx'))
 const AdvisorDashboard = lazy(() => import('./pages/advisor/AdvisorDashboard.tsx'))
@@ -37,6 +38,7 @@ function LegacyClientRedirect() {
 export default function App() {
   return (
     <AuthProvider>
+      <ErrorBoundary>
       <Suspense fallback={<Spinner className="min-h-screen" />}>
         <Routes>
           {/* ── Parcours 1: Client ── */}
@@ -47,7 +49,7 @@ export default function App() {
           <Route element={<ProtectedRoute requiredRole="client" />}>
             <Route element={<ClientLayout />}>
               <Route path="/dashboard" element={<ClientDashboard />} />
-              <Route path="/questionnaire" element={<QuestionnairePage />} />
+              <Route path="/questionnaire" element={<Navigate to="/questionnaire/profil" replace />} />
               <Route path="/questionnaire/profil" element={<ProfilPage />} />
               <Route path="/questionnaire/:universe" element={<UniverseQuestionnairePage />} />
               <Route path="/results/:diagnosticId" element={<ResultsPage />} />
@@ -75,6 +77,7 @@ export default function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </AuthProvider>
   )
 }

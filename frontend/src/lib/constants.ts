@@ -78,10 +78,10 @@ export function getScoreColorClass(score: number): string {
 /* ─── Trivial Pursuit Wheel Config ─── */
 
 export const UNIVERSE_WHEEL_LABELS: Record<Universe, { lines: [string, string]; subtitle: string }> = {
-  auto: { lines: ['Vos', 'deplacements'], subtitle: '~2 min' },
+  auto: { lines: ['Vos', 'd\u00e9placements'], subtitle: '~2 min' },
   habitation: { lines: ['Votre', 'logement'], subtitle: '~2 min' },
   prevoyance: { lines: ['Votre', 'famille'], subtitle: '~1 min' },
-  objets_valeur: { lines: ['Vos biens', 'precieux'], subtitle: '~2 min' },
+  objets_valeur: { lines: ['Vos biens', 'pr\u00e9cieux'], subtitle: '~2 min' },
 } as const
 
 export const UNIVERSE_WHEEL_COLORS: Record<Universe, { base: string; light: string; dark: string; glow: string }> = {

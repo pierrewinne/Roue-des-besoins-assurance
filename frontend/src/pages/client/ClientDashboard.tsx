@@ -28,6 +28,7 @@ export default function ClientDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
+  const [finishError, setFinishError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadPast() {
@@ -58,25 +59,27 @@ export default function ClientDashboard() {
   async function handleFinishDiagnostic() {
     if (!user || !progress.responseId) return
     setIsFinishing(true)
+    setFinishError(null)
 
-    // Compute full diagnostic
-    const diagnostic = computeDiagnostic(progress.answers)
+    try {
+      const diagnostic = computeDiagnostic(progress.answers)
 
-    // Save diagnostic record
-    const { data: diagData } = await supabase
-      .from('diagnostics')
-      .insert({
-        questionnaire_id: progress.responseId,
-        profile_id: user.id,
-        scores: diagnostic.universeScores,
-        global_score: diagnostic.globalScore,
-        weightings: diagnostic.weightings,
-      })
-      .select('id')
-      .single()
+      const { data: diagData, error: diagError } = await supabase
+        .from('diagnostics')
+        .insert({
+          questionnaire_id: progress.responseId,
+          profile_id: user.id,
+          scores: diagnostic.universeScores,
+          global_score: diagnostic.globalScore,
+          weightings: diagnostic.weightings,
+        })
+        .select('id')
+        .single()
 
-    if (diagData) {
-      // Save actions + mark questionnaire completed in parallel
+      if (diagError || !diagData) {
+        throw new Error(diagError?.message || '\u00c9chec de la cr\u00e9ation du diagnostic')
+      }
+
       const actionsToInsert = diagnostic.actions.map(a => ({
         diagnostic_id: diagData.id,
         profile_id: user.id,
@@ -86,6 +89,7 @@ export default function ClientDashboard() {
         title: a.title,
         description: a.description,
       }))
+
       await Promise.all([
         actionsToInsert.length > 0 ? supabase.from('actions').insert(actionsToInsert) : Promise.resolve(),
         supabase
@@ -96,8 +100,12 @@ export default function ClientDashboard() {
       ])
 
       navigate(`/results/${diagData.id}`)
+    } catch (err) {
+      console.error('Diagnostic creation failed:', err)
+      setFinishError('Une erreur est survenue lors de la cr\u00e9ation de votre diagnostic. Veuillez r\u00e9essayer.')
+    } finally {
+      setIsFinishing(false)
     }
-    setIsFinishing(false)
   }
 
   async function handleExportData() {
@@ -153,10 +161,10 @@ export default function ClientDashboard() {
             </div>
             <h2 className="text-lg font-bold text-primary-700 mb-2">Commencez par votre profil</h2>
             <p className="text-sm text-grey-400 mb-6 leading-relaxed max-w-xs mx-auto">
-              Quelques questions rapides pour personnaliser votre diagnostic et debloquer la roue.
+              Quelques questions rapides pour personnaliser votre diagnostic et d\u00e9bloquer la roue.
             </p>
             <Button onClick={() => navigate('/questionnaire/profil')} size="lg">
-              Completer mon profil
+              Compl\u00e9ter mon profil
             </Button>
           </Card>
         </div>
@@ -215,6 +223,11 @@ export default function ClientDashboard() {
           {/* Finish diagnostic CTA */}
           {progress.allCompleted && (
             <div className="text-center mb-8">
+              {finishError && (
+                <div className="mb-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
+                  <p className="text-sm text-[#d9304c]">{finishError}</p>
+                </div>
+              )}
               <Button onClick={handleFinishDiagnostic} size="lg" disabled={isFinishing}>
                 {isFinishing ? 'Calcul en cours...' : 'Voir mon diagnostic complet'}
               </Button>
@@ -226,7 +239,7 @@ export default function ClientDashboard() {
       {/* Past diagnostics */}
       {diagnostics.length > 0 && (
         <Card>
-          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics precedents</h2>
+          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics pr\u00e9c\u00e9dents</h2>
           <div className="space-y-2">
             {diagnostics.map(d => (
               <Link
@@ -253,12 +266,12 @@ export default function ClientDashboard() {
       <div className="mt-10 pt-6 border-t border-grey-100">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-grey-400">Vos donnees personnelles</h3>
-            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos donnees (RGPD).</p>
+            <h3 className="text-sm font-bold text-grey-400">Vos donn\u00e9es personnelles</h3>
+            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos donn\u00e9es (RGPD).</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleExportData}>
-              Exporter mes donnees
+              Exporter mes donn\u00e9es
             </Button>
             <Button
               variant="outline"
@@ -273,9 +286,9 @@ export default function ClientDashboard() {
 
         {showDeleteConfirm && (
           <div className="mt-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
-            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irreversible</p>
+            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irr\u00e9versible</p>
             <p className="text-xs text-grey-400 mb-4">
-              Toutes vos donnees seront definitivement supprimees : profil, questionnaires, diagnostics et actions recommandees.
+              Toutes vos donn\u00e9es seront d\u00e9finitivement supprim\u00e9es : profil, questionnaires, diagnostics et actions recommand\u00e9es.
             </p>
             <div className="flex gap-2">
               <Button size="sm" className="bg-[#d9304c] hover:bg-[#99172d]" disabled={isDeleting} onClick={handleDeleteAccount}>
