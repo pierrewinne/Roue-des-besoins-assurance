@@ -14,16 +14,16 @@ export default function WheelLegend({ diagnostic, showScores = false }: WheelLeg
         if (!score.active) return null
         const color = getNeedColor(score.needLevel)
         return (
-          <div key={key} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50/80">
+          <div key={key} className="flex items-center gap-3 p-3 rounded-lg bg-grey-50">
             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">{UNIVERSE_LABELS[key]}</span>
+                <span className="text-sm font-bold text-primary-700">{UNIVERSE_LABELS[key]}</span>
                 {showScores && (
-                  <span className="text-sm font-semibold tabular-nums" style={{ color }}>{score.needScore}/100</span>
+                  <span className="text-sm font-bold tabular-nums" style={{ color }}>{score.needScore}/100</span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">{NEED_LEGEND_MESSAGES[score.needLevel]}</p>
+              <p className="text-xs text-grey-300 mt-0.5">{NEED_LEGEND_MESSAGES[score.needLevel]}</p>
             </div>
           </div>
         )

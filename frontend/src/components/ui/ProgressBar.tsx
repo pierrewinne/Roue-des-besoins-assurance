@@ -11,12 +11,12 @@ export default function ProgressBar({ steps, currentStep }: ProgressBarProps) {
       <div className="flex items-center justify-between mb-3">
         {steps.map((step, i) => (
           <div key={step} className="flex items-center">
-            <div className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-semibold transition-all duration-300 ${
+            <div className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold transition-all duration-300 ${
               i < currentStep
                 ? 'bg-primary-700 text-white'
                 : i === currentStep
                   ? 'bg-white text-primary-700 ring-2 ring-primary-700'
-                  : 'bg-slate-100 text-slate-400'
+                  : 'bg-grey-100 text-grey-300'
             }`}>
               {i < currentStep ? (
                 <Icon name="check" size={16} strokeWidth={2.5} />
@@ -24,7 +24,7 @@ export default function ProgressBar({ steps, currentStep }: ProgressBarProps) {
             </div>
             {i < steps.length - 1 && (
               <div className={`hidden sm:block w-12 md:w-24 h-0.5 mx-2 rounded-full transition-colors duration-300 ${
-                i < currentStep ? 'bg-primary-700' : 'bg-slate-200'
+                i < currentStep ? 'bg-primary-700' : 'bg-grey-200'
               }`} />
             )}
           </div>
@@ -33,7 +33,7 @@ export default function ProgressBar({ steps, currentStep }: ProgressBarProps) {
       <div className="flex justify-between">
         {steps.map((step, i) => (
           <span key={step} className={`text-xs font-medium hidden sm:block transition-colors ${
-            i <= currentStep ? 'text-primary-700' : 'text-slate-400'
+            i <= currentStep ? 'text-primary-700' : 'text-grey-300'
           }`}>
             {step}
           </span>

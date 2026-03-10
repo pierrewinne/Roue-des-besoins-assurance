@@ -59,7 +59,7 @@ export default function InsuranceWheel({ diagnostic, size = 350, showLabels = tr
   }))
 
   if (data.length === 0) {
-    return <div className="text-center text-slate-500 py-8">Aucun univers actif</div>
+    return <div className="text-center text-grey-400 py-8">Aucun univers actif</div>
   }
 
   return (

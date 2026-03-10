@@ -15,7 +15,7 @@ export default function PageHeader({ title, subtitle, backLink, actions }: PageH
       {backLink && (
         <Link
           to={backLink.to}
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-700 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-grey-400 hover:text-primary-700 transition-colors duration-300 mb-4"
         >
           <Icon name="chevron-left" size={16} strokeWidth={2} />
           {backLink.label}
@@ -23,8 +23,8 @@ export default function PageHeader({ title, subtitle, backLink, actions }: PageH
       )}
       <div className={`flex items-start justify-between ${backLink ? '' : ''}`}>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
-          {subtitle && <p className="text-slate-500 mt-1">{subtitle}</p>}
+          <h1 className="text-3xl font-bold text-primary-700 tracking-tight">{title}</h1>
+          {subtitle && <p className="text-grey-400 mt-2 text-lg leading-relaxed">{subtitle}</p>}
         </div>
         {actions && <div className="flex items-center gap-3">{actions}</div>}
       </div>

@@ -8,9 +8,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: 'bg-primary-700 text-white hover:bg-primary-600 active:bg-primary-800 shadow-card',
-  secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200/70 active:bg-slate-200',
-  outline: 'border-2 border-slate-200 text-slate-600 hover:border-primary-200 hover:text-primary-700 active:bg-primary-50',
-  ghost: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 active:bg-slate-200',
+  secondary: 'bg-transparent text-primary-700 border border-primary-700 hover:shadow-card active:bg-primary-50',
+  outline: 'border border-grey-200 text-primary-700 hover:border-primary-700 active:bg-primary-50',
+  ghost: 'text-primary-700 hover:bg-primary-100 active:bg-primary-200',
 }
 
 const sizes = {
@@ -22,7 +22,7 @@ const sizes = {
 export default function Button({ variant = 'primary', size = 'md', className = '', children, ...props }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold rounded-md transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-bold rounded transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

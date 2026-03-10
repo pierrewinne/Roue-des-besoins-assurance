@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.ts'
+import { useAuth } from '../../contexts/AuthContext.tsx'
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
@@ -18,18 +19,21 @@ import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
 export default function ResultsPage() {
   const { diagnosticId } = useParams<{ diagnosticId: string }>()
+  const { user } = useAuth()
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null)
   const [loading, setLoading] = useState(true)
   const wheelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function load() {
-      if (!diagnosticId) return
+      if (!diagnosticId || !user) return
 
+      // Only fetch diagnostic belonging to current user
       const { data: diag } = await supabase
         .from('diagnostics')
         .select('*')
         .eq('id', diagnosticId)
+        .eq('profile_id', user.id)
         .single()
 
       const { data: actionsData } = await supabase
@@ -63,7 +67,7 @@ export default function ResultsPage() {
       setLoading(false)
     }
     load()
-  }, [diagnosticId])
+  }, [diagnosticId, user])
 
   if (loading) {
     return <Spinner />
@@ -86,9 +90,9 @@ export default function ResultsPage() {
                      diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées' :
                      'Votre situation nécessite une action rapide'
 
-  const scoreBg = diagnostic.globalScore <= 25 ? 'bg-emerald-50 ring-emerald-600/10' :
-                  diagnostic.globalScore <= 50 ? 'bg-amber-50 ring-amber-600/10' :
-                  'bg-rose-50 ring-rose-600/10'
+  const scoreBg = diagnostic.globalScore <= 25 ? 'bg-[#e8f3ec] ring-[#168741]/10' :
+                  diagnostic.globalScore <= 50 ? 'bg-accent-yellow-bg ring-accent-yellow-dark/10' :
+                  'bg-[#ffeef1] ring-[#d9304c]/10'
 
   return (
     <div>
@@ -109,12 +113,12 @@ export default function ResultsPage() {
         <div className="lg:col-span-1 space-y-6">
           <Card className="text-center">
             <div className={`px-4 py-2.5 rounded-xl ring-1 mb-6 ${scoreBg}`}>
-              <p className={`text-sm font-semibold ${scoreColor}`}>{scoreLabel}</p>
+              <p className={`text-sm font-bold ${scoreColor}`}>{scoreLabel}</p>
             </div>
             <div className="mb-4">
               <ScoreGauge score={diagnostic.globalScore} size={160} />
             </div>
-            <p className="text-xs text-slate-400 mb-6">Score de besoin : {diagnostic.globalScore}/100</p>
+            <p className="text-xs text-grey-300 mb-6">Score de besoin : {diagnostic.globalScore}/100</p>
             <div ref={wheelRef}>
               <InsuranceWheel diagnostic={diagnostic} size={280} />
             </div>
@@ -124,7 +128,7 @@ export default function ResultsPage() {
 
         <div className="lg:col-span-2 space-y-8">
           <section>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Détail par univers</h2>
+            <h2 className="text-lg font-bold text-primary-700 mb-4">Détail par univers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Object.entries(diagnostic.universeScores).map(([key, score]) => (
                 <UniverseCard key={key} universe={key} score={score} />
@@ -133,7 +137,7 @@ export default function ResultsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Actions recommandées</h2>
+            <h2 className="text-lg font-bold text-primary-700 mb-4">Actions recommandées</h2>
             <ActionList actions={diagnostic.actions} />
           </section>
         </div>

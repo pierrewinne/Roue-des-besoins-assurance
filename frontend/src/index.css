@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -17,15 +17,34 @@
   --color-primary-900: #000739;
   --color-primary-950: #000420;
 
-  /* Navy-tinted shadows */
-  --shadow-card: 0px 2px 5px 1px rgba(0, 7, 57, 0.08);
-  --shadow-card-hover: 0 0 12px 0 rgba(0, 7, 57, 0.13);
-  --shadow-elevated: 0 0 30px 0 rgba(0, 7, 57, 0.12);
+  /* Baloise neutral greys */
+  --color-grey-50: #fafafa;
+  --color-grey-100: #f6f6f6;
+  --color-grey-200: #e8e8e8;
+  --color-grey-300: #b6b6b6;
+  --color-grey-400: #747474;
+  --color-grey-500: #313131;
+
+  /* Baloise accent colors */
+  --color-accent-teal: #94e3d4;
+  --color-accent-teal-bg: #e9fbf7;
+  --color-accent-teal-dark: #00b28f;
+  --color-accent-purple: #b8b2ff;
+  --color-accent-purple-bg: #f9f3ff;
+  --color-accent-purple-dark: #9f52cc;
+  --color-accent-yellow: #fae052;
+  --color-accent-yellow-bg: #fff9e8;
+  --color-accent-yellow-dark: #c97612;
+
+  /* Navy-tinted shadows (Baloise official) */
+  --shadow-card: 0 0 10px 0 rgba(0, 7, 57, 0.15);
+  --shadow-card-hover: 0 0 30px 0 rgba(0, 7, 57, 0.15);
+  --shadow-elevated: 0 0 30px 0 rgba(0, 7, 57, 0.20);
   --shadow-header: 0 1px 3px 0 rgba(0, 7, 57, 0.08);
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply bg-white text-primary-700 antialiased;
 }
 
 ::selection {
@@ -41,9 +60,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
+  @apply bg-grey-300 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400;
+  @apply bg-grey-400;
+}
+
+@keyframes bal-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }

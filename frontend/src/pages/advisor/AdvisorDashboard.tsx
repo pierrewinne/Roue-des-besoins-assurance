@@ -80,7 +80,7 @@ export default function AdvisorDashboard() {
 
       <Card>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900">Mes clients</h2>
+          <h2 className="text-lg font-bold text-primary-700">Mes clients</h2>
           <div className="w-72">
             <Input
               type="text"
@@ -95,24 +95,24 @@ export default function AdvisorDashboard() {
         {filtered.length === 0 ? (
           <EmptyState icon="users" description="Aucun client trouvé." />
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-grey-100">
             {filtered.map(client => (
               <Link
                 key={client.client_id}
                 to={`/advisor/clients/${client.client_id}`}
-                className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-slate-50 rounded-lg transition-colors group"
+                className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-primary-50/30 rounded-lg transition-colors duration-300 group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-semibold text-slate-500">
+                  <div className="w-9 h-9 rounded-full bg-grey-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-grey-400">
                       {(client.profiles.first_name?.[0] || '?').toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-slate-900 text-sm">
+                    <span className="font-bold text-primary-700 text-sm">
                       {client.profiles.first_name || ''} {client.profiles.last_name || ''}
                     </span>
-                    <span className="text-sm text-slate-400 ml-2">{client.profiles.email}</span>
+                    <span className="text-sm text-grey-300 ml-2">{client.profiles.email}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -121,14 +121,14 @@ export default function AdvisorDashboard() {
                       <Badge color={client.latest_diagnostic.global_score <= 25 ? 'green' : client.latest_diagnostic.global_score <= 50 ? 'orange' : 'red'}>
                         Score: {client.latest_diagnostic.global_score}
                       </Badge>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-grey-300">
                         {new Date(client.latest_diagnostic.created_at).toLocaleDateString('fr-FR')}
                       </span>
                     </>
                   ) : (
                     <Badge color="gray">Pas de diagnostic</Badge>
                   )}
-                  <Icon name="chevron-right" size={16} strokeWidth={2} className="text-slate-300 group-hover:text-primary-400 transition-colors" />
+                  <Icon name="chevron-right" size={16} strokeWidth={2} className="text-grey-300 group-hover:text-primary-400 transition-colors" />
                 </div>
               </Link>
             ))}

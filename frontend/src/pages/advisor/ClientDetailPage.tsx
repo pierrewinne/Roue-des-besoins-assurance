@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.ts'
+import { useAuth } from '../../contexts/AuthContext.tsx'
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
@@ -23,6 +24,8 @@ interface ClientProfile {
 
 export default function ClientDetailPage() {
   const { clientId } = useParams<{ clientId: string }>()
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null)
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null)
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
@@ -31,7 +34,20 @@ export default function ClientDetailPage() {
 
   useEffect(() => {
     async function load() {
-      if (!clientId) return
+      if (!clientId || !user) return
+
+      // Verify advisor owns this client before loading any data
+      const { data: relation } = await supabase
+        .from('advisor_clients')
+        .select('id')
+        .eq('advisor_id', user.id)
+        .eq('client_id', clientId)
+        .single()
+
+      if (!relation) {
+        navigate('/advisor', { replace: true })
+        return
+      }
 
       const { data: prof } = await supabase
         .from('profiles')
@@ -89,7 +105,7 @@ export default function ClientDetailPage() {
       setLoading(false)
     }
     load()
-  }, [clientId])
+  }, [clientId, user, navigate])
 
   if (loading) {
     return <Spinner />
@@ -131,7 +147,7 @@ export default function ClientDetailPage() {
               <div className="mb-4">
                 <ScoreGauge score={diagnostic.globalScore} size={150} />
               </div>
-              <p className="text-xs text-slate-500 mb-5">Score global de besoin</p>
+              <p className="text-xs text-grey-400 mb-5">Score global de besoin</p>
               <div ref={wheelRef}>
                 <InsuranceWheel diagnostic={diagnostic} size={250} showLabels={false} />
               </div>
@@ -139,16 +155,16 @@ export default function ClientDetailPage() {
             </Card>
 
             <Card>
-              <h3 className="font-semibold text-sm text-slate-900 mb-4">Pondérations</h3>
+              <h3 className="font-bold text-sm text-primary-700 mb-4">Pondérations</h3>
               <div className="space-y-2.5">
                 {Object.entries(diagnostic.weightings).map(([key, weight]) => (
                   <div key={key} className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500 capitalize">{key.replace('_', ' ')}</span>
+                    <span className="text-grey-400 capitalize">{key.replace('_', ' ')}</span>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 bg-slate-100 rounded-full h-1.5">
+                      <div className="w-20 bg-grey-100 rounded-full h-1.5">
                         <div className="bg-primary-400 h-1.5 rounded-full" style={{ width: `${weight}%` }} />
                       </div>
-                      <span className="font-medium text-slate-700 tabular-nums w-8 text-right">{weight}%</span>
+                      <span className="font-bold text-primary-700 tabular-nums w-8 text-right">{weight}%</span>
                     </div>
                   </div>
                 ))}
@@ -158,7 +174,7 @@ export default function ClientDetailPage() {
 
           <div className="lg:col-span-2 space-y-8">
             <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Analyse détaillée</h2>
+              <h2 className="text-lg font-bold text-primary-700 mb-4">Analyse détaillée</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Object.entries(diagnostic.universeScores).map(([key, score]) => (
                   <UniverseCard key={key} universe={key} score={score} showDetails />
@@ -167,7 +183,7 @@ export default function ClientDetailPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Plan d'actions</h2>
+              <h2 className="text-lg font-bold text-primary-700 mb-4">Plan d'actions</h2>
               <ActionList actions={diagnostic.actions} showType />
             </section>
           </div>

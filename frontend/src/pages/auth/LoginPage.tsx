@@ -52,14 +52,12 @@ export default function LoginPage() {
       const msg = err instanceof Error ? err.message : ''
       if (msg.includes('Database error') || msg.includes('unexpected_failure')) {
         setError('Service momentanément indisponible. Veuillez réessayer dans quelques instants.')
-      } else if (msg.includes('Invalid login credentials')) {
-        setError('Email ou mot de passe incorrect.')
-      } else if (msg.includes('User already registered')) {
-        setError('Un compte existe déjà avec cet email.')
+      } else if (msg.includes('Invalid login credentials') || msg.includes('User already registered')) {
+        setError('Identifiants incorrects ou compte inexistant.')
       } else if (msg.includes('Password should be')) {
         setError('Le mot de passe doit contenir au moins 6 caractères.')
       } else {
-        setError(msg || 'Une erreur est survenue')
+        setError('Une erreur est survenue. Veuillez réessayer.')
       }
     } finally {
       setIsSubmitting(false)
@@ -84,7 +82,7 @@ export default function LoginPage() {
             <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
               <span className="text-white font-bold text-sm">RB</span>
             </div>
-            <span className="text-white/70 font-semibold tracking-tight">Roue des Besoins</span>
+            <span className="text-white/70 font-bold tracking-tight">Roue des Besoins</span>
           </div>
 
           {/* Wheel diagram */}
@@ -92,7 +90,7 @@ export default function LoginPage() {
 
           {/* Value proposition */}
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-white mb-3 leading-snug">
+            <h2 className="text-xl font-bold text-white mb-3 leading-snug">
               Évaluez et optimisez votre
               <br />
               couverture d'assurance
@@ -139,7 +137,7 @@ export default function LoginPage() {
               <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
                 <span className="text-white font-bold text-xs">RB</span>
               </div>
-              <span className="text-white/70 font-medium text-sm">Roue des Besoins</span>
+              <span className="text-white/70 font-bold text-sm">Roue des Besoins</span>
             </div>
             <NeedsWheel className="w-48 mx-auto mb-5" />
             <p className="text-primary-200 text-xs">Diagnostic assurance personnalisé</p>
@@ -151,36 +149,36 @@ export default function LoginPage() {
           <div className="w-full max-w-sm">
             {signupPending ? (
               <div className="text-center">
-                <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
-                  <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
+                <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Compte créé</h2>
-                <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+                <h2 className="text-xl font-bold text-primary-700 mb-2">Compte créé</h2>
+                <p className="text-grey-400 mb-6 text-sm leading-relaxed">
                   Un email de confirmation a été envoyé à{' '}
-                  <span className="font-medium text-slate-700">{email}</span>.
+                  <span className="font-bold text-primary-700">{email}</span>.
                   Cliquez sur le lien pour activer votre compte.
                 </p>
                 <button
                   onClick={() => { setSignupPending(false); setAuthMode('login') }}
-                  className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                  className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
                 >
                   Retour à la connexion
                 </button>
               </div>
             ) : magicLinkSent ? (
               <div className="text-center">
-                <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
-                  <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
+                <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">Vérifiez votre boîte mail</h2>
-                <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+                <h2 className="text-xl font-bold text-primary-700 mb-2">Vérifiez votre boîte mail</h2>
+                <p className="text-grey-400 mb-6 text-sm leading-relaxed">
                   Un lien de connexion a été envoyé à{' '}
-                  <span className="font-medium text-slate-700">{email}</span>.
+                  <span className="font-bold text-primary-700">{email}</span>.
                   Cliquez sur le lien pour accéder à votre espace.
                 </p>
                 <button
                   onClick={() => setMagicLinkSent(false)}
-                  className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                  className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
                 >
                   Utiliser une autre adresse
                 </button>
@@ -189,14 +187,14 @@ export default function LoginPage() {
               <>
                 {/* Form header */}
                 <div className="mb-8">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-1.5">
+                  <h2 className="text-xl font-bold text-primary-700 mb-1.5">
                     {mode === 'advisor'
                       ? 'Espace conseiller'
                       : authMode === 'signup'
                         ? 'Créez votre compte'
                         : 'Accédez à votre espace'}
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-grey-400">
                     {mode === 'advisor'
                       ? 'Connectez-vous pour gérer vos clients.'
                       : authMode === 'signup'
@@ -207,7 +205,7 @@ export default function LoginPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
-                    <div className="p-3 bg-rose-50 text-rose-700 text-sm rounded-lg ring-1 ring-rose-600/10">
+                    <div className="p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
                       {error}
                     </div>
                   )}
@@ -253,7 +251,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                      className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+                      className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
                     >
                       {authMode === 'login' ? 'Créer un compte' : 'J\'ai déjà un compte'}
                     </button>
@@ -261,21 +259,21 @@ export default function LoginPage() {
                 </form>
 
                 {/* Mode switch */}
-                <div className="mt-10 pt-6 border-t border-slate-100 text-center">
+                <div className="mt-10 pt-6 border-t border-grey-100 text-center">
                   {mode === 'client' ? (
                     <button
                       type="button"
                       onClick={() => { setMode('advisor'); setAuthMode('login'); setError(''); setPassword('') }}
-                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                      className="text-sm text-grey-300 hover:text-primary-700 transition-colors"
                     >
                       Vous êtes conseiller ?{' '}
-                      <span className="font-medium text-primary-700">Accès professionnel</span>
+                      <span className="font-bold text-primary-700">Accès professionnel</span>
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={() => { setMode('client'); setAuthMode('login'); setError(''); setPassword('') }}
-                      className="text-sm text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1.5"
+                      className="text-sm text-grey-300 hover:text-primary-700 transition-colors inline-flex items-center gap-1.5"
                     >
                       <Icon name="chevron-left" size={14} strokeWidth={2} />
                       Retour à l'accès client

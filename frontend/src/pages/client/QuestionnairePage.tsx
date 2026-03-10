@@ -165,7 +165,7 @@ export default function QuestionnairePage() {
         sideContent={
           previewDiagnostic ? (
             <Card>
-              <h3 className="text-sm font-semibold text-slate-700 mb-4">Aperçu en temps réel</h3>
+              <h3 className="text-sm font-bold text-primary-700 mb-4">Aperçu en temps réel</h3>
               <InsuranceWheel diagnostic={previewDiagnostic} size={220} showLabels={false} />
               <WheelLegend diagnostic={previewDiagnostic} />
             </Card>

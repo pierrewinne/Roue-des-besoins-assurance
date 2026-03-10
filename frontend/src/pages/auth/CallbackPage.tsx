@@ -21,13 +21,13 @@ export default function CallbackPage() {
 
   if (timedOut && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-grey-50">
         <div className="text-center max-w-md">
-          <p className="text-slate-900 font-medium mb-2">La connexion a échoué</p>
-          <p className="text-slate-500 text-sm mb-6">Le lien est peut-être expiré ou invalide.</p>
+          <p className="text-primary-700 font-bold mb-2">La connexion a échoué</p>
+          <p className="text-grey-400 text-sm mb-6">Le lien est peut-être expiré ou invalide.</p>
           <button
             onClick={() => navigate('/login', { replace: true })}
-            className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+            className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
           >
             Retour à la connexion
           </button>
@@ -37,11 +37,11 @@ export default function CallbackPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-grey-50">
       <div className="text-center">
         <Spinner className="mb-5" />
-        <p className="text-slate-600 font-medium">Connexion en cours...</p>
-        <p className="text-slate-400 text-sm mt-1">Vous allez être redirigé automatiquement.</p>
+        <p className="text-primary-700 font-bold">Connexion en cours...</p>
+        <p className="text-grey-300 text-sm mt-1">Vous allez être redirigé automatiquement.</p>
       </div>
     </div>
   )

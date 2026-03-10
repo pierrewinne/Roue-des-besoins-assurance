@@ -52,10 +52,10 @@ export default function ClientDashboard() {
           <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mb-5 ring-1 ring-primary-700/10">
             <Icon name="badge-check" size={28} className="text-primary-700" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-2">
+          <h2 className="text-lg font-bold text-primary-700 mb-2">
             {hasIncomplete ? 'Reprendre mon diagnostic' : 'Nouveau diagnostic'}
           </h2>
-          <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-xs">
+          <p className="text-sm text-grey-400 mb-6 leading-relaxed max-w-xs">
             {hasIncomplete
               ? 'Vous avez un questionnaire en cours. Reprenez là où vous vous êtes arrêté.'
               : 'Répondez à quelques questions pour découvrir vos besoins en assurance.'}
@@ -66,7 +66,7 @@ export default function ClientDashboard() {
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold text-slate-900 mb-5">Mes diagnostics</h2>
+          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics</h2>
           {diagnostics.length === 0 ? (
             <EmptyState icon="document" description="Aucun diagnostic réalisé pour le moment." />
           ) : (
@@ -75,16 +75,16 @@ export default function ClientDashboard() {
                 <Link
                   key={d.id}
                   to={`/results/${d.id}`}
-                  className="flex items-center justify-between p-3.5 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-all group"
+                  className="flex items-center justify-between p-3.5 rounded-lg border border-grey-100 hover:border-primary-200 hover:bg-primary-50/50 transition-all duration-300 group"
                 >
-                  <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
+                  <span className="text-sm text-grey-400 group-hover:text-primary-700 transition-colors">
                     {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className={`text-sm font-semibold ${getScoreColorClass(d.global_score)}`}>
+                    <span className={`text-sm font-bold ${getScoreColorClass(d.global_score)}`}>
                       {d.global_score}/100
                     </span>
-                    <Icon name="chevron-right" size={16} strokeWidth={2} className="text-slate-300 group-hover:text-primary-400 transition-colors" />
+                    <Icon name="chevron-right" size={16} strokeWidth={2} className="text-grey-300 group-hover:text-primary-400 transition-colors" />
                   </div>
                 </Link>
               ))}

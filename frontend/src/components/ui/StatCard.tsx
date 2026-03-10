@@ -4,9 +4,9 @@ import Card from './Card.tsx'
 
 const colorMap = {
   primary: { text: 'text-primary-700', bg: 'bg-primary-50 ring-1 ring-primary-700/10' },
-  emerald: { text: 'text-emerald-600', bg: 'bg-emerald-50 ring-1 ring-emerald-600/10' },
-  amber: { text: 'text-amber-600', bg: 'bg-amber-50 ring-1 ring-amber-600/10' },
-  rose: { text: 'text-rose-600', bg: 'bg-rose-50 ring-1 ring-rose-600/10' },
+  emerald: { text: 'text-[#168741]', bg: 'bg-[#e8f3ec] ring-1 ring-[#168741]/10' },
+  amber: { text: 'text-[#c97612]', bg: 'bg-accent-yellow-bg ring-1 ring-accent-yellow-dark/10' },
+  rose: { text: 'text-[#d9304c]', bg: 'bg-[#ffeef1] ring-1 ring-[#d9304c]/10' },
 } as const
 
 interface StatCardProps {
@@ -26,7 +26,7 @@ export default function StatCard({ icon, value, label, color }: StatCardProps) {
       </div>
       <div>
         <div className={`text-2xl font-bold ${text}`}>{value}</div>
-        <div className="text-sm text-slate-500">{label}</div>
+        <div className="text-sm text-grey-400">{label}</div>
       </div>
     </Card>
   )

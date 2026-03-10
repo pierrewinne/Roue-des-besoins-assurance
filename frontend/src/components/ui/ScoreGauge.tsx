@@ -37,7 +37,7 @@ export default function ScoreGauge({ score, size = 160 }: ScoreGaugeProps) {
       </svg>
       <div className="absolute flex flex-col items-center">
         <span className="text-4xl font-bold tracking-tight" style={{ color }}>{score}</span>
-        <span className="text-slate-400 text-xs font-medium">/100</span>
+        <span className="text-grey-300 text-xs font-bold">/100</span>
       </div>
     </div>
   )

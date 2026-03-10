@@ -45,8 +45,8 @@ export default function QuestionnaireShell({ answers, onAnswer, onComplete, side
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-card p-8">
-            <h2 className="text-lg font-semibold text-slate-900 mb-8">{BLOCK_LABELS[currentBlock]}</h2>
+          <div className="bg-white rounded-xl shadow-card p-8">
+            <h2 className="text-lg font-bold text-primary-700 mb-8">{BLOCK_LABELS[currentBlock]}</h2>
             <div className="space-y-7">
               {visibleQuestions.map(q => (
                 <QuestionField
@@ -58,7 +58,7 @@ export default function QuestionnaireShell({ answers, onAnswer, onComplete, side
               ))}
             </div>
 
-            <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">
+            <div className="flex justify-between mt-10 pt-6 border-t border-grey-100">
               <Button
                 variant="outline"
                 onClick={handlePrev}

@@ -55,8 +55,8 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('PDF generation failed:', err)
+    } catch {
+      console.error('PDF generation failed')
     } finally {
       setGenerating(false)
     }

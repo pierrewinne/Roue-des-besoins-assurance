@@ -16,8 +16,8 @@ export default function ActionList({ actions, showType = false }: ActionListProp
         <EmptyState
           icon="check-circle"
           description="Aucune action recommandée pour le moment."
-          iconColor="text-emerald-600"
-          iconBg="bg-emerald-50 ring-1 ring-emerald-600/10"
+          iconColor="text-[#168741]"
+          iconBg="bg-[#e8f3ec] ring-1 ring-[#168741]/10"
         />
       </Card>
     )
@@ -26,11 +26,11 @@ export default function ActionList({ actions, showType = false }: ActionListProp
   return (
     <div className="space-y-3">
       {actions.map((action, i) => (
-        <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-card p-5 transition-all duration-200 hover:shadow-card-hover">
+        <div key={i} className="bg-white rounded-xl shadow-card p-5 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] hover:shadow-card-hover hover:-translate-y-0.5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h4 className="font-semibold text-slate-900 text-sm">{action.title}</h4>
+                <h4 className="font-bold text-primary-700 text-sm">{action.title}</h4>
                 <Badge color="blue">{UNIVERSE_SHORT_LABELS[action.universe as keyof typeof UNIVERSE_SHORT_LABELS]}</Badge>
                 {showType && (
                   <Badge color={action.type === 'immediate' ? 'red' : action.type === 'deferred' ? 'orange' : 'gray'}>
@@ -38,9 +38,9 @@ export default function ActionList({ actions, showType = false }: ActionListProp
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-slate-500 leading-relaxed">{action.description}</p>
+              <p className="text-sm text-grey-400 leading-relaxed">{action.description}</p>
               {action.productName && (
-                <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
+                <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
                   {action.productName}
                 </span>
               )}
@@ -50,7 +50,7 @@ export default function ActionList({ actions, showType = false }: ActionListProp
                 <div
                   key={j}
                   className={`w-1.5 h-5 rounded-full transition-colors ${
-                    j < action.priority ? 'bg-rose-400' : 'bg-slate-100'
+                    j < action.priority ? 'bg-[#d9304c]' : 'bg-grey-100'
                   }`}
                 />
               ))}

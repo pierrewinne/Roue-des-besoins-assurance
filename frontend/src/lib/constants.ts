@@ -70,7 +70,7 @@ export const ACTION_TYPE_LABELS = {
 export type Universe = keyof typeof UNIVERSE_LABELS
 
 export function getScoreColorClass(score: number): string {
-  if (score <= 25) return 'text-emerald-600'
-  if (score <= 50) return 'text-amber-600'
-  return 'text-rose-600'
+  if (score <= 25) return 'text-[#168741]'
+  if (score <= 50) return 'text-[#c97612]'
+  return 'text-[#d9304c]'
 }
