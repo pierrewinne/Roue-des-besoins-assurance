@@ -14,7 +14,7 @@ export interface Question {
   type: QuestionType
   options?: QuestionOption[]
   required: boolean
-  dependsOn?: { questionId: string; values: (string | boolean | number)[] }
+  dependsOn?: { questionId: string; values?: (string | boolean | number)[]; operator?: 'gt' | 'gte'; value?: number }
 }
 
 export const BLOCK_LABELS: Record<QuestionBlock, string> = {
@@ -161,7 +161,7 @@ export const QUESTIONS: Question[] = [
     label: 'Quel est le type principal de v\u00e9hicule ?',
     type: 'select',
     required: true,
-    dependsOn: { questionId: 'vehicleCount', values: [1, 2, 3, 4, 5] },
+    dependsOn: { questionId: 'vehicleCount', operator: 'gt', value: 0 },
     options: [
       { value: 'car', label: 'Voiture particuli\u00e8re' },
       { value: 'utility', label: 'Utilitaire' },
@@ -174,7 +174,7 @@ export const QUESTIONS: Question[] = [
     label: 'Quel est l\'\u00e2ge de votre v\u00e9hicule principal (en ann\u00e9es) ?',
     type: 'number',
     required: true,
-    dependsOn: { questionId: 'vehicleCount', values: [1, 2, 3, 4, 5] },
+    dependsOn: { questionId: 'vehicleCount', operator: 'gt', value: 0 },
   },
   {
     id: 'vehicleUsage',
@@ -182,7 +182,7 @@ export const QUESTIONS: Question[] = [
     label: 'Quelle est l\'utilisation de votre v\u00e9hicule ?',
     type: 'select',
     required: true,
-    dependsOn: { questionId: 'vehicleCount', values: [1, 2, 3, 4, 5] },
+    dependsOn: { questionId: 'vehicleCount', operator: 'gt', value: 0 },
     options: [
       { value: 'daily', label: 'Quotidien' },
       { value: 'occasional', label: 'Occasionnel' },
@@ -194,7 +194,7 @@ export const QUESTIONS: Question[] = [
     label: 'Quel est votre niveau de couverture auto actuel ?',
     type: 'select',
     required: true,
-    dependsOn: { questionId: 'vehicleCount', values: [1, 2, 3, 4, 5] },
+    dependsOn: { questionId: 'vehicleCount', operator: 'gt', value: 0 },
     options: [
       { value: 'none', label: 'Aucune assurance' },
       { value: 'rc', label: 'RC uniquement (au tiers)' },
@@ -288,5 +288,7 @@ export function getBlockQuestions(block: QuestionBlock): Question[] {
 export function isQuestionVisible(question: Question, answers: Record<string, unknown>): boolean {
   if (!question.dependsOn) return true
   const depValue = answers[question.dependsOn.questionId]
-  return question.dependsOn.values.includes(depValue as string | boolean | number)
+  if (question.dependsOn.operator === 'gt') return typeof depValue === 'number' && depValue > (question.dependsOn.value ?? 0)
+  if (question.dependsOn.operator === 'gte') return typeof depValue === 'number' && depValue >= (question.dependsOn.value ?? 0)
+  return question.dependsOn.values?.includes(depValue as string | boolean | number) ?? false
 }

@@ -66,6 +66,8 @@ function computePrevoyanceScore(answers: Answers): UniverseScore {
   if ((ageRange === '30-40' || ageRange === '40-50') && familyStatus === 'family') exposure = 2
   const lifeEvent = answers.lifeEvent as string | undefined
   if (lifeEvent === 'birth' || lifeEvent === 'marriage') exposure = Math.min(exposure + 0.5, 2)
+  const incomeRange = answers.incomeRange as string | undefined
+  if (incomeRange === 'less-2k') exposure = Math.min(exposure + 0.5, 2)
 
   // Coverage
   let coverage = 2
@@ -122,6 +124,8 @@ function computeWeightings(answers: Answers, scores: Record<Universe, UniverseSc
 
   const familyStatus = answers.familyStatus as string | undefined
   if (familyStatus === 'family') weights.prevoyance = 40
+  const incomeRange = answers.incomeRange as string | undefined
+  if (incomeRange === '6k-10k' || incomeRange === '10k+') weights.objets_valeur = 15
 
   // Normalize to 100
   const total = Object.values(weights).reduce((s, w) => s + w, 0)
