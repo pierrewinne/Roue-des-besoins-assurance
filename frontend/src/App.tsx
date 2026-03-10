@@ -19,6 +19,8 @@ const ResultsPage = lazy(() => import('./pages/client/ResultsPage.tsx'))
 const AdvisorLayout = lazy(() => import('./components/layout/AdvisorLayout.tsx'))
 const AdvisorDashboard = lazy(() => import('./pages/advisor/AdvisorDashboard.tsx'))
 const ClientDetailPage = lazy(() => import('./pages/advisor/ClientDetailPage.tsx'))
+const ProfilPage = lazy(() => import('./pages/client/ProfilPage.tsx'))
+const UniverseQuestionnairePage = lazy(() => import('./pages/client/UniverseQuestionnairePage.tsx'))
 const NotFoundPage = lazy(() => import('./pages/shared/NotFoundPage.tsx'))
 
 function AuthRedirect() {
@@ -46,6 +48,8 @@ export default function App() {
             <Route element={<ClientLayout />}>
               <Route path="/dashboard" element={<ClientDashboard />} />
               <Route path="/questionnaire" element={<QuestionnairePage />} />
+              <Route path="/questionnaire/profil" element={<ProfilPage />} />
+              <Route path="/questionnaire/:universe" element={<UniverseQuestionnairePage />} />
               <Route path="/results/:diagnosticId" element={<ResultsPage />} />
             </Route>
           </Route>

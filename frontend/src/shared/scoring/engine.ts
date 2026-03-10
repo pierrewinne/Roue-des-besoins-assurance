@@ -134,6 +134,15 @@ function computeWeightings(answers: Answers, scores: Record<Universe, UniverseSc
   return weights
 }
 
+export function computeUniverseScore(universe: Universe, answers: Answers): UniverseScore {
+  switch (universe) {
+    case 'auto': return computeAutoScore(answers)
+    case 'habitation': return computeHabitationScore(answers)
+    case 'prevoyance': return computePrevoyanceScore(answers)
+    case 'objets_valeur': return computeObjetsValeurScore(answers)
+  }
+}
+
 export function computeDiagnostic(answers: Answers): DiagnosticResult {
   const universeScores: Record<Universe, UniverseScore> = {
     auto: computeAutoScore(answers),

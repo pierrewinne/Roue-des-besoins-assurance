@@ -252,4 +252,18 @@ body {
     transform: none !important;
     transition: none !important;
   }
+
+  .dw-segment-active {
+    animation: none;
+  }
+}
+
+/* Diagnostic wheel animations */
+@keyframes dw-pulse {
+  0%, 100% { opacity: 0.20; }
+  50% { opacity: 0.40; }
+}
+
+.dw-segment-active {
+  animation: dw-pulse 3s ease-in-out infinite;
 }

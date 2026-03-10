@@ -74,3 +74,36 @@ export function getScoreColorClass(score: number): string {
   if (score <= 50) return 'text-[#c97612]'
   return 'text-[#d9304c]'
 }
+
+/* ─── Trivial Pursuit Wheel Config ─── */
+
+export const UNIVERSE_WHEEL_LABELS: Record<Universe, { lines: [string, string]; subtitle: string }> = {
+  auto: { lines: ['Vos', 'deplacements'], subtitle: '~2 min' },
+  habitation: { lines: ['Votre', 'logement'], subtitle: '~2 min' },
+  prevoyance: { lines: ['Votre', 'famille'], subtitle: '~1 min' },
+  objets_valeur: { lines: ['Vos biens', 'precieux'], subtitle: '~2 min' },
+} as const
+
+export const UNIVERSE_WHEEL_COLORS: Record<Universe, { base: string; light: string; dark: string; glow: string }> = {
+  auto: { base: '#293485', light: '#3d4691', dark: '#1a2260', glow: 'rgba(41, 52, 133, 0.30)' },
+  habitation: { base: '#0014aa', light: '#0029d4', dark: '#000d6e', glow: 'rgba(0, 20, 170, 0.30)' },
+  prevoyance: { base: '#00b28f', light: '#2dd4bf', dark: '#008a6e', glow: 'rgba(0, 178, 143, 0.30)' },
+  objets_valeur: { base: '#9f52cc', light: '#b87ee6', dark: '#7b3da3', glow: 'rgba(159, 82, 204, 0.30)' },
+} as const
+
+export const UNIVERSE_ICONS: Record<Universe, 'car' | 'home' | 'shield' | 'trending-up'> = {
+  auto: 'car',
+  habitation: 'home',
+  prevoyance: 'shield',
+  objets_valeur: 'trending-up',
+} as const
+
+export const UNIVERSE_ORDER: Universe[] = ['prevoyance', 'habitation', 'objets_valeur', 'auto']
+
+// Angles for each universe on the wheel (clockwise from top)
+export const UNIVERSE_ANGLES: Record<Universe, number> = {
+  prevoyance: 0,
+  habitation: 90,
+  objets_valeur: 180,
+  auto: 270,
+} as const
