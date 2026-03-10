@@ -1,0 +1,23 @@
+{
+  "name": "roue-des-besoins-video",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render MotionDesignVideo out/video.mp4",
+    "render:4k": "remotion render MotionDesignVideo out/video-4k.mp4 --width=3840 --height=2160",
+    "render:square": "remotion render MotionDesignVideo out/video-square.mp4 --width=1080 --height=1080",
+    "preview": "remotion preview"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.242",
+    "@remotion/player": "4.0.242",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.242"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.5.0"
+  }
+}
