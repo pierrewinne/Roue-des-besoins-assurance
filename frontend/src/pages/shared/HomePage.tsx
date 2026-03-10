@@ -13,7 +13,7 @@ const universeDetails = [
     label: 'Protection des personnes',
     product: 'Bsafe',
     icon: 'shield-check' as const,
-    color: '#0014aa',
+    color: '#3B82F6',
     desc: 'Hospitalisation, incapacité de travail, décès : sécurisez votre famille contre les aléas de la vie.',
     covers: ['Hospitalisation & soins', 'Incapacité de travail', 'Décès & capital survivant', 'Accidents de la vie'],
   },
@@ -22,7 +22,7 @@ const universeDetails = [
     label: 'Protection des biens',
     product: 'Home',
     icon: 'home' as const,
-    color: '#293485',
+    color: '#8B5CF6',
     desc: 'Habitation, contenu, responsabilité civile : protégez votre patrimoine immobilier et mobilier.',
     covers: ['Habitation & bâtiment', 'Contenu & mobilier', 'Responsabilité civile', 'Dégâts naturels'],
   },
@@ -31,7 +31,7 @@ const universeDetails = [
     label: 'Protection du futur',
     product: 'Pension Plan',
     icon: 'gift' as const,
-    color: '#3d4691',
+    color: '#14B8A6',
     desc: 'Épargne, retraite, prévoyance fiscale : préparez l\'avenir sereinement avec les solutions Baloise.',
     covers: ['Épargne-pension', 'Assurance vie', 'Prévoyance fiscale', 'Capital retraite'],
   },
@@ -40,7 +40,7 @@ const universeDetails = [
     label: 'Protection des projets',
     product: 'Drive',
     icon: 'car' as const,
-    color: '#656ea8',
+    color: '#F59E0B',
     desc: 'Véhicule, mobilité, assistance : roulez l\'esprit tranquille avec une couverture complète.',
     covers: ['RC auto obligatoire', 'Omnium / mini-omnium', 'Assistance 24/7', 'Protection juridique'],
   },
@@ -172,7 +172,7 @@ export default function HomePage() {
               {/* RIGHT: Wheel + Detail panel */}
               <div className="reveal flex flex-col items-center" style={{ transitionDelay: '200ms' }}>
                 {/* Wheel container */}
-                <div className="relative w-full max-w-[480px] mx-auto">
+                <div className="relative w-full max-w-[480px] mx-auto px-6 sm:px-0">
                   {/* Ambient glow behind wheel - reacts to active segment */}
                   <div
                     className="absolute inset-0 scale-[1.3] rounded-full pointer-events-none wheel-ambient-glow"
@@ -265,7 +265,7 @@ export default function HomePage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-10">
+          <div className="grid md:grid-cols-3 gap-2 md:gap-6 lg:gap-10">
             {steps.map((step, i) => (
               <div
                 key={step.num}
@@ -276,7 +276,7 @@ export default function HomePage() {
                 {i < steps.length - 1 && (
                   <div className="hidden md:block absolute top-8 left-[calc(50%+36px)] right-[calc(-50%+36px)] h-px bg-gradient-to-r from-primary-100 to-transparent" />
                 )}
-                <div className="text-center px-4 py-6">
+                <div className="text-center px-4 py-3 md:py-6">
                   <span className="text-xs font-bold text-primary-200 tracking-widest mb-3 block">{step.num}</span>
                   <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center mx-auto mb-4 transition-colors duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] group-hover:bg-primary-100">
                     <Icon name={step.icon} size={20} strokeWidth={1.5} className="text-primary-700" />

@@ -1,6 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
 
@@ -118,7 +122,7 @@ body {
   50% { transform: translateY(-6px); }
 }
 .hero-wheel-float {
-  animation: hero-float 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: hero-float 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 /* Pulse dot in tag */
@@ -140,31 +144,28 @@ body {
    Interactive wheel — segment interactions
    ═══════════════════════════════════════════ */
 
-/* Segment group transitions */
-.wheel-segment {
-  transition: opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
+/* Premium segment group transitions */
+.wheel-segment-premium {
+  transition:
+    opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    filter 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
-/* Segment path hover/active transitions */
-.wheel-segment-path {
+/* Premium segment path transitions */
+.wheel-segment-path-premium {
   transition:
-    fill 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    fill-opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
     stroke 300ms cubic-bezier(0.25, 0.8, 0.5, 1),
     stroke-width 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
-/* Hover: brighten segment slightly (only when no segment is active or hovering own) */
-.wheel-segment:hover .wheel-segment-path {
-  fill: rgba(255,255,255,0.12);
-}
-
-/* Active segment glow pulse */
+/* Active segment glow pulse — slower, more premium */
 @keyframes wheel-glow-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
 }
 .wheel-segment-glow {
-  animation: wheel-glow-pulse 3s ease-in-out infinite;
+  animation: wheel-glow-pulse 4s ease-in-out infinite;
 }
 
 /* Ambient glow behind entire wheel */
@@ -229,8 +230,8 @@ body {
   }
   .hero-wheel-float { transform: none; }
 
-  .wheel-segment,
-  .wheel-segment-path,
+  .wheel-segment-premium,
+  .wheel-segment-path-premium,
   .wheel-ambient-glow,
   .wheel-detail-panel {
     transition: none !important;
