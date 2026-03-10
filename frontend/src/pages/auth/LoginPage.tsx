@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../../components/ui/Button.tsx'
-import Card from '../../components/ui/Card.tsx'
+import Input from '../../components/ui/Input.tsx'
+import Icon from '../../components/ui/Icon.tsx'
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'client' | 'advisor'>('client')
@@ -48,122 +49,122 @@ export default function LoginPage() {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="max-w-md w-full text-center">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-green-600 text-xl">{'\u2713'}</span>
+      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-elevated border border-slate-200 p-8 text-center">
+          <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-emerald-600/10">
+            <Icon name="check" size={28} strokeWidth={2} className="text-emerald-600" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">V\u00e9rifiez votre bo\u00eete mail</h2>
-          <p className="text-gray-600 mb-4">
-            Un lien de connexion a \u00e9t\u00e9 envoy\u00e9 \u00e0 <strong>{email}</strong>.
-            Cliquez sur le lien pour acc\u00e9der \u00e0 votre espace.
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">V&eacute;rifiez votre bo&icirc;te mail</h2>
+          <p className="text-slate-500 mb-6 text-sm leading-relaxed">
+            Un lien de connexion a été envoyé à <span className="font-medium text-slate-700">{email}</span>.
+            Cliquez sur le lien pour accéder à votre espace.
           </p>
-          <Button variant="ghost" onClick={() => setMagicLinkSent(false)}>
+          <button
+            onClick={() => setMagicLinkSent(false)}
+            className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
+          >
             Utiliser une autre adresse
-          </Button>
-        </Card>
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-lg">RB</span>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+      <div className="max-w-[420px] w-full">
+        <div className="text-center mb-10">
+          <div className="w-14 h-14 bg-primary-700 rounded-xl flex items-center justify-center mx-auto mb-5">
+            <span className="text-white font-bold text-xl">RB</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Roue des Besoins</h1>
-          <p className="text-gray-500 mt-1">Diagnostic assurance personnalis\u00e9</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Roue des Besoins</h1>
+          <p className="text-slate-500 mt-2 text-sm">Diagnostic assurance personnalisé</p>
         </div>
 
-        <div className="flex rounded-lg border border-gray-200 mb-6 overflow-hidden">
+        <div className="flex rounded-lg bg-slate-100 p-1 mb-8">
           <button
             onClick={() => { setMode('client'); setAuthMode('login') }}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'client' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              mode === 'client'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
           >
             Client
           </button>
           <button
             onClick={() => { setMode('advisor'); setAuthMode('login') }}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'advisor' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              mode === 'advisor'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
           >
             Conseiller
           </button>
         </div>
 
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white rounded-xl shadow-elevated border border-slate-200 p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg">{error}</div>
+              <div className="p-3 bg-rose-50 text-rose-700 text-sm rounded-lg ring-1 ring-rose-600/10">
+                {error}
+              </div>
             )}
 
             {authMode === 'signup' && (
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pr\u00e9nom</label>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={e => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={e => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <Input label="Prénom" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                <Input label="Nom" type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="votre@email.com"
-              />
-            </div>
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              placeholder="votre@email.com"
+            />
 
             {(mode === 'advisor' || authMode === 'signup') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
-                />
-              </div>
+              <Input
+                label="Mot de passe"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
             )}
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
               {isSubmitting ? 'Chargement...' :
                 mode === 'client' && authMode === 'login' ? 'Recevoir le lien de connexion' :
-                authMode === 'signup' ? 'Cr\u00e9er un compte' : 'Se connecter'}
+                authMode === 'signup' ? 'Créer un compte' : 'Se connecter'}
             </Button>
 
-            <div className="text-center">
+            <div className="text-center pt-1">
               <button
                 type="button"
                 onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                className="text-sm text-blue-600 hover:text-blue-700"
+                className="text-sm font-medium text-primary-700 hover:text-primary-600 transition-colors"
               >
-                {authMode === 'login' ? 'Cr\u00e9er un compte' : 'J\'ai d\u00e9j\u00e0 un compte'}
+                {authMode === 'login' ? 'Créer un compte' : 'J\'ai déjà un compte'}
               </button>
             </div>
           </form>
-        </Card>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-4 text-xs text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <Icon name="lock" size={14} strokeWidth={2} />
+            Connexion sécurisée
+          </span>
+          <span className="text-slate-300">&middot;</span>
+          <span>Données confidentielles</span>
+        </div>
       </div>
     </div>
   )

@@ -1,26 +1,15 @@
 import type { UniverseScore } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 import Badge from '../ui/Badge.tsx'
+import Icon from '../ui/Icon.tsx'
+import type { IconName } from '../ui/Icon.tsx'
+import { UNIVERSE_LABELS, NEED_BADGE_LABELS, NEED_BADGE_COLORS, NEED_MESSAGES } from '../../lib/constants.ts'
 
-const UNIVERSE_LABELS: Record<string, string> = {
-  auto: 'Auto / Mobilité',
-  habitation: 'Habitation / Propriétaire',
-  prevoyance: 'Prévoyance',
-  objets_valeur: 'Objets de valeur',
-}
-
-const NEED_BADGE_COLOR: Record<string, 'green' | 'orange' | 'red'> = {
-  low: 'green',
-  moderate: 'orange',
-  high: 'red',
-  critical: 'red',
-}
-
-const NEED_MESSAGES: Record<string, string> = {
-  low: 'Votre protection est adaptée à votre situation.',
-  moderate: 'Quelques améliorations pourraient renforcer votre couverture.',
-  high: 'Des lacunes ont été identifiées dans votre couverture.',
-  critical: 'Votre couverture est insuffisante. Une action rapide est recommandée.',
+const UNIVERSE_ICONS: Record<string, IconName> = {
+  auto: 'car',
+  habitation: 'home',
+  prevoyance: 'shield-check',
+  objets_valeur: 'gift',
 }
 
 interface UniverseCardProps {
@@ -33,43 +22,48 @@ export default function UniverseCard({ universe, score, showDetails = false }: U
   if (!score.active) return null
 
   const color = getNeedColor(score.needLevel)
-  const badgeColor = NEED_BADGE_COLOR[score.needLevel]
+  const badgeColor = NEED_BADGE_COLORS[score.needLevel]
+  const iconName = UNIVERSE_ICONS[universe]
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-card p-5 transition-all duration-200 hover:shadow-card-hover">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-          <h3 className="font-semibold text-gray-900">{UNIVERSE_LABELS[universe]}</h3>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}12` }}>
+            {iconName && <Icon name={iconName} size={20} style={{ color }} />}
+          </div>
+          <h3 className="font-semibold text-slate-900 text-sm">{UNIVERSE_LABELS[universe as keyof typeof UNIVERSE_LABELS]}</h3>
         </div>
         <Badge color={badgeColor}>
-          {score.needLevel === 'low' ? 'Bien couvert' :
-           score.needLevel === 'moderate' ? 'À améliorer' :
-           'Action requise'}
+          {NEED_BADGE_LABELS[score.needLevel]}
         </Badge>
       </div>
 
-      <p className="text-sm text-gray-600 mb-3">{NEED_MESSAGES[score.needLevel]}</p>
+      <p className="text-sm text-slate-500 leading-relaxed">{NEED_MESSAGES[score.needLevel as keyof typeof NEED_MESSAGES]}</p>
 
       {showDetails && (
-        <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Exposition au risque</span>
-            <span className="font-medium">{Math.round(score.exposure)}%</span>
+        <div className="mt-5 pt-5 border-t border-slate-100 space-y-4">
+          <div>
+            <div className="flex justify-between text-sm mb-1.5">
+              <span className="text-slate-500">Exposition au risque</span>
+              <span className="font-medium text-slate-700">{Math.round(score.exposure)}%</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2">
+              <div className="bg-amber-400 h-2 rounded-full transition-all duration-500" style={{ width: `${score.exposure}%` }} />
+            </div>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5">
-            <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: `${score.exposure}%` }} />
+          <div>
+            <div className="flex justify-between text-sm mb-1.5">
+              <span className="text-slate-500">Niveau de couverture</span>
+              <span className="font-medium text-slate-700">{Math.round(score.coverage)}%</span>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2">
+              <div className="bg-primary-400 h-2 rounded-full transition-all duration-500" style={{ width: `${score.coverage}%` }} />
+            </div>
           </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-gray-500">Niveau de couverture</span>
-            <span className="font-medium">{Math.round(score.coverage)}%</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5">
-            <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: `${score.coverage}%` }} />
-          </div>
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-gray-500">Score de besoin</span>
-            <span className="font-semibold" style={{ color }}>{score.needScore}/100</span>
+          <div className="flex justify-between items-center pt-1">
+            <span className="text-sm text-slate-500">Score de besoin</span>
+            <span className="text-lg font-bold" style={{ color }}>{score.needScore}/100</span>
           </div>
         </div>
       )}

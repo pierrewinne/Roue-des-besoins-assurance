@@ -4,6 +4,11 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import { supabase } from '../../lib/supabase.ts'
 import Card from '../../components/ui/Card.tsx'
 import Badge from '../../components/ui/Badge.tsx'
+import PageHeader from '../../components/ui/PageHeader.tsx'
+import StatCard from '../../components/ui/StatCard.tsx'
+import Input from '../../components/ui/Input.tsx'
+import Icon from '../../components/ui/Icon.tsx'
+import EmptyState from '../../components/ui/EmptyState.tsx'
 
 interface ClientRow {
   client_id: string
@@ -62,57 +67,53 @@ export default function AdvisorDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord conseiller</h1>
-        <p className="text-gray-500 mt-1">Gérez vos clients et suivez leurs diagnostics.</p>
-      </div>
+      <PageHeader
+        title="Tableau de bord conseiller"
+        subtitle="Gérez vos clients et suivez leurs diagnostics."
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-blue-600">{clients.length}</div>
-          <div className="text-sm text-gray-500 mt-1">Clients</div>
-        </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-green-600">
-            {clients.filter(c => c.latest_diagnostic).length}
-          </div>
-          <div className="text-sm text-gray-500 mt-1">Diagnostics réalisés</div>
-        </Card>
-        <Card className="text-center">
-          <div className="text-3xl font-bold text-orange-500">
-            {clients.filter(c => c.latest_diagnostic && c.latest_diagnostic.global_score > 50).length}
-          </div>
-          <div className="text-sm text-gray-500 mt-1">Actions requises</div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        <StatCard icon="users" value={clients.length} label="Clients" color="indigo" />
+        <StatCard icon="badge-check" value={clients.filter(c => c.latest_diagnostic).length} label="Diagnostics réalisés" color="emerald" />
+        <StatCard icon="alert-triangle" value={clients.filter(c => c.latest_diagnostic && c.latest_diagnostic.global_score > 50).length} label="Actions requises" color="amber" />
       </div>
 
       <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Mes clients</h2>
-          <input
-            type="text"
-            placeholder="Rechercher un client..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-          />
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-slate-900">Mes clients</h2>
+          <div className="w-72">
+            <Input
+              type="text"
+              placeholder="Rechercher un client..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              icon={<Icon name="search" size={16} strokeWidth={2} />}
+            />
+          </div>
         </div>
 
         {filtered.length === 0 ? (
-          <p className="text-sm text-gray-500 py-4 text-center">Aucun client trouvé.</p>
+          <EmptyState icon="users" description="Aucun client trouvé." />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {filtered.map(client => (
               <Link
                 key={client.client_id}
                 to={`/advisor/clients/${client.client_id}`}
-                className="flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded-lg transition-colors"
+                className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-slate-50 rounded-lg transition-colors group"
               >
-                <div>
-                  <span className="font-medium text-gray-900">
-                    {client.profiles.first_name || ''} {client.profiles.last_name || ''}
-                  </span>
-                  <span className="text-sm text-gray-500 ml-2">{client.profiles.email}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-semibold text-slate-500">
+                      {(client.profiles.first_name?.[0] || '?').toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-slate-900 text-sm">
+                      {client.profiles.first_name || ''} {client.profiles.last_name || ''}
+                    </span>
+                    <span className="text-sm text-slate-400 ml-2">{client.profiles.email}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-3">
                   {client.latest_diagnostic ? (
@@ -120,13 +121,14 @@ export default function AdvisorDashboard() {
                       <Badge color={client.latest_diagnostic.global_score <= 25 ? 'green' : client.latest_diagnostic.global_score <= 50 ? 'orange' : 'red'}>
                         Score: {client.latest_diagnostic.global_score}
                       </Badge>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-slate-400">
                         {new Date(client.latest_diagnostic.created_at).toLocaleDateString('fr-FR')}
                       </span>
                     </>
                   ) : (
                     <Badge color="gray">Pas de diagnostic</Badge>
                   )}
+                  <Icon name="chevron-right" size={16} strokeWidth={2} className="text-slate-300 group-hover:text-primary-400 transition-colors" />
                 </div>
               </Link>
             ))}

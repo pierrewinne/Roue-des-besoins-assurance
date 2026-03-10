@@ -1,12 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
-  --color-green: #22c55e;
-  --color-orange: #f97316;
-  --color-red: #ef4444;
-  --color-blue: #3b82f6;
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Baloise-inspired deep navy primary */
+  --color-primary-50: #f0f1f7;
+  --color-primary-100: #e5e7f0;
+  --color-primary-200: #b3b6d4;
+  --color-primary-300: #656ea8;
+  --color-primary-400: #3d4691;
+  --color-primary-500: #293485;
+  --color-primary-600: #0014aa;
+  --color-primary-700: #000d6e;
+  --color-primary-800: #000a55;
+  --color-primary-900: #000739;
+  --color-primary-950: #000420;
+
+  /* Navy-tinted shadows */
+  --shadow-card: 0px 2px 5px 1px rgba(0, 7, 57, 0.08);
+  --shadow-card-hover: 0 0 12px 0 rgba(0, 7, 57, 0.13);
+  --shadow-elevated: 0 0 30px 0 rgba(0, 7, 57, 0.12);
+  --shadow-header: 0 1px 3px 0 rgba(0, 7, 57, 0.08);
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-white text-slate-900 antialiased;
+}
+
+::selection {
+  @apply bg-primary-100 text-primary-900;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
 }

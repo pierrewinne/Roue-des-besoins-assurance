@@ -6,6 +6,8 @@ import QuestionnaireShell from '../../components/questionnaire/QuestionnaireShel
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import Card from '../../components/ui/Card.tsx'
+import PageHeader from '../../components/ui/PageHeader.tsx'
+import EmptyState from '../../components/ui/EmptyState.tsx'
 import { computeDiagnostic } from '../../shared/scoring/engine.ts'
 
 type State = {
@@ -151,10 +153,10 @@ export default function QuestionnairePage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Mon diagnostic assurance</h1>
-        <p className="text-gray-500 mt-1">Répondez aux questions pour découvrir vos besoins.</p>
-      </div>
+      <PageHeader
+        title="Mon diagnostic assurance"
+        subtitle="Répondez aux questions pour découvrir vos besoins."
+      />
 
       <QuestionnaireShell
         answers={state.answers}
@@ -163,15 +165,16 @@ export default function QuestionnairePage() {
         sideContent={
           previewDiagnostic ? (
             <Card>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Aperçu en temps réel</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-4">Aperçu en temps réel</h3>
               <InsuranceWheel diagnostic={previewDiagnostic} size={220} showLabels={false} />
               <WheelLegend diagnostic={previewDiagnostic} />
             </Card>
           ) : (
             <Card>
-              <p className="text-sm text-gray-500 text-center py-4">
-                L'aperçu de votre roue des besoins apparaîtra ici au fur et à mesure de vos réponses.
-              </p>
+              <EmptyState
+                icon="chart-pie"
+                description="L'aperçu de votre roue des besoins apparaîtra ici au fur et à mesure de vos réponses."
+              />
             </Card>
           )
         }

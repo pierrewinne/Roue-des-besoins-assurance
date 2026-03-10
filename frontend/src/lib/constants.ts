@@ -5,18 +5,25 @@ export const UNIVERSE_LABELS = {
   objets_valeur: 'Objets de valeur',
 } as const
 
+export const UNIVERSE_SHORT_LABELS = {
+  auto: 'Auto',
+  habitation: 'Habitation',
+  prevoyance: 'Prévoyance',
+  objets_valeur: 'Objets',
+} as const
+
 export const UNIVERSE_COLORS = {
-  auto: '#3b82f6',
-  habitation: '#8b5cf6',
-  prevoyance: '#ec4899',
-  objets_valeur: '#f59e0b',
+  auto: '#293485',
+  habitation: '#656ea8',
+  prevoyance: '#0014aa',
+  objets_valeur: '#3d4691',
 } as const
 
 export const NEED_COLORS = {
-  low: '#22c55e',
-  moderate: '#f97316',
-  high: '#ef4444',
-  critical: '#ef4444',
+  low: '#168741',
+  moderate: '#c97612',
+  high: '#d9304c',
+  critical: '#99172d',
 } as const
 
 export const NEED_LABELS = {
@@ -26,4 +33,44 @@ export const NEED_LABELS = {
   critical: 'Besoin critique',
 } as const
 
+export const NEED_BADGE_LABELS = {
+  low: 'Bien couvert',
+  moderate: 'À améliorer',
+  high: 'Action requise',
+  critical: 'Action requise',
+} as const
+
+export const NEED_BADGE_COLORS = {
+  low: 'green',
+  moderate: 'orange',
+  high: 'red',
+  critical: 'red',
+} as const
+
+export const NEED_MESSAGES = {
+  low: 'Votre protection est adaptée à votre situation.',
+  moderate: 'Quelques améliorations pourraient renforcer votre couverture.',
+  high: 'Des lacunes ont été identifiées dans votre couverture.',
+  critical: 'Votre couverture est insuffisante. Une action rapide est recommandée.',
+} as const
+
+export const NEED_LEGEND_MESSAGES = {
+  low: 'Votre protection est adaptée',
+  moderate: 'Des améliorations sont possibles',
+  high: 'Action recommandée',
+  critical: 'Action recommandée',
+} as const
+
+export const ACTION_TYPE_LABELS = {
+  immediate: 'Action immédiate',
+  deferred: 'Action différée',
+  event: 'Événement de vie',
+} as const
+
 export type Universe = keyof typeof UNIVERSE_LABELS
+
+export function getScoreColorClass(score: number): string {
+  if (score <= 25) return 'text-emerald-600'
+  if (score <= 50) return 'text-amber-600'
+  return 'text-rose-600'
+}

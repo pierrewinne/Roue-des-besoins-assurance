@@ -4,6 +4,10 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import { supabase } from '../../lib/supabase.ts'
 import Button from '../../components/ui/Button.tsx'
 import Card from '../../components/ui/Card.tsx'
+import PageHeader from '../../components/ui/PageHeader.tsx'
+import Icon from '../../components/ui/Icon.tsx'
+import EmptyState from '../../components/ui/EmptyState.tsx'
+import { getScoreColorClass } from '../../lib/constants.ts'
 
 interface PastDiagnostic {
   id: string
@@ -38,53 +42,49 @@ export default function ClientDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Bonjour{profile?.first_name ? `, ${profile.first_name}` : ''} !
-        </h1>
-        <p className="text-gray-500 mt-1">Bienvenue dans votre espace diagnostic assurance.</p>
-      </div>
+      <PageHeader
+        title={`Bonjour${profile?.first_name ? `, ${profile.first_name}` : ''} !`}
+        subtitle="Bienvenue dans votre espace diagnostic assurance."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4">
-            <span className="text-2xl">🎯</span>
+          <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mb-5 ring-1 ring-primary-700/10">
+            <Icon name="badge-check" size={28} className="text-primary-700" />
           </div>
-          <h2 className="text-lg font-semibold mb-2">
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">
             {hasIncomplete ? 'Reprendre mon diagnostic' : 'Nouveau diagnostic'}
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed max-w-xs">
             {hasIncomplete
               ? 'Vous avez un questionnaire en cours. Reprenez là où vous vous êtes arrêté.'
               : 'Répondez à quelques questions pour découvrir vos besoins en assurance.'}
           </p>
-          <Button onClick={() => navigate('/questionnaire')}>
+          <Button onClick={() => navigate('/questionnaire')} size="lg">
             {hasIncomplete ? 'Reprendre' : 'Commencer'}
           </Button>
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold mb-4">Mes diagnostics</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-5">Mes diagnostics</h2>
           {diagnostics.length === 0 ? (
-            <p className="text-sm text-gray-500">Aucun diagnostic réalisé pour le moment.</p>
+            <EmptyState icon="document" description="Aucun diagnostic réalisé pour le moment." />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {diagnostics.map(d => (
                 <Link
                   key={d.id}
                   to={`/results/${d.id}`}
-                  className="block p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-lg border border-slate-100 hover:border-primary-200 hover:bg-primary-50/50 transition-all group"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
+                    {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm font-semibold ${getScoreColorClass(d.global_score)}`}>
+                      {d.global_score}/100
                     </span>
-                    <span className={`text-sm font-semibold ${
-                      d.global_score <= 25 ? 'text-green-600' :
-                      d.global_score <= 50 ? 'text-orange-500' : 'text-red-500'
-                    }`}>
-                      Score: {d.global_score}/100
-                    </span>
+                    <Icon name="chevron-right" size={16} strokeWidth={2} className="text-slate-300 group-hover:text-primary-400 transition-colors" />
                   </div>
                 </Link>
               ))}

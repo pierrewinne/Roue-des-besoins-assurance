@@ -1,49 +1,29 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
-
-const UNIVERSE_LABELS: Record<string, string> = {
-  auto: 'Auto / Mobilit\u00e9',
-  habitation: 'Habitation / Propri\u00e9taire',
-  prevoyance: 'Pr\u00e9voyance',
-  objets_valeur: 'Objets de valeur',
-}
-
-const NEED_COLORS: Record<string, string> = {
-  low: '#22c55e',
-  moderate: '#f97316',
-  high: '#ef4444',
-  critical: '#ef4444',
-}
-
-const NEED_MESSAGES: Record<string, string> = {
-  low: 'Votre protection est adapt\u00e9e \u00e0 votre situation.',
-  moderate: 'Quelques am\u00e9liorations pourraient renforcer votre couverture.',
-  high: 'Des lacunes ont \u00e9t\u00e9 identifi\u00e9es dans votre couverture.',
-  critical: 'Votre couverture est insuffisante. Une action rapide est recommand\u00e9e.',
-}
+import { UNIVERSE_LABELS, NEED_COLORS, NEED_MESSAGES } from '../../lib/constants.ts'
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: '#1f2937' },
-  header: { marginBottom: 30, borderBottom: '2 solid #3b82f6', paddingBottom: 15 },
-  title: { fontSize: 22, fontFamily: 'Helvetica-Bold', color: '#1e3a5f', marginBottom: 4 },
-  subtitle: { fontSize: 12, color: '#6b7280' },
-  date: { fontSize: 9, color: '#9ca3af', marginTop: 6 },
+  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: '#1e293b' },
+  header: { marginBottom: 30, borderBottom: '2 solid #000d6e', paddingBottom: 15 },
+  title: { fontSize: 22, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 4 },
+  subtitle: { fontSize: 12, color: '#64748b' },
+  date: { fontSize: 9, color: '#94a3b8', marginTop: 6 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#1e3a5f', marginBottom: 10, borderBottom: '1 solid #e5e7eb', paddingBottom: 6 },
-  globalScoreContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginVertical: 20, padding: 20, backgroundColor: '#f9fafb', borderRadius: 8 },
+  sectionTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 10, borderBottom: '1 solid #e2e8f0', paddingBottom: 6 },
+  globalScoreContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginVertical: 20, padding: 20, backgroundColor: '#f8fafc', borderRadius: 8 },
   globalScore: { fontSize: 48, fontFamily: 'Helvetica-Bold' },
-  globalScoreLabel: { fontSize: 12, color: '#6b7280', marginLeft: 8 },
-  globalScoreMessage: { fontSize: 11, color: '#4b5563', textAlign: 'center', marginTop: 8 },
+  globalScoreLabel: { fontSize: 12, color: '#64748b', marginLeft: 8 },
+  globalScoreMessage: { fontSize: 11, color: '#475569', textAlign: 'center', marginTop: 8 },
   wheelImage: { width: 280, height: 280, alignSelf: 'center', marginVertical: 15 },
-  universeRow: { flexDirection: 'row', marginBottom: 10, padding: 10, backgroundColor: '#f9fafb', borderRadius: 6 },
+  universeRow: { flexDirection: 'row', marginBottom: 10, padding: 10, backgroundColor: '#f8fafc', borderRadius: 6 },
   universeIndicator: { width: 10, height: 10, borderRadius: 5, marginRight: 10, marginTop: 2 },
   universeName: { fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
-  universeMessage: { fontSize: 9, color: '#6b7280' },
-  actionItem: { flexDirection: 'row', marginBottom: 8, padding: 8, backgroundColor: '#fef2f2', borderRadius: 4, borderLeft: '3 solid #ef4444' },
+  universeMessage: { fontSize: 9, color: '#64748b' },
+  actionItem: { flexDirection: 'row', marginBottom: 8, padding: 8, backgroundColor: '#fff1f2', borderRadius: 4, borderLeft: '3 solid #d9304c' },
   actionTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', marginBottom: 2 },
-  actionDesc: { fontSize: 9, color: '#4b5563' },
-  actionPriority: { fontSize: 8, color: '#ef4444', marginTop: 2 },
-  footer: { position: 'absolute', bottom: 25, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 8, color: '#9ca3af', borderTop: '1 solid #e5e7eb', paddingTop: 8 },
+  actionDesc: { fontSize: 9, color: '#475569' },
+  actionPriority: { fontSize: 8, color: '#d9304c', marginTop: 2 },
+  footer: { position: 'absolute', bottom: 25, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 8, color: '#94a3b8', borderTop: '1 solid #e2e8f0', paddingTop: 8 },
 })
 
 interface PdfClientReportProps {
@@ -112,7 +92,7 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri 
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Actions recommand\u00e9es</Text>
-            <Text style={{ fontSize: 9, color: '#6b7280', marginBottom: 12 }}>
+            <Text style={{ fontSize: 9, color: '#64748b', marginBottom: 12 }}>
               Voici les actions prioritaires identifi\u00e9es lors de votre diagnostic.
             </Text>
             {immediateActions.map((action, i) => (
@@ -128,9 +108,9 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri 
             ))}
           </View>
 
-          <View style={{ marginTop: 20, padding: 15, backgroundColor: '#eff6ff', borderRadius: 6 }}>
-            <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#1e40af', marginBottom: 6 }}>Prochaines \u00e9tapes</Text>
-            <Text style={{ fontSize: 9, color: '#3b82f6' }}>
+          <View style={{ marginTop: 20, padding: 15, backgroundColor: '#e5e7f0', borderRadius: 6 }}>
+            <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#000739', marginBottom: 6 }}>Prochaines \u00e9tapes</Text>
+            <Text style={{ fontSize: 9, color: '#000d6e' }}>
               1. Prenez contact avec votre conseiller pour discuter des recommandations{'\n'}
               2. Demandez des devis pour les couvertures identifi\u00e9es comme prioritaires{'\n'}
               3. Planifiez un bilan de suivi dans 6 mois

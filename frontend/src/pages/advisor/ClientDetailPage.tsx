@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.ts'
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
@@ -7,6 +7,10 @@ import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
 import ActionList from '../../components/diagnostic/ActionList.tsx'
 import PdfDownloadButton from '../../components/pdf/PdfDownloadButton.tsx'
 import Card from '../../components/ui/Card.tsx'
+import ScoreGauge from '../../components/ui/ScoreGauge.tsx'
+import PageHeader from '../../components/ui/PageHeader.tsx'
+import Spinner from '../../components/ui/Spinner.tsx'
+import EmptyState from '../../components/ui/EmptyState.tsx'
 import type { DiagnosticResult, UniverseScore, RecommendedAction, Universe } from '../../shared/scoring/types.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
@@ -88,84 +92,84 @@ export default function ClientDetailPage() {
   }, [clientId])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    )
+    return <Spinner />
   }
+
+  const subtitle = [clientProfile?.email, clientProfile?.phone].filter(Boolean).join(' · ')
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <Link to="/advisor" className="text-sm text-blue-600 hover:text-blue-700 mb-2 inline-block">
-            ← Retour au tableau de bord
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {clientProfile?.first_name} {clientProfile?.last_name}
-          </h1>
-          <p className="text-gray-500">{clientProfile?.email} {clientProfile?.phone ? `· ${clientProfile.phone}` : ''}</p>
-        </div>
-        {diagnostic && (
-          <PdfDownloadButton
-            diagnostic={diagnostic}
-            type="advisor"
-            clientName={`${clientProfile?.first_name || ''} ${clientProfile?.last_name || ''}`}
-            clientEmail={clientProfile?.email || undefined}
-            answers={answers}
-            wheelRef={wheelRef}
-          />
-        )}
-      </div>
+      <PageHeader
+        title={`${clientProfile?.first_name || ''} ${clientProfile?.last_name || ''}`}
+        subtitle={subtitle}
+        backLink={{ to: '/advisor', label: 'Retour au tableau de bord' }}
+        actions={
+          diagnostic ? (
+            <PdfDownloadButton
+              diagnostic={diagnostic}
+              type="advisor"
+              clientName={`${clientProfile?.first_name || ''} ${clientProfile?.last_name || ''}`}
+              clientEmail={clientProfile?.email || undefined}
+              answers={answers}
+              wheelRef={wheelRef}
+            />
+          ) : undefined
+        }
+      />
 
       {!diagnostic ? (
-        <Card className="text-center py-8">
-          <p className="text-gray-500">Ce client n'a pas encore réalisé de diagnostic.</p>
+        <Card>
+          <EmptyState
+            icon="document"
+            description="Ce client n'a pas encore réalisé de diagnostic."
+          />
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-5">
             <Card className="text-center">
-              <div className="mb-2">
-                <span className={`text-4xl font-bold ${
-                  diagnostic.globalScore <= 25 ? 'text-green-600' :
-                  diagnostic.globalScore <= 50 ? 'text-orange-500' : 'text-red-500'
-                }`}>{diagnostic.globalScore}</span>
-                <span className="text-gray-400 text-lg">/100</span>
+              <div className="mb-4">
+                <ScoreGauge score={diagnostic.globalScore} size={150} />
               </div>
-              <p className="text-xs text-gray-500 mb-4">Score global de besoin</p>
+              <p className="text-xs text-slate-500 mb-5">Score global de besoin</p>
               <div ref={wheelRef}>
                 <InsuranceWheel diagnostic={diagnostic} size={250} showLabels={false} />
               </div>
               <WheelLegend diagnostic={diagnostic} showScores />
             </Card>
 
-            <Card className="mt-4">
-              <h3 className="font-semibold text-sm text-gray-900 mb-3">Pondérations</h3>
-              {Object.entries(diagnostic.weightings).map(([key, weight]) => (
-                <div key={key} className="flex justify-between text-sm py-1">
-                  <span className="text-gray-500 capitalize">{key.replace('_', ' ')}</span>
-                  <span className="font-medium">{weight}%</span>
-                </div>
-              ))}
+            <Card>
+              <h3 className="font-semibold text-sm text-slate-900 mb-4">Pondérations</h3>
+              <div className="space-y-2.5">
+                {Object.entries(diagnostic.weightings).map(([key, weight]) => (
+                  <div key={key} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-500 capitalize">{key.replace('_', ' ')}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-slate-100 rounded-full h-1.5">
+                        <div className="bg-primary-400 h-1.5 rounded-full" style={{ width: `${weight}%` }} />
+                      </div>
+                      <span className="font-medium text-slate-700 tabular-nums w-8 text-right">{weight}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Analyse détaillée</h2>
+          <div className="lg:col-span-2 space-y-8">
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Analyse détaillée</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Object.entries(diagnostic.universeScores).map(([key, score]) => (
                   <UniverseCard key={key} universe={key} score={score} showDetails />
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Plan d'actions</h2>
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Plan d'actions</h2>
               <ActionList actions={diagnostic.actions} showType />
-            </div>
+            </section>
           </div>
         </div>
       )}

@@ -10,17 +10,17 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
   switch (question.type) {
     case 'boolean':
       return (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{question.label}</label>
-          {question.helpText && <p className="text-xs text-gray-500">{question.helpText}</p>}
+        <div className="space-y-2.5">
+          <label className="block text-sm font-medium text-slate-900">{question.label}</label>
+          {question.helpText && <p className="text-xs text-slate-500 leading-relaxed">{question.helpText}</p>}
           <div className="flex gap-3">
             <button
               type="button"
               onClick={() => onChange(true)}
-              className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-colors ${
+              className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
                 value === true
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  ? 'border-primary-700 bg-primary-50 text-primary-700'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
               }`}
             >
               Oui
@@ -28,10 +28,10 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
             <button
               type="button"
               onClick={() => onChange(false)}
-              className={`flex-1 py-3 px-4 rounded-lg border text-sm font-medium transition-colors ${
+              className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
                 value === false
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  ? 'border-primary-700 bg-primary-50 text-primary-700'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700'
               }`}
             >
               Non
@@ -42,19 +42,19 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
 
     case 'select':
       return (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{question.label}</label>
-          {question.helpText && <p className="text-xs text-gray-500">{question.helpText}</p>}
+        <div className="space-y-2.5">
+          <label className="block text-sm font-medium text-slate-900">{question.label}</label>
+          {question.helpText && <p className="text-xs text-slate-500 leading-relaxed">{question.helpText}</p>}
           <div className="grid gap-2">
             {question.options?.map(option => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => onChange(option.value)}
-                className={`w-full text-left py-3 px-4 rounded-lg border text-sm transition-colors ${
+                className={`w-full text-left py-3 px-4 rounded-lg border-2 text-sm transition-all duration-200 ${
                   value === option.value
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-primary-700 bg-primary-50 text-primary-700 font-medium'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
                 {option.label}
@@ -66,16 +66,16 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
 
     case 'number':
       return (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">{question.label}</label>
-          {question.helpText && <p className="text-xs text-gray-500">{question.helpText}</p>}
+        <div className="space-y-2.5">
+          <label className="block text-sm font-medium text-slate-900">{question.label}</label>
+          {question.helpText && <p className="text-xs text-slate-500 leading-relaxed">{question.helpText}</p>}
           <input
             type="number"
             min="0"
             max="99"
             value={typeof value === 'number' ? value : ''}
             onChange={e => onChange(e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-md text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-200/50 focus:border-primary-400 transition-all"
           />
         </div>
       )

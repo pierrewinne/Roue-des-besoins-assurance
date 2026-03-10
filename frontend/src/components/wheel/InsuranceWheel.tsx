@@ -37,8 +37,9 @@ function renderCustomLabel(props: PieLabelRenderProps) {
       fill={getNeedColor(needLevel)}
       textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
-      fontSize={12}
+      fontSize={11}
       fontWeight={600}
+      fontFamily="Inter, system-ui, sans-serif"
     >
       {name}
     </Text>
@@ -58,7 +59,7 @@ export default function InsuranceWheel({ diagnostic, size = 350, showLabels = tr
   }))
 
   if (data.length === 0) {
-    return <div className="text-center text-gray-500 py-8">Aucun univers actif</div>
+    return <div className="text-center text-slate-500 py-8">Aucun univers actif</div>
   }
 
   return (

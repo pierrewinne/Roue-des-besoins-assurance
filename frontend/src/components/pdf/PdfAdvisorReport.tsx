@@ -1,19 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, Universe } from '../../shared/scoring/types.ts'
-
-const UNIVERSE_LABELS: Record<string, string> = {
-  auto: 'Auto / Mobilit\u00e9',
-  habitation: 'Habitation / Propri\u00e9taire',
-  prevoyance: 'Pr\u00e9voyance',
-  objets_valeur: 'Objets de valeur',
-}
-
-const NEED_COLORS: Record<string, string> = {
-  low: '#22c55e',
-  moderate: '#f97316',
-  high: '#ef4444',
-  critical: '#ef4444',
-}
+import { UNIVERSE_LABELS, NEED_COLORS } from '../../lib/constants.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   immediate: 'Imm\u00e9diate',
@@ -22,26 +9,26 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 35, fontFamily: 'Helvetica', fontSize: 9, color: '#1f2937' },
-  header: { marginBottom: 20, borderBottom: '2 solid #1e3a5f', paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  title: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#1e3a5f' },
-  subtitle: { fontSize: 10, color: '#6b7280' },
-  badge: { backgroundColor: '#7c3aed', color: '#ffffff', padding: '3 8', borderRadius: 4, fontSize: 8 },
+  page: { padding: 35, fontFamily: 'Helvetica', fontSize: 9, color: '#1e293b' },
+  header: { marginBottom: 20, borderBottom: '2 solid #1e293b', paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  title: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#1e293b' },
+  subtitle: { fontSize: 10, color: '#64748b' },
+  badge: { backgroundColor: '#000d6e', color: '#ffffff', padding: '3 8', borderRadius: 4, fontSize: 8 },
   section: { marginBottom: 15 },
-  sectionTitle: { fontSize: 12, fontFamily: 'Helvetica-Bold', color: '#1e3a5f', marginBottom: 8, borderBottom: '1 solid #e5e7eb', paddingBottom: 4 },
+  sectionTitle: { fontSize: 12, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 8, borderBottom: '1 solid #e2e8f0', paddingBottom: 4 },
   row: { flexDirection: 'row', marginBottom: 4 },
-  label: { width: 160, fontSize: 9, color: '#6b7280' },
+  label: { width: 160, fontSize: 9, color: '#64748b' },
   value: { fontSize: 9, fontFamily: 'Helvetica-Bold' },
   table: { marginTop: 6 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f3f4f6', padding: '4 8', borderRadius: 3, marginBottom: 3 },
-  tableRow: { flexDirection: 'row', padding: '4 8', borderBottom: '0.5 solid #e5e7eb' },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f1f5f9', padding: '4 8', borderRadius: 3, marginBottom: 3 },
+  tableRow: { flexDirection: 'row', padding: '4 8', borderBottom: '0.5 solid #e2e8f0' },
   tableCell: { fontSize: 8 },
   wheelImage: { width: 240, height: 240, alignSelf: 'center', marginVertical: 10 },
   scoreBar: { height: 6, borderRadius: 3, marginTop: 2 },
-  scoreBarBg: { height: 6, borderRadius: 3, backgroundColor: '#e5e7eb', width: '100%' },
-  universeCard: { padding: 10, marginBottom: 8, backgroundColor: '#f9fafb', borderRadius: 6, borderLeft: '3 solid #3b82f6' },
-  actionItem: { padding: 8, marginBottom: 5, borderRadius: 4, borderLeft: '3 solid #ef4444', backgroundColor: '#fff' },
-  footer: { position: 'absolute', bottom: 20, left: 35, right: 35, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#9ca3af', borderTop: '0.5 solid #e5e7eb', paddingTop: 6 },
+  scoreBarBg: { height: 6, borderRadius: 3, backgroundColor: '#e2e8f0', width: '100%' },
+  universeCard: { padding: 10, marginBottom: 8, backgroundColor: '#f8fafc', borderRadius: 6, borderLeft: '3 solid #000d6e' },
+  actionItem: { padding: 8, marginBottom: 5, borderRadius: 4, borderLeft: '3 solid #d9304c', backgroundColor: '#fff' },
+  footer: { position: 'absolute', bottom: 20, left: 35, right: 35, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#94a3b8', borderTop: '0.5 solid #e2e8f0', paddingTop: 6 },
 })
 
 interface PdfAdvisorReportProps {
@@ -64,7 +51,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <View>
             <Text style={styles.title}>Rapport Diagnostic Assurance</Text>
             <Text style={styles.subtitle}>{clientName}{clientEmail ? ` \u2014 ${clientEmail}` : ''}</Text>
-            <Text style={{ fontSize: 8, color: '#9ca3af', marginTop: 3 }}>
+            <Text style={{ fontSize: 8, color: '#94a3b8', marginTop: 3 }}>
               {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
             </Text>
           </View>
@@ -74,21 +61,21 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Synth\u00e8se globale</Text>
           <View style={{ flexDirection: 'row', gap: 20, marginBottom: 10 }}>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f9fafb', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? '#22c55e' : diagnostic.globalScore <= 50 ? '#f97316' : '#ef4444' }}>
+            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? '#168741' : diagnostic.globalScore <= 50 ? '#c97612' : '#d9304c' }}>
                 {diagnostic.globalScore}
               </Text>
-              <Text style={{ fontSize: 8, color: '#6b7280' }}>Score global /100</Text>
+              <Text style={{ fontSize: 8, color: '#64748b' }}>Score global /100</Text>
             </View>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f9fafb', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#3b82f6' }}>{activeUniverses.length}</Text>
-              <Text style={{ fontSize: 8, color: '#6b7280' }}>Univers actifs /4</Text>
+            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#000d6e' }}>{activeUniverses.length}</Text>
+              <Text style={{ fontSize: 8, color: '#64748b' }}>Univers actifs /4</Text>
             </View>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f9fafb', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#ef4444' }}>
+            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#d9304c' }}>
                 {diagnostic.actions.filter(a => a.type === 'immediate').length}
               </Text>
-              <Text style={{ fontSize: 8, color: '#6b7280' }}>Actions imm\u00e9diates</Text>
+              <Text style={{ fontSize: 8, color: '#64748b' }}>Actions imm\u00e9diates</Text>
             </View>
           </View>
         </View>
@@ -141,7 +128,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                 <Text style={styles.value}>{Math.round(score.exposure)}%</Text>
               </View>
               <View style={styles.scoreBarBg}>
-                <View style={{ ...styles.scoreBar, width: `${score.exposure}%`, backgroundColor: '#f97316' }} />
+                <View style={{ ...styles.scoreBar, width: `${score.exposure}%`, backgroundColor: '#c97612' }} />
               </View>
 
               <View style={{ ...styles.row, marginTop: 6 }}>
@@ -149,7 +136,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                 <Text style={styles.value}>{Math.round(score.coverage)}%</Text>
               </View>
               <View style={styles.scoreBarBg}>
-                <View style={{ ...styles.scoreBar, width: `${score.coverage}%`, backgroundColor: '#3b82f6' }} />
+                <View style={{ ...styles.scoreBar, width: `${score.coverage}%`, backgroundColor: '#000d6e' }} />
               </View>
 
               <View style={{ ...styles.row, marginTop: 6 }}>
@@ -168,7 +155,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             <View style={styles.table}>
               {Object.entries(answers).map(([key, val]) => (
                 <View key={key} style={styles.tableRow}>
-                  <Text style={{ ...styles.tableCell, width: '40%', color: '#6b7280' }}>{key}</Text>
+                  <Text style={{ ...styles.tableCell, width: '40%', color: '#64748b' }}>{key}</Text>
                   <Text style={{ ...styles.tableCell, width: '60%' }}>{String(val)}</Text>
                 </View>
               ))}
@@ -193,17 +180,17 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               if (typeActions.length === 0) return null
               return (
                 <View key={type} style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#4b5563', marginBottom: 6 }}>
+                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#475569', marginBottom: 6 }}>
                     {TYPE_LABELS[type]} ({typeActions.length})
                   </Text>
                   {typeActions.map((action, i) => (
                     <View key={i} style={styles.actionItem}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{action.title}</Text>
-                        <Text style={{ fontSize: 8, color: '#6b7280' }}>{UNIVERSE_LABELS[action.universe]}</Text>
+                        <Text style={{ fontSize: 8, color: '#64748b' }}>{UNIVERSE_LABELS[action.universe]}</Text>
                       </View>
-                      <Text style={{ fontSize: 8, color: '#4b5563', marginTop: 2 }}>{action.description}</Text>
-                      <Text style={{ fontSize: 7, color: '#ef4444', marginTop: 2 }}>
+                      <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.description}</Text>
+                      <Text style={{ fontSize: 7, color: '#d9304c', marginTop: 2 }}>
                         Priorit\u00e9 : {'\u2605'.repeat(action.priority)}{'\u2606'.repeat(5 - action.priority)}
                       </Text>
                     </View>
@@ -213,9 +200,9 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             })}
           </View>
 
-          <View style={{ marginTop: 15, padding: 12, backgroundColor: '#f0fdf4', borderRadius: 6 }}>
-            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#166534', marginBottom: 4 }}>Opportunit\u00e9s commerciales</Text>
-            <Text style={{ fontSize: 8, color: '#15803d' }}>
+          <View style={{ marginTop: 15, padding: 12, backgroundColor: '#ecfdf5', borderRadius: 6 }}>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#065f46', marginBottom: 4 }}>Opportunit\u00e9s commerciales</Text>
+            <Text style={{ fontSize: 8, color: '#047857' }}>
               {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length} univers avec besoin \u00e9lev\u00e9/critique identifi\u00e9.{'\n'}
               {diagnostic.actions.filter(a => a.type === 'immediate').length} actions imm\u00e9diates \u00e0 proposer au client.{'\n'}
               Potentiel de cross-selling : {activeUniverses.length > 2 ? '\u00c9lev\u00e9' : 'Mod\u00e9r\u00e9'}.

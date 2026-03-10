@@ -9,10 +9,10 @@ export function getNeedLevel(needScore: number): NeedLevel {
 
 export function getNeedColor(level: NeedLevel): string {
   switch (level) {
-    case 'low': return '#22c55e'
-    case 'moderate': return '#f97316'
-    case 'high': return '#ef4444'
-    case 'critical': return '#ef4444'
+    case 'low': return '#168741'
+    case 'moderate': return '#c97612'
+    case 'high': return '#d9304c'
+    case 'critical': return '#99172d'
   }
 }
 
