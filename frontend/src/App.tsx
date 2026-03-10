@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext.tsx'
+import HomePage from './pages/shared/HomePage.tsx'
 import LoginPage from './pages/auth/LoginPage.tsx'
 import CallbackPage from './pages/auth/CallbackPage.tsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.tsx'
@@ -12,7 +13,7 @@ import AdvisorDashboard from './pages/advisor/AdvisorDashboard.tsx'
 import ClientDetailPage from './pages/advisor/ClientDetailPage.tsx'
 import NotFoundPage from './pages/shared/NotFoundPage.tsx'
 
-function RootRedirect() {
+function AuthRedirect() {
   const { profile } = useAuth()
   if (profile?.role === 'advisor') return <Navigate to="/advisor" replace />
   return <Navigate to="/dashboard" replace />
@@ -22,11 +23,14 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<CallbackPage />} />
 
+        {/* Authenticated routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/app" element={<AuthRedirect />} />
 
           <Route element={<ClientLayout />}>
             <Route path="/dashboard" element={<ClientDashboard />} />

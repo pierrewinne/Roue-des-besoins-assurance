@@ -71,3 +71,122 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═══════════════════════════════════════════
+   Landing page — hero animations
+   ═══════════════════════════════════════════ */
+
+/* Grid background pattern */
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+}
+
+/* Accent text gradient */
+.hero-accent-text {
+  background: linear-gradient(135deg, #94e3d4 0%, #b8b2ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA glow button */
+.hero-cta-btn {
+  position: relative;
+}
+.hero-cta-btn::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(148, 227, 212, 0.15), rgba(184, 178, 255, 0.15));
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 300ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+.hero-cta-btn:hover::after {
+  opacity: 1;
+}
+
+/* Wheel glow */
+.hero-wheel-glow {
+  background: radial-gradient(circle, rgba(148, 227, 212, 0.08) 0%, rgba(184, 178, 255, 0.04) 40%, transparent 70%);
+}
+
+/* Wheel float */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.hero-wheel-float {
+  animation: hero-float 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+/* Pulse dot in tag */
+@keyframes hero-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.6); }
+}
+.hero-pulse-dot {
+  animation: hero-pulse 2.5s ease-in-out infinite;
+}
+
+/* Scroll indicator */
+@keyframes hero-scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+.hero-scroll-dot {
+  animation: hero-scroll-bounce 2s ease-in-out infinite;
+}
+.hero-scroll-hint {
+  animation: bal-fade-in 1s ease both;
+  animation-delay: 1.5s;
+  opacity: 0;
+}
+
+/* Hero title stagger */
+.hero-title {
+  animation: bal-fade-in 800ms cubic-bezier(0.25, 0.8, 0.5, 1) both;
+  animation-delay: 200ms;
+}
+
+/* ═══════════════════════════════════════════
+   Landing page — scroll reveal system
+   ═══════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 600ms cubic-bezier(0.25, 0.8, 0.5, 1),
+    transform 600ms cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════
+   Reduced motion — disable all landing animations
+   ═══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .hero-wheel-float,
+  .hero-pulse-dot,
+  .hero-scroll-dot,
+  .hero-scroll-hint,
+  .hero-title {
+    animation: none !important;
+  }
+  .hero-wheel-float { transform: none; }
+  .hero-scroll-hint { opacity: 1; }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
