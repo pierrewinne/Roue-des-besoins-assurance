@@ -5,10 +5,10 @@ import { UNIVERSE_WHEEL_COLORS, UNIVERSE_WHEEL_LABELS, UNIVERSE_ICONS, UNIVERSE_
 
 /* ─── Aria status labels (ANO-13) ─── */
 const STATUS_ARIA: Record<string, string> = {
-  locked: 'Verrouill\u00e9 \u2014 Compl\u00e9tez votre profil',
-  available: 'Disponible \u2014 Cliquez pour commencer',
+  locked: 'Verrouillé — Complétez votre profil',
+  available: 'Disponible — Cliquez pour commencer',
   in_progress: 'En cours',
-  completed: 'Compl\u00e9t\u00e9',
+  completed: 'Complété',
 }
 
 /* ─── Geometry (viewBox 500×500) ─── */
@@ -84,10 +84,10 @@ function SegmentIcon({ icon, x, y, opacity }: { icon: string; x: number; y: numb
             <path d="M5 10v8a1 1 0 001 1h3v-5h6v5h3a1 1 0 001-1v-8" />
           </>
         )}
-        {icon === 'trending-up' && (
+        {icon === 'gift' && (
           <>
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-            <polyline points="16 7 22 7 22 13" />
+            <path d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25" />
+            <path d="M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
           </>
         )}
         {icon === 'car' && (

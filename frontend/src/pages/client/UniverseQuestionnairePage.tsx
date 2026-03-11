@@ -50,7 +50,6 @@ export default function UniverseQuestionnairePage() {
       if (data) {
         setAnswers((data.responses as Record<string, unknown>) || {})
         responseIdRef.current = data.id
-        responseIdRef.current = data.id
         setCompletedUniverses((data.completed_universes as Record<string, boolean>) || {})
         if (!data.profil_completed) {
           navigate('/questionnaire/profil', { replace: true })
@@ -147,8 +146,8 @@ export default function UniverseQuestionnairePage() {
     <div>
       <PageHeader
         title={`${labels.lines[0]} ${labels.lines[1]}`}
-        subtitle="R\u00e9pondez aux questions pour analyser ce domaine."
-        backLink={{ to: '/dashboard', label: 'Retour \u00e0 la roue' }}
+        subtitle="Répondez aux questions pour analyser ce domaine."
+        backLink={{ to: '/dashboard', label: 'Retour à la roue' }}
       />
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -166,7 +165,7 @@ export default function UniverseQuestionnairePage() {
 
               {visibleQuestions.length === 0 && (
                 <p className="text-sm text-grey-400 text-center py-8">
-                  Ce domaine ne n\u00e9cessite pas de questions suppl\u00e9mentaires selon votre profil.
+                  Ce domaine ne nécessite pas de questions supplémentaires selon votre profil.
                 </p>
               )}
             </div>

@@ -68,7 +68,7 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       disabled={generating}
       variant={type === 'advisor' ? 'secondary' : 'primary'}
     >
-      {generating ? 'G\u00e9n\u00e9ration...' : 'T\u00e9l\u00e9charger le PDF'}
+      {generating ? 'Génération...' : 'Télécharger le PDF'}
     </Button>
   )
 }

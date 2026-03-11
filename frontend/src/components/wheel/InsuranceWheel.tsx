@@ -62,10 +62,13 @@ export default function InsuranceWheel({ diagnostic, size = 350, showLabels = tr
     return <div className="text-center text-grey-400 py-8">Aucun univers actif</div>
   }
 
+  const padding = showLabels ? 60 : 0
+  const containerSize = size + padding * 2
+
   return (
-    <div style={{ width: size, height: size, margin: '0 auto' }}>
+    <div style={{ width: containerSize, height: containerSize, margin: '0 auto' }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: padding, right: padding, bottom: padding, left: padding }}>
           <Pie
             data={data}
             cx="50%"

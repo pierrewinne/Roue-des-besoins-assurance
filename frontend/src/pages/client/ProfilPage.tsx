@@ -15,6 +15,7 @@ export default function ProfilPage() {
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
   const responseIdRef = useRef<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
@@ -37,7 +38,6 @@ export default function ProfilPage() {
 
       if (data) {
         setAnswers((data.responses as Record<string, unknown>) || {})
-        responseIdRef.current = data.id
         responseIdRef.current = data.id
         if (data.profil_completed) {
           navigate('/dashboard', { replace: true })
@@ -71,7 +71,6 @@ export default function ProfilPage() {
       }
       if (data) {
         responseIdRef.current = data.id
-        responseIdRef.current = data.id
       }
     }
   }, [user])
@@ -86,6 +85,7 @@ export default function ProfilPage() {
   async function handleComplete() {
     if (!user) return
     setSaving(true)
+    setError(null)
 
     // Flush pending debounce
     if (saveTimeout.current) {
@@ -93,35 +93,42 @@ export default function ProfilPage() {
       saveTimeout.current = undefined
     }
 
-    const rid = responseIdRef.current
-    if (rid) {
-      const { error } = await supabase
-        .from('questionnaire_responses')
-        .update({ responses: answers, profil_completed: true, updated_at: new Date().toISOString() })
-        .eq('id', rid)
-        .eq('profile_id', user.id)
-      if (error) { console.error('Save failed:', error); setSaving(false); return }
-    } else {
-      const { data, error } = await supabase
-        .from('questionnaire_responses')
-        .insert({ profile_id: user.id, responses: answers, profil_completed: true })
-        .select('id')
-        .single()
-      if (error) { console.error('Save failed:', error); setSaving(false); return }
-      if (data) responseIdRef.current = data.id
-    }
+    try {
+      const rid = responseIdRef.current
+      if (rid) {
+        const { error: err } = await supabase
+          .from('questionnaire_responses')
+          .update({ responses: answers, profil_completed: true, updated_at: new Date().toISOString() })
+          .eq('id', rid)
+          .eq('profile_id', user.id)
+        if (err) throw err
+      } else {
+        const { data, error: err } = await supabase
+          .from('questionnaire_responses')
+          .insert({ profile_id: user.id, responses: answers, profil_completed: true })
+          .select('id')
+          .single()
+        if (err) throw err
+        if (data) responseIdRef.current = data.id
+      }
 
-    setSaving(false)
-    navigate('/dashboard')
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Save failed:', err)
+      setError('Impossible de sauvegarder votre profil. Veuillez réessayer.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const isValid = isProfilComplete(answers)
+
 
   return (
     <div>
       <PageHeader
         title="Votre profil"
-        subtitle="Quelques questions pour mieux vous conna\u00eetre avant d'explorer vos besoins."
+        subtitle="Quelques questions pour mieux vous connaître avant d'explorer vos besoins."
       />
 
       <div className="max-w-2xl mx-auto">
@@ -137,9 +144,15 @@ export default function ProfilPage() {
             ))}
           </div>
 
+          {error && (
+            <div className="mt-6 p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
+              {error}
+            </div>
+          )}
+
           <div className="flex justify-end mt-10 pt-6 border-t border-grey-100">
             <Button onClick={handleComplete} disabled={!isValid || saving} size="lg">
-              {saving ? 'Enregistrement...' : 'D\u00e9couvrir ma roue'}
+              {saving ? 'Enregistrement...' : 'Découvrir ma roue'}
             </Button>
           </div>
         </div>

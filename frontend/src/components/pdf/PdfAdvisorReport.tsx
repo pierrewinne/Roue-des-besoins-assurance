@@ -3,9 +3,9 @@ import type { DiagnosticResult, Universe } from '../../shared/scoring/types.ts'
 import { UNIVERSE_LABELS, NEED_COLORS } from '../../lib/constants.ts'
 
 const TYPE_LABELS: Record<string, string> = {
-  immediate: 'Imm\u00e9diate',
-  deferred: 'Diff\u00e9r\u00e9e',
-  event: '\u00c9v\u00e9nementielle',
+  immediate: 'Immédiate',
+  deferred: 'Différée',
+  event: 'Événementielle',
 }
 
 const styles = StyleSheet.create({
@@ -50,7 +50,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Rapport Diagnostic Assurance</Text>
-            <Text style={styles.subtitle}>{clientName}{clientEmail ? ` \u2014 ${clientEmail}` : ''}</Text>
+            <Text style={styles.subtitle}>{clientName}{clientEmail ? ` — ${clientEmail}` : ''}</Text>
             <Text style={{ fontSize: 8, color: '#94a3b8', marginTop: 3 }}>
               {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
             </Text>
@@ -59,7 +59,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Synth\u00e8se globale</Text>
+          <Text style={styles.sectionTitle}>Synthèse globale</Text>
           <View style={{ flexDirection: 'row', gap: 20, marginBottom: 10 }}>
             <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
               <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? '#168741' : diagnostic.globalScore <= 50 ? '#c97612' : '#d9304c' }}>
@@ -75,7 +75,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#d9304c' }}>
                 {diagnostic.actions.filter(a => a.type === 'immediate').length}
               </Text>
-              <Text style={{ fontSize: 8, color: '#64748b' }}>Actions imm\u00e9diates</Text>
+              <Text style={{ fontSize: 8, color: '#64748b' }}>Actions immédiates</Text>
             </View>
           </View>
         </View>
@@ -87,25 +87,25 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Pond\u00e9rations appliqu\u00e9es</Text>
+          <Text style={styles.sectionTitle}>Pondérations appliquées</Text>
           <View style={styles.table}>
             <View style={styles.tableHeader}>
               <Text style={{ ...styles.tableCell, width: '50%', fontFamily: 'Helvetica-Bold' }}>Univers</Text>
-              <Text style={{ ...styles.tableCell, width: '25%', fontFamily: 'Helvetica-Bold' }}>Pond\u00e9ration</Text>
+              <Text style={{ ...styles.tableCell, width: '25%', fontFamily: 'Helvetica-Bold' }}>Pondération</Text>
               <Text style={{ ...styles.tableCell, width: '25%', fontFamily: 'Helvetica-Bold' }}>Score besoin</Text>
             </View>
             {Object.entries(diagnostic.universeScores).map(([key, score]) => (
               <View key={key} style={styles.tableRow}>
-                <Text style={{ ...styles.tableCell, width: '50%' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}{!score.active ? ' (d\u00e9sactiv\u00e9)' : ''}</Text>
+                <Text style={{ ...styles.tableCell, width: '50%' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}{!score.active ? ' (désactivé)' : ''}</Text>
                 <Text style={{ ...styles.tableCell, width: '25%' }}>{diagnostic.weightings[key as Universe]}%</Text>
-                <Text style={{ ...styles.tableCell, width: '25%', color: NEED_COLORS[score.needLevel] }}>{score.active ? `${score.needScore}/100` : '\u2014'}</Text>
+                <Text style={{ ...styles.tableCell, width: '25%', color: NEED_COLORS[score.needLevel] }}>{score.active ? `${score.needScore}/100` : '—'}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <View style={styles.footer}>
-          <Text>Roue des Besoins \u2014 Rapport conseiller confidentiel</Text>
+          <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
           <Text>Page 1/{pageCount}</Text>
         </View>
       </Page>
@@ -113,7 +113,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
       {/* Page 2: Detailed universe analysis */}
       <Page size="A4" style={styles.page}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Analyse d\u00e9taill\u00e9e par univers</Text>
+          <Text style={styles.sectionTitle}>Analyse détaillée par univers</Text>
           {activeUniverses.map(([key, score]) => (
             <View key={key} style={{ ...styles.universeCard, borderLeftColor: NEED_COLORS[score.needLevel] }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -142,7 +142,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <View style={{ ...styles.row, marginTop: 6 }}>
                 <Text style={styles.label}>Niveau de besoin</Text>
                 <Text style={{ ...styles.value, color: NEED_COLORS[score.needLevel] }}>
-                  {score.needLevel === 'low' ? 'Faible' : score.needLevel === 'moderate' ? 'Mod\u00e9r\u00e9' : score.needLevel === 'high' ? '\u00c9lev\u00e9' : 'Critique'}
+                  {score.needLevel === 'low' ? 'Faible' : score.needLevel === 'moderate' ? 'Modéré' : score.needLevel === 'high' ? 'Élevé' : 'Critique'}
                 </Text>
               </View>
             </View>
@@ -151,7 +151,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
 
         {answers && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Donn\u00e9es collect\u00e9es</Text>
+            <Text style={styles.sectionTitle}>Données collectées</Text>
             <View style={styles.table}>
               {Object.entries(answers).map(([key, val]) => (
                 <View key={key} style={styles.tableRow}>
@@ -164,7 +164,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         )}
 
         <View style={styles.footer}>
-          <Text>Roue des Besoins \u2014 Rapport conseiller confidentiel</Text>
+          <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
           <Text>Page 2/{pageCount}</Text>
         </View>
       </Page>
@@ -191,7 +191,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                       </View>
                       <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.description}</Text>
                       <Text style={{ fontSize: 7, color: '#d9304c', marginTop: 2 }}>
-                        Priorit\u00e9 : {'\u2605'.repeat(action.priority)}{'\u2606'.repeat(5 - action.priority)}
+                        {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
                       </Text>
                     </View>
                   ))}
@@ -201,16 +201,16 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           </View>
 
           <View style={{ marginTop: 15, padding: 12, backgroundColor: '#ecfdf5', borderRadius: 6 }}>
-            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#065f46', marginBottom: 4 }}>Opportunit\u00e9s commerciales</Text>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#065f46', marginBottom: 4 }}>Opportunités commerciales</Text>
             <Text style={{ fontSize: 8, color: '#047857' }}>
-              {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length} univers avec besoin \u00e9lev\u00e9/critique identifi\u00e9.{'\n'}
-              {diagnostic.actions.filter(a => a.type === 'immediate').length} actions imm\u00e9diates \u00e0 proposer au client.{'\n'}
-              Potentiel de cross-selling : {activeUniverses.length > 2 ? '\u00c9lev\u00e9' : 'Mod\u00e9r\u00e9'}.
+              {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length}{' univers avec besoin élevé/critique identifié.\n'}
+              {diagnostic.actions.filter(a => a.type === 'immediate').length}{' actions immédiates à proposer au client.\n'}
+              {'Potentiel de cross-selling : '}{activeUniverses.length > 2 ? 'Élevé' : 'Modéré'}.
             </Text>
           </View>
 
           <View style={styles.footer}>
-            <Text>Roue des Besoins \u2014 Rapport conseiller confidentiel</Text>
+            <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
             <Text>Page 3/{pageCount}</Text>
           </View>
         </Page>

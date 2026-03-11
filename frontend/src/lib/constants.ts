@@ -91,11 +91,11 @@ export const UNIVERSE_WHEEL_COLORS: Record<Universe, { base: string; light: stri
   objets_valeur: { base: '#9f52cc', light: '#b87ee6', dark: '#7b3da3', glow: 'rgba(159, 82, 204, 0.30)' },
 } as const
 
-export const UNIVERSE_ICONS: Record<Universe, 'car' | 'home' | 'shield' | 'trending-up'> = {
+export const UNIVERSE_ICONS: Record<Universe, 'car' | 'home' | 'shield' | 'gift'> = {
   auto: 'car',
   habitation: 'home',
   prevoyance: 'shield',
-  objets_valeur: 'trending-up',
+  objets_valeur: 'gift',
 } as const
 
 export const UNIVERSE_ORDER: Universe[] = ['prevoyance', 'habitation', 'objets_valeur', 'auto']

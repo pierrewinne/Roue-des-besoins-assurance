@@ -4,8 +4,8 @@ import Icon from '../../components/ui/Icon.tsx'
 
 const features = [
   { icon: 'users' as const, title: 'Portefeuille clients', desc: 'Vue d\'ensemble de vos clients et de leur couverture d\'assurance.' },
-  { icon: 'chart-pie' as const, title: 'Diagnostics detailles', desc: 'Analyse approfondie des besoins par univers avec scores et ponderation.' },
-  { icon: 'document' as const, title: 'Rapports PDF', desc: 'Generez des rapports personnalises pour accompagner vos entretiens.' },
+  { icon: 'chart-pie' as const, title: 'Diagnostics détaillés', desc: 'Analyse approfondie des besoins par univers avec scores et pondération.' },
+  { icon: 'document' as const, title: 'Rapports PDF', desc: 'Générez des rapports personnalisés pour accompagner vos entretiens.' },
 ]
 
 export default function AdvisorHomePage() {
@@ -48,13 +48,13 @@ export default function AdvisorHomePage() {
 
             {/* Subtitle */}
             <p className="text-base text-primary-200 max-w-lg mx-auto leading-relaxed mb-10">
-              Visualisez les besoins d'assurance de chaque client, suivez leur score de couverture et preparez vos entretiens avec des donnees concretes.
+              Visualisez les besoins d'assurance de chaque client, suivez leur score de couverture et préparez vos entretiens avec des données concrètes.
             </p>
 
             {/* CTA */}
             <Link to="/conseiller/login">
               <Button size="lg" className="hero-cta-btn px-8 py-3.5 text-base">
-                Acceder a mon espace
+                Accéder à mon espace
                 <Icon name="chevron-right" size={18} strokeWidth={2} className="ml-2" />
               </Button>
             </Link>
@@ -62,7 +62,7 @@ export default function AdvisorHomePage() {
             {/* Trust line */}
             <p className="mt-8 text-xs text-white/25 flex items-center justify-center gap-1.5">
               <Icon name="lock" size={12} strokeWidth={1.5} />
-              Acces reserve aux conseillers habilites
+              Accès réservé aux conseillers habilités
             </p>
 
             {/* Feature cards */}
@@ -91,7 +91,7 @@ export default function AdvisorHomePage() {
             <span className="text-white/40 font-bold text-sm tracking-tight">Roue des Besoins</span>
           </div>
           <p className="text-[11px] text-white/20">
-            &copy; {new Date().getFullYear()} Baloise Luxembourg. Tous droits reserves.
+            &copy; {new Date().getFullYear()} Baloise Luxembourg. Tous droits réservés.
           </p>
         </div>
       </footer>

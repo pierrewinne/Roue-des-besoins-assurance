@@ -45,10 +45,10 @@ interface PdfClientReportProps {
 }
 
 const SCORE_MESSAGES = [
-  { max: 25, message: 'Votre protection est bien adapt\u00e9e \u00e0 votre situation' },
-  { max: 50, message: 'Quelques points m\u00e9ritent votre attention' },
-  { max: 75, message: 'Des lacunes significatives ont \u00e9t\u00e9 identifi\u00e9es' },
-  { max: 100, message: 'Votre situation n\u00e9cessite une action rapide' },
+  { max: 25, message: 'Votre protection est bien adaptée à votre situation' },
+  { max: 50, message: 'Quelques points méritent votre attention' },
+  { max: 75, message: 'Des lacunes significatives ont été identifiées' },
+  { max: 100, message: 'Votre situation nécessite une action rapide' },
 ]
 
 export default function PdfClientReport({ diagnostic, clientName, wheelImageUri, advisor }: PdfClientReportProps) {
@@ -66,8 +66,8 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.title}>Roue des Besoins Assurance</Text>
-          <Text style={styles.subtitle}>Votre diagnostic personnalis\u00e9{clientName ? ` \u2014 ${clientName}` : ''}</Text>
-          <Text style={styles.date}>G\u00e9n\u00e9r\u00e9 le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+          <Text style={styles.subtitle}>{'Votre diagnostic personnalisé'}{clientName ? ` — ${clientName}` : ''}</Text>
+          <Text style={styles.date}>{'Généré le '}{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
         </View>
 
         <View style={styles.section}>
@@ -102,14 +102,14 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
           <View style={styles.advisorBox}>
             <Text style={styles.advisorTitle}>Votre conseiller Baloise</Text>
             <Text style={styles.advisorInfo}>{advisor.name}</Text>
-            {advisor.phone && <Text style={styles.advisorInfo}>{`T\u00e9l : ${advisor.phone}`}</Text>}
+            {advisor.phone && <Text style={styles.advisorInfo}>{`Tél : ${advisor.phone}`}</Text>}
             {advisor.email && <Text style={styles.advisorInfo}>{`Email : ${advisor.email}`}</Text>}
-            <Text style={styles.advisorCta}>Prenez rendez-vous pour \u00e9changer sur vos r\u00e9sultats</Text>
+            <Text style={styles.advisorCta}>Prenez rendez-vous pour échanger sur vos résultats</Text>
           </View>
         )}
 
         <View style={styles.footer}>
-          <Text>Roue des Besoins Assurance {'\u2014'} Document confidentiel</Text>
+          <Text>{'Roue des Besoins Assurance — Document confidentiel'}</Text>
           <Text>Page 1/2</Text>
         </View>
       </Page>
@@ -117,9 +117,9 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
       {priorityActions.length > 0 && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Actions recommand\u00e9es</Text>
+            <Text style={styles.sectionTitle}>Actions recommandées</Text>
             <Text style={{ fontSize: 9, color: '#64748b', marginBottom: 12 }}>
-              Voici les actions prioritaires identifi\u00e9es lors de votre diagnostic.
+              Voici les actions prioritaires identifiées lors de votre diagnostic.
             </Text>
             {priorityActions.map((action, i) => (
               <View key={i} style={styles.actionItem}>
@@ -127,10 +127,10 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
                   <Text style={styles.actionTitle}>{action.title}</Text>
                   <Text style={styles.actionDesc}>{action.description}</Text>
                   {action.productName && (
-                    <Text style={styles.actionProduct}>Solution : {action.productName}</Text>
+                    <Text style={styles.actionProduct}>{'Solution : '}{action.productName}</Text>
                   )}
                   <Text style={styles.actionPriority}>
-                    Priorit\u00e9 : {'\u2605'.repeat(action.priority)}{'\u2606'.repeat(5 - action.priority)} {'\u2014'} {UNIVERSE_LABELS[action.universe]}
+                    {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}{' — '}{UNIVERSE_LABELS[action.universe]}
                   </Text>
                 </View>
               </View>
@@ -138,17 +138,17 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
           </View>
 
           <View style={{ marginTop: 20, padding: 15, backgroundColor: '#e5e7f0', borderRadius: 6 }}>
-            <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#000739', marginBottom: 6 }}>Prochaines \u00e9tapes</Text>
+            <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#000739', marginBottom: 6 }}>Prochaines étapes</Text>
             <Text style={{ fontSize: 9, color: '#000d6e' }}>
               {advisor
-                ? `1. Contactez votre conseiller ${advisor.name}${advisor.phone ? ` au ${advisor.phone}` : ''}\n2. \u00c9changez sur les recommandations et demandez des devis personnalis\u00e9s\n3. Planifiez un bilan de suivi dans 6 mois`
-                : '1. Prenez contact avec votre conseiller pour discuter des recommandations\n2. Demandez des devis pour les couvertures identifi\u00e9es comme prioritaires\n3. Planifiez un bilan de suivi dans 6 mois'
+                ? `1. Contactez votre conseiller ${advisor.name}${advisor.phone ? ` au ${advisor.phone}` : ''}\n2. Échangez sur les recommandations et demandez des devis personnalisés\n3. Planifiez un bilan de suivi dans 6 mois`
+                : `1. Prenez contact avec votre conseiller pour discuter des recommandations\n2. Demandez des devis pour les couvertures identifiées comme prioritaires\n3. Planifiez un bilan de suivi dans 6 mois`
               }
             </Text>
           </View>
 
           <View style={styles.footer}>
-            <Text>Roue des Besoins Assurance {'\u2014'} Document confidentiel</Text>
+            <Text>{'Roue des Besoins Assurance — Document confidentiel'}</Text>
             <Text>Page 2/2</Text>
           </View>
         </Page>

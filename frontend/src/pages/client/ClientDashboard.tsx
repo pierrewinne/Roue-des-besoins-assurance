@@ -77,7 +77,7 @@ export default function ClientDashboard() {
         .single()
 
       if (diagError || !diagData) {
-        throw new Error(diagError?.message || '\u00c9chec de la cr\u00e9ation du diagnostic')
+        throw new Error(diagError?.message || 'Échec de la création du diagnostic')
       }
 
       const actionsToInsert = diagnostic.actions.map(a => ({
@@ -102,15 +102,21 @@ export default function ClientDashboard() {
       navigate(`/results/${diagData.id}`)
     } catch (err) {
       console.error('Diagnostic creation failed:', err)
-      setFinishError('Une erreur est survenue lors de la cr\u00e9ation de votre diagnostic. Veuillez r\u00e9essayer.')
+      setFinishError('Une erreur est survenue lors de la création de votre diagnostic. Veuillez réessayer.')
     } finally {
       setIsFinishing(false)
     }
   }
 
+  const [rgpdError, setRgpdError] = useState<string | null>(null)
+
   async function handleExportData() {
+    setRgpdError(null)
     const { data, error } = await supabase.rpc('export_my_data')
-    if (error) return
+    if (error) {
+      setRgpdError('Impossible d\'exporter vos données. Veuillez réessayer.')
+      return
+    }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -122,11 +128,15 @@ export default function ClientDashboard() {
 
   async function handleDeleteAccount() {
     setIsDeleting(true)
+    setRgpdError(null)
     const { error } = await supabase.rpc('delete_my_data')
-    if (!error) {
-      await signOut()
-      navigate('/login', { replace: true })
+    if (error) {
+      setRgpdError('Impossible de supprimer votre compte. Veuillez réessayer.')
+      setIsDeleting(false)
+      return
     }
+    await signOut()
+    navigate('/login', { replace: true })
     setIsDeleting(false)
   }
 
@@ -142,7 +152,7 @@ export default function ClientDashboard() {
       {/* Wheel hero */}
       <div className="flex justify-center mb-8">
         <DiagnosticWheel
-          className="w-full max-w-[380px]"
+          className="w-full max-w-[480px]"
           universeStates={progress.universeStates}
           completedCount={progress.completedCount}
           globalScore={progress.globalScore}
@@ -161,10 +171,10 @@ export default function ClientDashboard() {
             </div>
             <h2 className="text-lg font-bold text-primary-700 mb-2">Commencez par votre profil</h2>
             <p className="text-sm text-grey-400 mb-6 leading-relaxed max-w-xs mx-auto">
-              Quelques questions rapides pour personnaliser votre diagnostic et d\u00e9bloquer la roue.
+              Quelques questions rapides pour personnaliser votre diagnostic et débloquer la roue.
             </p>
             <Button onClick={() => navigate('/questionnaire/profil')} size="lg">
-              Compl\u00e9ter mon profil
+              Compléter mon profil
             </Button>
           </Card>
         </div>
@@ -239,7 +249,7 @@ export default function ClientDashboard() {
       {/* Past diagnostics */}
       {diagnostics.length > 0 && (
         <Card>
-          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics pr\u00e9c\u00e9dents</h2>
+          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics précédents</h2>
           <div className="space-y-2">
             {diagnostics.map(d => (
               <Link
@@ -264,14 +274,19 @@ export default function ClientDashboard() {
 
       {/* GDPR section */}
       <div className="mt-10 pt-6 border-t border-grey-100">
+        {rgpdError && (
+          <div className="mb-4 p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
+            {rgpdError}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-grey-400">Vos donn\u00e9es personnelles</h3>
-            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos donn\u00e9es (RGPD).</p>
+            <h3 className="text-sm font-bold text-grey-400">Vos données personnelles</h3>
+            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos données (RGPD).</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleExportData}>
-              Exporter mes donn\u00e9es
+              Exporter mes données
             </Button>
             <Button
               variant="outline"
@@ -286,9 +301,9 @@ export default function ClientDashboard() {
 
         {showDeleteConfirm && (
           <div className="mt-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
-            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irr\u00e9versible</p>
+            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irréversible</p>
             <p className="text-xs text-grey-400 mb-4">
-              Toutes vos donn\u00e9es seront d\u00e9finitivement supprim\u00e9es : profil, questionnaires, diagnostics et actions recommand\u00e9es.
+              Toutes vos données seront définitivement supprimées : profil, questionnaires, diagnostics et actions recommandées.
             </p>
             <div className="flex gap-2">
               <Button size="sm" className="bg-[#d9304c] hover:bg-[#99172d]" disabled={isDeleting} onClick={handleDeleteAccount}>

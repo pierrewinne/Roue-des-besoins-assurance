@@ -29,11 +29,11 @@ export default function AdvisorLoginPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
       if (msg.includes('Database error') || msg.includes('unexpected_failure')) {
-        setError('Service momentanement indisponible. Veuillez reessayer dans quelques instants.')
+        setError('Service momentanément indisponible. Veuillez réessayer dans quelques instants.')
       } else if (msg.includes('Invalid login credentials')) {
-        setError('Identifiants incorrects. Verifiez votre email et mot de passe.')
+        setError('Identifiants incorrects. Vérifiez votre email et mot de passe.')
       } else {
-        setError('Une erreur est survenue. Veuillez reessayer.')
+        setError('Une erreur est survenue. Veuillez réessayer.')
       }
     } finally {
       setIsSubmitting(false)
@@ -67,7 +67,7 @@ export default function AdvisorLoginPage() {
             de vos clients
           </h2>
           <p className="text-primary-200 text-sm leading-relaxed mb-10 max-w-xs mx-auto">
-            Visualisez les besoins, suivez les scores et generez des rapports PDF pour accompagner vos clients.
+            Visualisez les besoins, suivez les scores et générez des rapports PDF pour accompagner vos clients.
           </p>
 
           <div className="flex items-center justify-center gap-6 text-xs">
@@ -78,7 +78,7 @@ export default function AdvisorLoginPage() {
             <span className="w-px h-3 bg-white/10" />
             <span className="flex items-center gap-1.5 text-primary-300">
               <Icon name="chart-pie" size={15} strokeWidth={1.5} />
-              Diagnostics detailles
+              Diagnostics détaillés
             </span>
             <span className="w-px h-3 bg-white/10" />
             <span className="flex items-center gap-1.5 text-primary-300">
@@ -90,7 +90,7 @@ export default function AdvisorLoginPage() {
         <div className="absolute bottom-6 left-0 right-0 flex justify-center">
           <span className="flex items-center gap-1.5 text-[11px] text-primary-400/50">
             <Icon name="lock" size={12} strokeWidth={1.5} />
-            Acces reserve aux conseillers habilites
+            Accès réservé aux conseillers habilités
           </span>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function AdvisorLoginPage() {
             <div className="mb-8">
               <h2 className="text-xl font-bold text-primary-700 mb-1.5">Espace conseiller</h2>
               <p className="text-sm text-grey-400">
-                Connectez-vous pour gerer vos clients.
+                Connectez-vous pour gérer vos clients.
               </p>
             </div>
 
@@ -156,7 +156,7 @@ export default function AdvisorLoginPage() {
                 className="text-sm text-grey-300 hover:text-primary-700 transition-colors inline-flex items-center gap-1.5"
               >
                 <Icon name="chevron-left" size={14} strokeWidth={2} />
-                Acces client
+                Accès client
               </Link>
             </div>
           </div>

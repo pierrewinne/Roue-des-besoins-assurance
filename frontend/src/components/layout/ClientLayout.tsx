@@ -22,7 +22,7 @@ export default function ClientLayout() {
               <Link
                 to="/dashboard"
                 className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors duration-300 ${
-                  location.pathname === '/dashboard'
+                  location.pathname.startsWith('/dashboard')
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-grey-400 hover:text-primary-700 hover:bg-grey-100'
                 }`}

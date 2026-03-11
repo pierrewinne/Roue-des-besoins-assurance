@@ -29,7 +29,7 @@ export default function AdvisorLayout() {
                   key={item.path}
                   to={item.path}
                   className={`px-3 py-1.5 rounded-md text-sm font-bold transition-colors duration-300 ${
-                    location.pathname === item.path
+                    location.pathname.startsWith(item.path)
                       ? 'bg-primary-50 text-primary-700'
                       : 'text-grey-400 hover:text-primary-700 hover:bg-grey-100'
                   }`}

@@ -6,6 +6,8 @@ import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 
+const isDev = import.meta.env.DEV
+
 export default function ClientLoginPage() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -16,7 +18,8 @@ export default function ClientLoginPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false)
   const [signupPending, setSignupPending] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { user, profile, isLoading, signUpWithEmail, signInWithMagicLink } = useAuth()
+  const [devPasswordLogin, setDevPasswordLogin] = useState(isDev)
+  const { user, profile, isLoading, signUpWithEmail, signInWithEmail, signInWithMagicLink } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -34,20 +37,24 @@ export default function ClientLoginPage() {
       if (authMode === 'signup') {
         await signUpWithEmail(email, password, firstName, lastName)
         setSignupPending(true)
+      } else if (devPasswordLogin) {
+        await signInWithEmail(email, password)
       } else {
         await signInWithMagicLink(email)
         setMagicLinkSent(true)
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : ''
-      if (msg.includes('Database error') || msg.includes('unexpected_failure')) {
-        setError('Service momentanement indisponible. Veuillez reessayer dans quelques instants.')
+      if (msg.includes('Invalid login credentials')) {
+        setError('Email ou mot de passe incorrect.')
+      } else if (msg.includes('Database error') || msg.includes('unexpected_failure')) {
+        setError('Service momentanément indisponible. Veuillez réessayer dans quelques instants.')
       } else if (msg.includes('User already registered')) {
-        setError('Un compte existe deja avec cette adresse email.')
+        setError('Un compte existe déjà avec cette adresse email.')
       } else if (msg.includes('Password should be')) {
-        setError('Le mot de passe doit contenir au moins 6 caracteres.')
+        setError('Le mot de passe doit contenir au moins 6 caractères.')
       } else {
-        setError('Une erreur est survenue. Veuillez reessayer.')
+        setError('Une erreur est survenue. Veuillez réessayer.')
       }
     } finally {
       setIsSubmitting(false)
@@ -74,12 +81,12 @@ export default function ClientLoginPage() {
           <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" />
           <div className="text-center">
             <h2 className="text-xl font-bold text-white mb-3 leading-snug">
-              Evaluez et optimisez votre
+              Évaluez et optimisez votre
               <br />
               couverture d'assurance
             </h2>
             <p className="text-primary-200 text-sm leading-relaxed mb-10 max-w-xs mx-auto">
-              Un diagnostic personnalise en quelques minutes pour identifier vos besoins reels.
+              Un diagnostic personnalisé en quelques minutes pour identifier vos besoins réels.
             </p>
             <div className="flex items-center justify-center gap-6 text-xs">
               <span className="flex items-center gap-1.5 text-primary-300">
@@ -102,7 +109,7 @@ export default function ClientLoginPage() {
         <div className="absolute bottom-6 left-0 right-0 flex justify-center">
           <span className="flex items-center gap-1.5 text-[11px] text-primary-400/50">
             <Icon name="lock" size={12} strokeWidth={1.5} />
-            Donnees chiffrees et confidentielles
+            Données chiffrées et confidentielles
           </span>
         </div>
       </div>
@@ -119,7 +126,7 @@ export default function ClientLoginPage() {
               <span className="text-white/70 font-bold text-sm">Roue des Besoins</span>
             </div>
             <NeedsWheel className="w-48 mx-auto mb-5" />
-            <p className="text-primary-200 text-xs">Diagnostic assurance personnalise</p>
+            <p className="text-primary-200 text-xs">Diagnostic assurance personnalisé</p>
           </div>
         )}
 
@@ -131,9 +138,9 @@ export default function ClientLoginPage() {
                 <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
                   <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
                 </div>
-                <h2 className="text-xl font-bold text-primary-700 mb-2">Compte cree</h2>
+                <h2 className="text-xl font-bold text-primary-700 mb-2">Compte créé</h2>
                 <p className="text-grey-400 mb-6 text-sm leading-relaxed">
-                  Un email de confirmation a ete envoye a{' '}
+                  Un email de confirmation a été envoyé à{' '}
                   <span className="font-bold text-primary-700">{email}</span>.
                   Cliquez sur le lien pour activer votre compte.
                 </p>
@@ -141,7 +148,7 @@ export default function ClientLoginPage() {
                   onClick={() => { setSignupPending(false); setAuthMode('login') }}
                   className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
                 >
-                  Retour a la connexion
+                  Retour à la connexion
                 </button>
               </div>
             ) : magicLinkSent ? (
@@ -149,11 +156,11 @@ export default function ClientLoginPage() {
                 <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
                   <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
                 </div>
-                <h2 className="text-xl font-bold text-primary-700 mb-2">Verifiez votre boite mail</h2>
+                <h2 className="text-xl font-bold text-primary-700 mb-2">Vérifiez votre boîte mail</h2>
                 <p className="text-grey-400 mb-6 text-sm leading-relaxed">
-                  Un lien de connexion a ete envoye a{' '}
+                  Un lien de connexion a été envoyé à{' '}
                   <span className="font-bold text-primary-700">{email}</span>.
-                  Cliquez sur le lien pour acceder a votre espace.
+                  Cliquez sur le lien pour accéder à votre espace.
                 </p>
                 <button
                   onClick={() => setMagicLinkSent(false)}
@@ -166,13 +173,24 @@ export default function ClientLoginPage() {
               <>
                 <div className="mb-8">
                   <h2 className="text-xl font-bold text-primary-700 mb-1.5">
-                    {authMode === 'signup' ? 'Creez votre compte' : 'Accedez a votre espace'}
+                    {authMode === 'signup' ? 'Créez votre compte' : 'Accédez à votre espace'}
                   </h2>
                   <p className="text-sm text-grey-400">
                     {authMode === 'signup'
-                      ? 'Creez un compte pour demarrer votre diagnostic.'
-                      : 'Recevez un lien de connexion securise par email.'}
+                      ? 'Créez un compte pour démarrer votre diagnostic.'
+                      : devPasswordLogin
+                        ? 'Connectez-vous avec votre email et mot de passe.'
+                        : 'Recevez un lien de connexion sécurisé par email.'}
                   </p>
+                  {isDev && authMode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => setDevPasswordLogin(!devPasswordLogin)}
+                      className="mt-2 text-xs text-amber-600 hover:text-amber-500 font-mono"
+                    >
+                      [DEV] {devPasswordLogin ? 'Magic link' : 'Mot de passe'}
+                    </button>
+                  )}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -184,7 +202,7 @@ export default function ClientLoginPage() {
 
                   {authMode === 'signup' && (
                     <div className="grid grid-cols-2 gap-3">
-                      <Input label="Prenom" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                      <Input label="Prénom" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
                       <Input label="Nom" type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
                     </div>
                   )}
@@ -198,7 +216,7 @@ export default function ClientLoginPage() {
                     placeholder="votre@email.com"
                   />
 
-                  {authMode === 'signup' && (
+                  {(authMode === 'signup' || devPasswordLogin) && (
                     <Input
                       label="Mot de passe"
                       type="password"
@@ -212,9 +230,11 @@ export default function ClientLoginPage() {
                   <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                     {isSubmitting
                       ? 'Chargement...'
-                      : authMode === 'login'
-                        ? 'Recevoir mon lien de connexion'
-                        : 'Creer mon compte'}
+                      : authMode === 'signup'
+                        ? 'Créer mon compte'
+                        : devPasswordLogin
+                          ? 'Se connecter'
+                          : 'Recevoir mon lien de connexion'}
                   </Button>
 
                   <div className="text-center pt-1">
@@ -223,7 +243,7 @@ export default function ClientLoginPage() {
                       onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
                       className="text-sm font-bold text-primary-700 hover:text-primary-600 transition-colors"
                     >
-                      {authMode === 'login' ? 'Creer un compte' : 'J\'ai deja un compte'}
+                      {authMode === 'login' ? 'Créer un compte' : 'J\'ai déjà un compte'}
                     </button>
                   </div>
                 </form>

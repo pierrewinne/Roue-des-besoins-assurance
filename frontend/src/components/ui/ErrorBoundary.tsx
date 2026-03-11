@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               Une erreur est survenue
             </h1>
             <p className="text-grey-400 mb-6">
-              La page n'a pas pu se charger correctement. Cela peut arriver apr\u00e8s une mise \u00e0 jour.
+              La page n'a pas pu se charger correctement. Cela peut arriver après une mise à jour.
             </p>
             <Button onClick={this.handleRetry}>
               Recharger la page
