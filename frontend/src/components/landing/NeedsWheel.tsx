@@ -406,7 +406,7 @@ export default function NeedsWheel({
                   const [t2x, t2y] = xy(OUTER_R2 + 14, seg.angle)
                   return <line x1={t1x} y1={t1y} x2={t2x} y2={t2y} stroke={isActive ? `${seg.color}80` : 'rgba(255,255,255,0.05)'} strokeWidth="1" strokeLinecap="round" className="pointer-events-none" style={{ transition: `stroke 300ms ${ease}` }} />
                 })()}
-                <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fill={isActive ? seg.color : isOther ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.40)'} fontSize="10" fontWeight="700" fontFamily="'BaloiseCreateText','Inter',sans-serif" letterSpacing="0.14em" className="pointer-events-none select-none" style={{ filter: isActive ? `drop-shadow(0 0 6px ${seg.glowColor})` : undefined, transition: `fill 300ms ${ease}` }}>
+                <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fill={isActive ? seg.color : isOther ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)'} fontSize="10" fontWeight="700" fontFamily="'BaloiseCreateText','Inter',sans-serif" letterSpacing="0.14em" className="pointer-events-none select-none" style={{ filter: isActive ? `drop-shadow(0 0 6px ${seg.glowColor})` : undefined, transition: `fill 300ms ${ease}` }}>
                   {seg.product.toUpperCase()}
                 </text>
               </>
@@ -458,7 +458,7 @@ export default function NeedsWheel({
       ) : (
         <>
           <text x={CX} y={CY + 14} textAnchor="middle" fill="white" fontSize="8" fontWeight="700" letterSpacing="0.10em" fontFamily="'BaloiseCreateText','Inter',sans-serif" opacity={0.80} className="pointer-events-none select-none">CLIENTS</text>
-          <text x={CX} y={CY + 24} textAnchor="middle" fill="white" fontSize="7.5" fontWeight="600" letterSpacing="0.08em" fontFamily="'BaloiseCreateText','Inter',sans-serif" opacity={0.60} className="pointer-events-none select-none">PARTICULIERS</text>
+          <text x={CX} y={CY + 24} textAnchor="middle" fill="white" fontSize="7.5" fontWeight="700" letterSpacing="0.08em" fontFamily="'BaloiseCreateText','Inter',sans-serif" opacity={0.60} className="pointer-events-none select-none">PARTICULIERS</text>
         </>
       )}
     </svg>

@@ -38,7 +38,7 @@ function renderCustomLabel(props: PieLabelRenderProps) {
       textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
       fontSize={11}
-      fontWeight={600}
+      fontWeight={700}
       fontFamily="Inter, system-ui, sans-serif"
     >
       {name}

@@ -32,7 +32,7 @@ export default function ProgressBar({ steps, currentStep }: ProgressBarProps) {
       </div>
       <div className="flex justify-between">
         {steps.map((step, i) => (
-          <span key={step} className={`text-xs font-medium hidden sm:block transition-colors ${
+          <span key={step} className={`text-xs font-normal hidden sm:block transition-colors ${
             i <= currentStep ? 'text-primary-700' : 'text-grey-300'
           }`}>
             {step}
