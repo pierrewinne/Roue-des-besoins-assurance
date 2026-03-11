@@ -52,7 +52,7 @@ export default function ClientLoginPage() {
       } else if (msg.includes('User already registered')) {
         setError('Un compte existe déjà avec cette adresse email.')
       } else if (msg.includes('Password should be')) {
-        setError('Le mot de passe doit contenir au moins 6 caractères.')
+        setError('Le mot de passe doit contenir au moins 12 caractères.')
       } else {
         setError('Une erreur est survenue. Veuillez réessayer.')
       }

@@ -77,17 +77,18 @@ export default function ClientDetailPage() {
 
       if (diag) {
         // Audit advisor access to client data (SEC-03/P12)
-      await supabase.rpc('log_audit_event', {
-        p_action: 'view_client_diagnostic',
-        p_resource_type: 'diagnostics',
-        p_resource_id: diag.id,
-        p_details: { client_id: clientId },
-      })
+        await supabase.rpc('log_audit_event', {
+          p_action: 'view_client_diagnostic',
+          p_resource_type: 'diagnostics',
+          p_resource_id: diag.id,
+          p_details: { client_id: clientId },
+        })
 
-      const { data: actionsData } = await supabase
+        const { data: actionsData } = await supabase
           .from('actions')
           .select('id, diagnostic_id, type, universe, priority, title, description, created_at')
           .eq('diagnostic_id', diag.id)
+          .eq('profile_id', clientId)
           .order('priority', { ascending: false })
 
         const scores = diag.scores as Record<Universe, UniverseScore>

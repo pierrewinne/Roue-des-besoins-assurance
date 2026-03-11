@@ -289,7 +289,7 @@ export default function NeedsWheel({
         return (
           <g
             key={seg.key}
-            className="wheel-segment-premium focus:outline-none focus-visible:outline-none"
+            className="wheel-segment-premium focus:outline-none focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-[-2px]"
             style={{
               cursor: isClickable ? 'pointer' : 'default',
               outline: 'none',

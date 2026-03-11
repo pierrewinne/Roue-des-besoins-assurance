@@ -1,3 +1,5 @@
+import type { Universe } from '../shared/scoring/types.ts'
+
 export const UNIVERSE_LABELS = {
   auto: 'Auto / Mobilité',
   habitation: 'Habitation / Propriétaire',
@@ -66,8 +68,6 @@ export const ACTION_TYPE_LABELS = {
   deferred: 'Action différée',
   event: 'Événement de vie',
 } as const
-
-export type Universe = keyof typeof UNIVERSE_LABELS
 
 export function getScoreColorClass(score: number): string {
   if (score <= 25) return 'text-[#168741]'

@@ -1,19 +1,11 @@
-import type { UniverseScore } from '../../shared/scoring/types.ts'
+import type { UniverseScore, Universe } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 import Badge from '../ui/Badge.tsx'
 import Icon from '../ui/Icon.tsx'
-import type { IconName } from '../ui/Icon.tsx'
-import { UNIVERSE_LABELS, NEED_BADGE_LABELS, NEED_BADGE_COLORS, NEED_MESSAGES } from '../../lib/constants.ts'
-
-const UNIVERSE_ICONS: Record<string, IconName> = {
-  auto: 'car',
-  habitation: 'home',
-  prevoyance: 'shield-check',
-  objets_valeur: 'gift',
-}
+import { UNIVERSE_LABELS, UNIVERSE_ICONS, NEED_BADGE_LABELS, NEED_BADGE_COLORS, NEED_MESSAGES } from '../../lib/constants.ts'
 
 interface UniverseCardProps {
-  universe: string
+  universe: string | Universe
   score: UniverseScore
   showDetails?: boolean
 }
@@ -23,7 +15,7 @@ export default function UniverseCard({ universe, score, showDetails = false }: U
 
   const color = getNeedColor(score.needLevel)
   const badgeColor = NEED_BADGE_COLORS[score.needLevel]
-  const iconName = UNIVERSE_ICONS[universe]
+  const iconName = UNIVERSE_ICONS[universe as Universe]
 
   return (
     <div className="bg-white rounded-xl shadow-card p-5 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] hover:shadow-card-hover hover:-translate-y-0.5">

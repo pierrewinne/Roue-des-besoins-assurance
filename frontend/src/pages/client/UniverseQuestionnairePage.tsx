@@ -26,6 +26,7 @@ export default function UniverseQuestionnairePage() {
   const responseIdRef = useRef<string | null>(null)
   const [completedUniverses, setCompletedUniverses] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const validUniverse = isValidUniverse(universeParam)
@@ -95,6 +96,7 @@ export default function UniverseQuestionnairePage() {
   async function handleCompleteUniverse() {
     if (!user || !responseIdRef.current) return
     setSaving(true)
+    setSaveError(null)
 
     const newCompleted = { ...completedUniverses, [universe]: true }
     const { error } = await supabase
@@ -107,7 +109,7 @@ export default function UniverseQuestionnairePage() {
       .eq('profile_id', user.id)
 
     if (error) {
-      console.error('Save failed:', error)
+      setSaveError('Impossible de valider ce domaine. Veuillez réessayer.')
       setSaving(false)
       return
     }
@@ -173,6 +175,12 @@ export default function UniverseQuestionnairePage() {
                 </p>
               )}
             </div>
+
+            {saveError && (
+              <div className="mt-6 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
+                <p className="text-sm text-[#d9304c]">{saveError}</p>
+              </div>
+            )}
 
             <div className="flex justify-between mt-10 pt-6 border-t border-grey-100">
               <Button variant="outline" onClick={() => flushAndNavigate('/dashboard')}>

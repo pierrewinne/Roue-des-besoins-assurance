@@ -1,10 +1,16 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../ui/Button.tsx'
 
 export default function AdvisorLayout() {
   const { signOut, profile } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/conseiller/login')
+  }
 
   const navItems = [
     { path: '/conseiller/dashboard', label: 'Tableau de bord' },
@@ -44,7 +50,7 @@ export default function AdvisorLayout() {
                   </span>
                 </div>
                 <span className="text-sm text-grey-400">{profile?.first_name} {profile?.last_name}</span>
-                <Button variant="ghost" size="sm" onClick={signOut}>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
                   Déconnexion
                 </Button>
               </div>

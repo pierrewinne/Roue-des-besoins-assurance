@@ -1,10 +1,16 @@
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../ui/Button.tsx'
 
 export default function ClientLayout() {
   const { signOut, profile } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  async function handleSignOut() {
+    await signOut()
+    navigate('/login')
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-grey-50">
@@ -36,7 +42,7 @@ export default function ClientLayout() {
                   </span>
                 </div>
                 <span className="text-sm text-grey-400 hidden sm:block">{profile?.first_name || profile?.email}</span>
-                <Button variant="ghost" size="sm" onClick={signOut}>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
                   Déconnexion
                 </Button>
               </div>

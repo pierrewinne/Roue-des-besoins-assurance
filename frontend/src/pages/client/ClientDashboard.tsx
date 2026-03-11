@@ -7,9 +7,9 @@ import Card from '../../components/ui/Card.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
-import { QUADRANT_TO_UNIVERSE } from '../../lib/constants.ts'
+import Spinner from '../../components/ui/Spinner.tsx'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
-import { getScoreColorClass, UNIVERSE_WHEEL_LABELS, UNIVERSE_WHEEL_COLORS, UNIVERSE_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_TO_UNIVERSE, getScoreColorClass, UNIVERSE_WHEEL_LABELS, UNIVERSE_WHEEL_COLORS, UNIVERSE_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
 import { ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 import type { Universe, NeedLevel } from '../../shared/scoring/types.ts'
@@ -114,10 +114,9 @@ export default function ClientDashboard() {
     }
     await signOut()
     navigate('/login', { replace: true })
-    setIsDeleting(false)
   }
 
-  if (progress.loading) return null
+  if (progress.loading) return <Spinner />
 
   return (
     <div>

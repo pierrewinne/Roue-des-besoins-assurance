@@ -43,7 +43,7 @@ export default function AdvisorHomePage() {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-6">
               Accompagnez vos clients
               <br />
-              <span className="hero-accent-text">avec precision</span>
+              <span className="hero-accent-text">avec précision</span>
             </h1>
 
             {/* Subtitle */}
