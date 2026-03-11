@@ -107,3 +107,13 @@ export const UNIVERSE_ANGLES: Record<Universe, number> = {
   objets_valeur: 180,
   auto: 270,
 } as const
+
+// Quadrant mapping for NeedsWheel (new dual-ring layout)
+export const UNIVERSE_TO_QUADRANT: Record<Universe, number> = {
+  auto: 0,          // biens
+  prevoyance: 1,    // personnes
+  objets_valeur: 2, // futur
+  habitation: 3,    // projets
+} as const
+
+export const QUADRANT_TO_UNIVERSE = ['auto', 'prevoyance', 'objets_valeur', 'habitation'] as const satisfies readonly Universe[]

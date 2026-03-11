@@ -5,7 +5,8 @@ import { computeUniverseScore, computeDiagnostic } from '../shared/scoring/engin
 import { getNeedLevel } from '../shared/scoring/thresholds.ts'
 import { ALL_UNIVERSES } from '../shared/questionnaire/universe-mapping.ts'
 import type { Universe, NeedLevel } from '../shared/scoring/types.ts'
-import type { UniverseState } from '../components/wheel/DiagnosticWheel.tsx'
+import type { QuadrantState } from '../components/landing/NeedsWheel.tsx'
+import { UNIVERSE_TO_QUADRANT } from '../lib/constants.ts'
 
 interface DiagnosticProgress {
   loading: boolean
@@ -13,7 +14,8 @@ interface DiagnosticProgress {
   answers: Record<string, unknown>
   profilCompleted: boolean
   completedUniverses: Record<string, boolean>
-  universeStates: Record<Universe, UniverseState>
+  universeStates: Record<Universe, QuadrantState>
+  segmentStates: QuadrantState[]
   completedCount: number
   allCompleted: boolean
   globalScore?: number
@@ -53,20 +55,24 @@ export function useDiagnosticProgress(): DiagnosticProgress {
   }, [user])
 
   // Compute universe states (memoized to avoid recomputing scores on unrelated re-renders)
-  const { universeStates, completedCount, allCompleted, globalScore, globalNeedLevel } = useMemo(() => {
-    const states = {} as Record<Universe, UniverseState>
+  const { universeStates, segmentStates, completedCount, allCompleted, globalScore, globalNeedLevel } = useMemo(() => {
+    const states = {} as Record<Universe, QuadrantState>
+    const segments: QuadrantState[] = new Array(4)
     let count = 0
 
     for (const u of ALL_UNIVERSES) {
+      let s: QuadrantState
       if (completedUniverses[u]) {
         const score = computeUniverseScore(u, answers)
-        states[u] = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
+        s = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
         count++
       } else if (profilCompleted) {
-        states[u] = { status: 'available' }
+        s = { status: 'available' }
       } else {
-        states[u] = { status: 'locked' }
+        s = { status: 'locked' }
       }
+      states[u] = s
+      segments[UNIVERSE_TO_QUADRANT[u]] = s
     }
 
     const all = count === 4
@@ -79,11 +85,11 @@ export function useDiagnosticProgress(): DiagnosticProgress {
       gNeedLevel = getNeedLevel(diagnostic.globalScore)
     }
 
-    return { universeStates: states, completedCount: count, allCompleted: all, globalScore: gScore, globalNeedLevel: gNeedLevel }
+    return { universeStates: states, segmentStates: segments, completedCount: count, allCompleted: all, globalScore: gScore, globalNeedLevel: gNeedLevel }
   }, [answers, completedUniverses, profilCompleted])
 
   return {
     loading, responseId, answers, profilCompleted, completedUniverses,
-    universeStates, completedCount, allCompleted, globalScore, globalNeedLevel,
+    universeStates, segmentStates, completedCount, allCompleted, globalScore, globalNeedLevel,
   }
 }

@@ -6,7 +6,8 @@ import Button from '../../components/ui/Button.tsx'
 import Card from '../../components/ui/Card.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import Icon from '../../components/ui/Icon.tsx'
-import DiagnosticWheel from '../../components/wheel/DiagnosticWheel.tsx'
+import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
+import { QUADRANT_TO_UNIVERSE } from '../../lib/constants.ts'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
 import { getScoreColorClass, UNIVERSE_WHEEL_LABELS, UNIVERSE_WHEEL_COLORS, UNIVERSE_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
 import { ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
@@ -49,10 +50,14 @@ export default function ClientDashboard() {
       return
     }
     if (progress.completedUniverses[universe]) {
-      // Already completed — could show detail, for now just navigate
       return
     }
     navigate(`/questionnaire/${universe}`)
+  }
+
+  function handleSegmentClick(index: number) {
+    const universe = QUADRANT_TO_UNIVERSE[index]
+    handleUniverseClick(universe)
   }
 
   async function handleFinishDiagnostic() {
@@ -123,13 +128,13 @@ export default function ClientDashboard() {
 
       {/* Wheel hero */}
       <div className="flex justify-center mb-8">
-        <DiagnosticWheel
+        <NeedsWheel
           className="w-full max-w-[480px]"
-          universeStates={progress.universeStates}
+          segmentStates={progress.segmentStates}
           completedCount={progress.completedCount}
           globalScore={progress.globalScore}
           globalNeedLevel={progress.globalNeedLevel}
-          onUniverseClick={handleUniverseClick}
+          onSegmentClick={handleSegmentClick}
           variant="light"
         />
       </div>

@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { supabase } from '../../lib/supabase.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
-import DiagnosticWheel from '../../components/wheel/DiagnosticWheel.tsx'
-import type { UniverseState } from '../../components/wheel/DiagnosticWheel.tsx'
+import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
+import type { QuadrantState } from '../../components/landing/NeedsWheel.tsx'
+import { QUADRANT_TO_UNIVERSE, UNIVERSE_TO_QUADRANT } from '../../lib/constants.ts'
 import Card from '../../components/ui/Card.tsx'
 import { getVisibleUniverseQuestions, isUniverseComplete, getUniverseProgress, ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
 import { computeUniverseScore } from '../../shared/scoring/engine.ts'
@@ -125,21 +126,25 @@ export default function UniverseQuestionnairePage() {
   const labels = UNIVERSE_WHEEL_LABELS[universe]
   const isValid = isUniverseComplete(universe, answers)
 
-  // Build wheel states for sidebar
-  const universeStates = {} as Record<Universe, UniverseState>
-  let completedCount = 0
-  for (const u of ALL_UNIVERSES) {
-    if (completedUniverses[u]) {
-      const score = computeUniverseScore(u, answers)
-      universeStates[u] = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
-      completedCount++
-    } else if (u === universe) {
-      const prog = getUniverseProgress(u, answers)
-      universeStates[u] = { status: 'in_progress', progress: prog.total > 0 ? prog.answered / prog.total : 0 }
-    } else {
-      universeStates[u] = { status: 'available' }
+  // Build wheel states for sidebar (memoized to avoid recomputing scores on every render)
+  const { segmentStates, completedCount } = useMemo(() => {
+    const states: QuadrantState[] = new Array(4)
+    let count = 0
+    for (const u of ALL_UNIVERSES) {
+      const qi = UNIVERSE_TO_QUADRANT[u]
+      if (completedUniverses[u]) {
+        const score = computeUniverseScore(u, answers)
+        states[qi] = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
+        count++
+      } else if (u === universe) {
+        const prog = getUniverseProgress(u, answers)
+        states[qi] = { status: 'in_progress', progress: prog.total > 0 ? prog.answered / prog.total : 0 }
+      } else {
+        states[qi] = { status: 'available' }
+      }
     }
-  }
+    return { segmentStates: states, completedCount: count }
+  }, [completedUniverses, answers, universe])
 
   return (
     <div>
@@ -184,14 +189,14 @@ export default function UniverseQuestionnairePage() {
         <div className="hidden lg:block">
           <Card>
             <h3 className="text-sm font-bold text-primary-700 mb-4">Ma progression</h3>
-            <DiagnosticWheel
-              universeStates={universeStates}
+            <NeedsWheel
+              segmentStates={segmentStates}
               completedCount={completedCount}
-              activeUniverse={universe}
               variant="light"
               compact
               className="w-full max-w-[220px] mx-auto"
-              onUniverseClick={(u) => {
+              onSegmentClick={(i) => {
+                const u = QUADRANT_TO_UNIVERSE[i]
                 if (u !== universe && !completedUniverses[u]) {
                   flushAndNavigate(`/questionnaire/${u}`)
                 }
