@@ -40,19 +40,30 @@ export default function AdvisorDashboard() {
         .eq('advisor_id', profile.id)
 
       if (data) {
-        // Fetch latest diagnostic for each client
-        const enriched = await Promise.all(
-          (data as unknown as ClientRow[]).map(async (row) => {
-            const { data: diag } = await supabase
+        const rows = data as unknown as ClientRow[]
+        const clientIds = rows.map(r => r.client_id)
+
+        // Single batch query instead of N+1 (P11)
+        const { data: allDiags } = clientIds.length > 0
+          ? await supabase
               .from('diagnostics')
-              .select('global_score, created_at')
-              .eq('profile_id', row.client_id)
+              .select('profile_id, global_score, created_at')
+              .in('profile_id', clientIds)
               .order('created_at', { ascending: false })
-              .limit(1)
-              .single()
-            return { ...row, latest_diagnostic: diag || undefined }
-          })
-        )
+          : { data: [] }
+
+        // Keep only the latest diagnostic per client
+        const latestByClient = new Map<string, { global_score: number; created_at: string }>()
+        for (const d of allDiags || []) {
+          if (!latestByClient.has(d.profile_id)) {
+            latestByClient.set(d.profile_id, { global_score: d.global_score, created_at: d.created_at })
+          }
+        }
+
+        const enriched = rows.map(row => ({
+          ...row,
+          latest_diagnostic: latestByClient.get(row.client_id) || undefined,
+        }))
         setClients(enriched)
       }
     }

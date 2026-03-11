@@ -69,16 +69,24 @@ export default function ClientDetailPage() {
 
       const { data: diag } = await supabase
         .from('diagnostics')
-        .select('*')
+        .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
         .eq('profile_id', clientId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
 
       if (diag) {
-        const { data: actionsData } = await supabase
+        // Audit advisor access to client data (SEC-03/P12)
+      await supabase.rpc('log_audit_event', {
+        p_action: 'view_client_diagnostic',
+        p_resource_type: 'diagnostics',
+        p_resource_id: diag.id,
+        p_details: { client_id: clientId },
+      })
+
+      const { data: actionsData } = await supabase
           .from('actions')
-          .select('*')
+          .select('id, diagnostic_id, type, universe, priority, title, description, created_at')
           .eq('diagnostic_id', diag.id)
           .order('priority', { ascending: false })
 

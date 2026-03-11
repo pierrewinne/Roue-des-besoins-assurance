@@ -69,7 +69,7 @@ export default function UniverseQuestionnairePage() {
     if (!rid) return
     const { error } = await supabase
       .from('questionnaire_responses')
-      .update({ responses: newAnswers, updated_at: new Date().toISOString() })
+      .update({ responses: newAnswers })
       .eq('id', rid)
       .eq('profile_id', user.id)
     if (error) console.error('Auto-save failed:', error)
@@ -101,7 +101,6 @@ export default function UniverseQuestionnairePage() {
       .update({
         responses: answers,
         completed_universes: newCompleted,
-        updated_at: new Date().toISOString(),
       })
       .eq('id', responseIdRef.current)
       .eq('profile_id', user.id)

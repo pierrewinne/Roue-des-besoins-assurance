@@ -15,7 +15,6 @@ const AdvisorLoginPage = lazy(() => import('./pages/auth/AdvisorLoginPage.tsx'))
 const CallbackPage = lazy(() => import('./pages/auth/CallbackPage.tsx'))
 const ClientLayout = lazy(() => import('./components/layout/ClientLayout.tsx'))
 const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard.tsx'))
-// QuestionnairePage removed — old flow replaced by ProfilPage + UniverseQuestionnairePage
 const ResultsPage = lazy(() => import('./pages/client/ResultsPage.tsx'))
 const AdvisorLayout = lazy(() => import('./components/layout/AdvisorLayout.tsx'))
 const AdvisorDashboard = lazy(() => import('./pages/advisor/AdvisorDashboard.tsx'))

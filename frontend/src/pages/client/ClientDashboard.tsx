@@ -8,7 +8,6 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import DiagnosticWheel from '../../components/wheel/DiagnosticWheel.tsx'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
-import { computeDiagnostic } from '../../shared/scoring/engine.ts'
 import { getScoreColorClass, UNIVERSE_WHEEL_LABELS, UNIVERSE_WHEEL_COLORS, UNIVERSE_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
 import { ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
@@ -62,46 +61,18 @@ export default function ClientDashboard() {
     setFinishError(null)
 
     try {
-      const diagnostic = computeDiagnostic(progress.answers)
+      // Server-side scoring (SEC-01): the DB computes scores, generates actions,
+      // and marks the questionnaire as completed in a single transaction.
+      const { data: diagId, error } = await supabase.rpc('compute_and_save_diagnostic', {
+        p_questionnaire_id: progress.responseId,
+      })
 
-      const { data: diagData, error: diagError } = await supabase
-        .from('diagnostics')
-        .insert({
-          questionnaire_id: progress.responseId,
-          profile_id: user.id,
-          scores: diagnostic.universeScores,
-          global_score: diagnostic.globalScore,
-          weightings: diagnostic.weightings,
-        })
-        .select('id')
-        .single()
-
-      if (diagError || !diagData) {
-        throw new Error(diagError?.message || 'Échec de la création du diagnostic')
+      if (error || !diagId) {
+        throw new Error(error?.message || 'Échec de la création du diagnostic')
       }
 
-      const actionsToInsert = diagnostic.actions.map(a => ({
-        diagnostic_id: diagData.id,
-        profile_id: user.id,
-        type: a.type,
-        universe: a.universe,
-        priority: a.priority,
-        title: a.title,
-        description: a.description,
-      }))
-
-      await Promise.all([
-        actionsToInsert.length > 0 ? supabase.from('actions').insert(actionsToInsert) : Promise.resolve(),
-        supabase
-          .from('questionnaire_responses')
-          .update({ completed: true })
-          .eq('id', progress.responseId)
-          .eq('profile_id', user.id),
-      ])
-
-      navigate(`/results/${diagData.id}`)
-    } catch (err) {
-      console.error('Diagnostic creation failed:', err)
+      navigate(`/results/${diagId}`)
+    } catch {
       setFinishError('Une erreur est survenue lors de la création de votre diagnostic. Veuillez réessayer.')
     } finally {
       setIsFinishing(false)
@@ -112,6 +83,7 @@ export default function ClientDashboard() {
 
   async function handleExportData() {
     setRgpdError(null)
+    // Audit log is now handled server-side in export_my_data() (SEC-12)
     const { data, error } = await supabase.rpc('export_my_data')
     if (error) {
       setRgpdError('Impossible d\'exporter vos données. Veuillez réessayer.')

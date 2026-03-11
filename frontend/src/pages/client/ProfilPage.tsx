@@ -55,7 +55,7 @@ export default function ProfilPage() {
     if (rid) {
       const { error } = await supabase
         .from('questionnaire_responses')
-        .update({ responses: newAnswers, updated_at: new Date().toISOString() })
+        .update({ responses: newAnswers })
         .eq('id', rid)
         .eq('profile_id', user.id)
       if (error) console.error('Auto-save failed:', error)
@@ -98,7 +98,7 @@ export default function ProfilPage() {
       if (rid) {
         const { error: err } = await supabase
           .from('questionnaire_responses')
-          .update({ responses: answers, profil_completed: true, updated_at: new Date().toISOString() })
+          .update({ responses: answers, profil_completed: true })
           .eq('id', rid)
           .eq('profile_id', user.id)
         if (err) throw err
