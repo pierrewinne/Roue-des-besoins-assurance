@@ -272,10 +272,277 @@ const bsafeRules: RuleDefinition[] = [
 ]
 
 // ═══════════════════════════════════════════
+// HOME rules (15)
+// ═══════════════════════════════════════════
+
+const homeRules: RuleDefinition[] = [
+  {
+    id: 'home_01_tenant_no_coverage',
+    condition: (_, a) =>
+      s(a.housing_status) === 'tenant' && s(a.home_coverage_existing) === 'none',
+    recommendation: {
+      product: 'home',
+      type: 'immediate', priority: 5,
+      title: 'Sécuriser votre logement',
+      message: 'En tant que locataire, vous êtes responsable des dommages causés au logement (dégât des eaux, incendie). Une assurance habitation protège votre responsabilité et vos biens.',
+      advisorNote: 'Au Luxembourg, l\'assurance habitation n\'est pas légalement obligatoire pour les locataires mais quasi systématiquement exigée par les bailleurs. Vérifier le bail.',
+    },
+  },
+  {
+    id: 'home_02_owner_mortgage_gap',
+    condition: (_, a) =>
+      s(a.housing_status) === 'owner_with_mortgage' &&
+      ['none', 'unknown'].includes(s(a.home_coverage_existing)),
+    recommendation: {
+      product: 'home',
+      type: 'immediate', priority: 5,
+      title: 'Protéger votre investissement immobilier',
+      message: 'Avec un crédit immobilier en cours, une couverture habitation complète protège votre bien et votre famille. En cas de sinistre grave, c\'est votre patrimoine qui est en jeu.',
+      advisorNote: 'Vérifier si la banque exige une assurance. Proposer Home complet + prévoyance emprunteur (B-Safe).',
+    },
+  },
+  {
+    id: 'home_03_garden_pool',
+    condition: (_, a) => {
+      const specifics = arr(a.home_specifics)
+      return (specifics.includes('garden') || specifics.includes('pool')) &&
+        s(a.home_coverage_existing) !== 'with_options'
+    },
+    recommendation: {
+      product: 'home', optionId: 'home_pack_jardin_piscine',
+      type: 'deferred', priority: 3,
+      title: 'Couvrir vos espaces extérieurs',
+      message: 'Votre jardin aménagé et/ou votre piscine ne sont pas couverts par l\'assurance habitation de base. Le Pack Jardin/Piscine protège vos aménagements extérieurs contre les intempéries, le gel et les dommages accidentels.',
+      advisorNote: 'Pack Jardin/Piscine. Chiffrer la valeur des aménagements extérieurs.',
+    },
+  },
+  {
+    id: 'home_04_solar_panels',
+    condition: (_, a) =>
+      arr(a.home_specifics).includes('solar_panels') &&
+      s(a.home_coverage_existing) !== 'with_options',
+    recommendation: {
+      product: 'home', optionId: 'home_pack_energie_renouvelable',
+      type: 'deferred', priority: 3,
+      title: 'Protéger vos installations d\'énergie renouvelable',
+      message: 'Vos panneaux solaires ou votre pompe à chaleur représentent un investissement de plusieurs milliers d\'euros. Le Pack Énergie Renouvelable couvre les dommages spécifiques à ces installations.',
+      advisorNote: 'Pack Énergie Renouvelable. Au Luxembourg, investissement moyen 10-20k EUR. Argument : subventions ne couvrent que l\'installation, pas le remplacement en cas de sinistre.',
+    },
+  },
+  {
+    id: 'home_05_wine_cellar',
+    condition: (_, a) => arr(a.home_specifics).includes('wine_cellar'),
+    recommendation: {
+      product: 'home', optionId: 'home_pack_cave_vin',
+      type: 'deferred', priority: 2,
+      title: 'Assurer votre cave à vin',
+      message: 'Votre cave à vin est un patrimoine sensible aux variations de température, au bris accidentel et au vol. Le Pack Cave à Vin couvre sa valeur réelle.',
+      advisorNote: 'Pack Cave à Vin/Denrées. Question sur la valeur estimée de la cave pour dimensionner.',
+    },
+  },
+  {
+    id: 'home_06_multimedia',
+    condition: (_, a) =>
+      arr(a.valuable_possessions).includes('multimedia') &&
+      s(a.home_coverage_existing) !== 'with_options',
+    recommendation: {
+      product: 'home', optionId: 'home_pack_multimedia',
+      type: 'deferred', priority: 3,
+      title: 'Couvrir vos équipements multimédia',
+      message: 'Vos équipements multimédia haut de gamme (ordinateurs, home cinéma, matériel photo...) dépassent souvent les plafonds de la couverture standard. Le Pack Multimédia protège leur valeur réelle.',
+      advisorNote: 'Pack Multimédia. Lister les équipements concernés et chiffrer.',
+    },
+  },
+  {
+    id: 'home_07_sustainable_mobility',
+    condition: (_, a) => arr(a.valuable_possessions).includes('sustainable_mobility'),
+    recommendation: {
+      product: 'home', optionId: 'home_pack_mobilite_durable',
+      type: 'deferred', priority: 3,
+      title: 'Protéger votre équipement de mobilité durable',
+      message: 'Votre vélo électrique ou trottinette représente un investissement de plusieurs milliers d\'euros, souvent insuffisamment couvert. Le Pack Mobilité Durable protège contre le vol, la casse et les dommages.',
+      advisorNote: 'Pack Mobilité Durable. Vélo électrique moyen 3-8k EUR au Luxembourg. Vol en forte hausse.',
+    },
+  },
+  {
+    id: 'home_08_high_value_items',
+    condition: (_, a) => {
+      const possessions = arr(a.valuable_possessions)
+      return includesAny(possessions, ['jewelry', 'art', 'collections']) &&
+        ['15k_50k', '50k_plus'].includes(s(a.valuable_total_estimate)) &&
+        s(a.home_coverage_existing) !== 'with_options'
+    },
+    recommendation: {
+      product: 'home', optionId: 'home_pack_objets_valeur',
+      type: 'immediate', priority: 4,
+      title: 'Assurer vos objets de valeur',
+      message: 'Vos objets de valeur dépassent les plafonds de la couverture habitation standard. Sans assurance spécifique, vous ne seriez remboursé qu\'à hauteur d\'un plafond forfaitaire, très inférieur à leur valeur réelle.',
+      advisorNote: 'Pack OV/Art ou Pack OP/Bijoux selon le type. Proposer une expertise pour les valeurs > 50k.',
+    },
+  },
+  {
+    id: 'home_09_sports_equipment',
+    condition: (_, a) => arr(a.valuable_possessions).includes('sports_leisure'),
+    recommendation: {
+      product: 'home', optionId: 'home_pack_objets_loisirs',
+      type: 'deferred', priority: 2,
+      title: 'Couvrir votre équipement sportif',
+      message: 'Votre équipement de loisirs coûteux (ski, golf, vélo...) n\'est généralement pas couvert par l\'assurance habitation standard, ni en dehors du domicile. Le Pack Objets de Loisirs étend la protection.',
+      advisorNote: 'Pack Objets de Loisirs. Couvre aussi hors domicile (important pour équipement sportif).',
+    },
+  },
+  {
+    id: 'home_10_rc_vie_privee',
+    condition: (_, a) =>
+      ['no', 'unsure'].includes(s(a.has_rc_vie_privee)) &&
+      (n(a.children_count) > 0 || (arr(a.sports_activities).length > 0 && !arr(a.sports_activities).includes('none'))),
+    recommendation: {
+      product: 'home', optionId: 'home_rc_vie_privee',
+      type: 'immediate', priority: 4,
+      title: 'Vous protéger en responsabilité civile',
+      message: 'Avec des enfants ou une activité sportive, les risques de causer involontairement des dommages à des tiers sont réels. La RC Vie Privée vous protège contre les conséquences financières, partout dans le monde.',
+      advisorNote: 'RC Vie Privée HOME. Couverture monde entier. Exemples concrets : enfant qui casse une vitre, collision à vélo, chute en ski blessant un tiers.',
+    },
+  },
+  {
+    id: 'home_11_no_security_valuables',
+    condition: (_, a) =>
+      arr(a.security_measures).includes('none') &&
+      !arr(a.valuable_possessions).includes('none'),
+    recommendation: {
+      product: 'home', optionId: 'home_vol_vandalisme',
+      type: 'immediate', priority: 4,
+      title: 'Sécuriser et assurer vos biens de valeur',
+      message: 'Vos biens de valeur sont conservés sans dispositif de sécurité particulier. L\'option Vol/Vandalisme est d\'autant plus recommandée. Votre conseiller peut aussi vous orienter vers des solutions de sécurisation adaptées.',
+      advisorNote: 'Home Vol/Vandalisme en priorité. Conseil sécurité : proposer coffre-fort ou alarme pour réduire la prime.',
+    },
+  },
+  {
+    id: 'home_12_reequipement',
+    condition: (_, a) =>
+      ['50k_100k', '100k_plus'].includes(s(a.home_contents_value)) &&
+      s(a.home_coverage_existing) !== 'with_options',
+    recommendation: {
+      product: 'home', optionId: 'home_reequipement_neuf',
+      type: 'deferred', priority: 3,
+      title: 'Protéger la valeur de remplacement de vos biens',
+      message: 'En cas de sinistre, la valeur de remplacement de votre contenu peut être très différente de la valeur d\'usage. Le Rééquipement à neuf vous garantit le remplacement sans décote.',
+      advisorNote: 'Rééquipement à neuf. Argument clé : la différence vétusté/neuf peut représenter 30-50% de la valeur.',
+    },
+  },
+  {
+    id: 'home_13_property_purchase',
+    condition: (_, a) => arr(a.life_event).includes('property_purchase'),
+    recommendation: {
+      product: 'home',
+      type: 'event', priority: 5,
+      title: 'Sécuriser votre projet immobilier',
+      message: 'L\'achat immobilier est le moment idéal pour mettre en place une couverture habitation complète. Votre conseiller peut préparer votre contrat en amont pour que vous soyez couvert dès l\'acte de vente.',
+      advisorNote: 'Home complet + B-Safe prévoyance emprunteur. Proposer un RDV avant la signature. Cross-sell majeur.',
+    },
+  },
+  {
+    id: 'home_14_renovation',
+    condition: (_, a) => arr(a.life_event).includes('renovation'),
+    recommendation: {
+      product: 'home',
+      type: 'event', priority: 3,
+      title: 'Adapter votre couverture à vos travaux',
+      message: 'Des travaux de rénovation modifient la valeur de votre bien et potentiellement vos installations (énergie renouvelable, cuisine, salle de bain). Pensez à mettre à jour votre contrat habitation.',
+      advisorNote: 'Réévaluation des capitaux + Pack Énergie Renouvelable si installation solaire/PAC.',
+    },
+  },
+  {
+    id: 'home_15_other_properties',
+    condition: (_, a) => s(a.other_properties) !== 'none' && s(a.other_properties) !== '',
+    recommendation: {
+      product: 'home',
+      type: 'deferred', priority: 3,
+      title: 'Assurer vos autres biens immobiliers',
+      message: 'Votre résidence secondaire ou vos biens locatifs nécessitent chacun une couverture adaptée. En tant que propriétaire bailleur, votre responsabilité est engagée.',
+      advisorNote: 'Multi-contrat Home. Le bien locatif doit être couvert même si le locataire a sa propre assurance (responsabilité du propriétaire).',
+    },
+  },
+]
+
+// ═══════════════════════════════════════════
+// TRAVEL rules (5)
+// ═══════════════════════════════════════════
+
+const travelRules: RuleDefinition[] = [
+  {
+    id: 'travel_01_frequent_no_annual',
+    condition: (_, a) =>
+      ['several_year', 'frequent'].includes(s(a.travel_frequency)) &&
+      s(a.travel_coverage_existing) !== 'annual',
+    recommendation: {
+      product: 'travel',
+      type: 'immediate', priority: 4,
+      title: 'Opter pour une couverture voyage annuelle',
+      message: 'Avec plusieurs voyages par an, un contrat annuel est plus économique et vous couvre en permanence, sans avoir à y penser à chaque départ.',
+      advisorNote: 'Travel annuel. Chiffrer : coût de 2-3 contrats temporaires vs annuel. Argument de tranquillité.',
+    },
+  },
+  {
+    id: 'travel_02_worldwide_credit_card',
+    condition: (_, a) =>
+      arr(a.travel_destinations).includes('worldwide') &&
+      s(a.travel_coverage_existing) === 'credit_card',
+    recommendation: {
+      product: 'travel',
+      type: 'immediate', priority: 5,
+      title: 'Renforcer votre couverture voyage hors Europe',
+      message: 'Les couvertures des cartes bancaires ont des plafonds limités et des exclusions nombreuses. Hors Europe, une hospitalisation peut coûter des dizaines de milliers d\'euros. Une assurance voyage dédiée vous couvre sans surprise.',
+      advisorNote: 'Travel complet. Exemples concrets : hospitalisation aux USA 5-20k EUR/jour. Rapatriement médical 15-50k EUR. La carte bancaire plafonne généralement à 10-15k EUR.',
+    },
+  },
+  {
+    id: 'travel_03_high_budget_no_cancel',
+    condition: (_, a) =>
+      ['3k_5k', '5k_plus'].includes(s(a.travel_budget)) &&
+      ['none', 'credit_card'].includes(s(a.travel_coverage_existing)),
+    recommendation: {
+      product: 'travel',
+      type: 'immediate', priority: 4,
+      title: 'Protéger votre investissement voyage',
+      message: 'Un voyage à plus de 3 000 EUR représente un investissement important. En cas d\'annulation pour maladie, accident ou imprévu familial, l\'assurance annulation vous rembourse les frais engagés.',
+      advisorNote: 'Travel Annulation. Les causes d\'annulation couvertes sont larges : maladie, accident, décès d\'un proche, licenciement, convocation tribunal.',
+    },
+  },
+  {
+    id: 'travel_04_adventure_no_accident',
+    condition: (_, a) =>
+      arr(a.travel_destinations).includes('adventure') &&
+      ['none', 'credit_card'].includes(s(a.travel_coverage_existing)),
+    recommendation: {
+      product: 'travel',
+      type: 'immediate', priority: 3,
+      title: 'Vous couvrir pour vos voyages aventure',
+      message: 'Les destinations nature et aventure présentent des risques spécifiques (éloignement des structures médicales, activités de plein air). L\'assurance accident de voyage complète votre protection sur place.',
+      advisorNote: 'Travel Accident + Assistance Personnes. Vérifier la compatibilité des activités prévues avec les exclusions (sports exclus dans l\'IPID).',
+    },
+  },
+  {
+    id: 'travel_05_family_travel',
+    condition: (_, a) =>
+      n(a.children_count) > 0 &&
+      s(a.travel_frequency) !== 'never' &&
+      ['none', 'credit_card'].includes(s(a.travel_coverage_existing)),
+    recommendation: {
+      product: 'travel',
+      type: 'deferred', priority: 3,
+      title: 'Couvrir toute la famille en voyage',
+      message: 'Avec des enfants, les imprévus de voyage sont plus fréquents et plus complexes à gérer. La formule famille couvre tout le foyer sous un seul contrat, y compris l\'annulation et l\'assistance.',
+      advisorNote: 'Travel formule famille. Argument : un enfant malade à l\'étranger = rapatriement de toute la famille.',
+    },
+  },
+]
+
+// ═══════════════════════════════════════════
 // Engine
 // ═══════════════════════════════════════════
 
-const ALL_RULES: RuleDefinition[] = [...driveRules, ...bsafeRules]
+const ALL_RULES: RuleDefinition[] = [...driveRules, ...bsafeRules, ...homeRules, ...travelRules]
 
 export function generateRecommendations(
   scores: Record<Quadrant, QuadrantScore>,

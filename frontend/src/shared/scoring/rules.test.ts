@@ -45,7 +45,7 @@ describe('generateRecommendations', () => {
     }
   })
 
-  it('only generates drive and bsafe recommendations', () => {
+  it('generates recommendations for all four products', () => {
     const result = computeDiagnostic({
       vehicle_count: 1,
       vehicle_details: 'car_new',
@@ -54,10 +54,16 @@ describe('generateRecommendations', () => {
       income_contributors: 'one',
       accident_coverage_existing: 'none',
       sports_activities: ['winter_sports'],
+      housing_status: 'tenant',
+      home_coverage_existing: 'none',
+      travel_frequency: 'frequent',
+      travel_coverage_existing: 'none',
+      travel_destinations: ['worldwide'],
+      children_count: 2,
     })
     const products = [...new Set(result.recommendations.map(r => r.product))]
     for (const p of products) {
-      expect(['drive', 'bsafe']).toContain(p)
+      expect(['drive', 'bsafe', 'home', 'travel']).toContain(p)
     }
   })
 })
@@ -900,13 +906,29 @@ describe('rules - life events edge cases', () => {
     expect(recommendations.find(r => r.id === 'bsafe_12_divorce_event')).toBeDefined()
   })
 
-  it('marriage/property_purchase/move/renovation/career_change do not trigger event rules', () => {
+  it('marriage/move/career_change do not trigger event rules', () => {
     const scores = makeScores()
     const recommendations = generateRecommendations(scores, {
-      life_event: ['marriage', 'property_purchase', 'move', 'renovation', 'career_change'],
+      life_event: ['marriage', 'move', 'career_change'],
     })
     const eventRecs = recommendations.filter(r => r.type === 'event')
     expect(eventRecs).toHaveLength(0)
+  })
+
+  it('property_purchase triggers home event rule', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      life_event: ['property_purchase'],
+    })
+    expect(recommendations.find(r => r.id === 'home_13_property_purchase')).toBeDefined()
+  })
+
+  it('renovation triggers home event rule', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      life_event: ['renovation'],
+    })
+    expect(recommendations.find(r => r.id === 'home_14_renovation')).toBeDefined()
   })
 
   it('empty life_event array produces no event recommendations', () => {
@@ -919,8 +941,401 @@ describe('rules - life events edge cases', () => {
   })
 })
 
-describe('rules - non-regression: no home/travel products', () => {
-  it('no recommendation ever references home product', () => {
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — HOME rules (15)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('home_01: tenant no coverage', () => {
+  it('triggers for tenant with no home coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'tenant', home_coverage_existing: 'none' })
+    const rec = recs.find(r => r.id === 'home_01_tenant_no_coverage')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(5)
+    expect(rec!.type).toBe('immediate')
+  })
+
+  it('does NOT trigger for tenant with basic coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'tenant', home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_01_tenant_no_coverage')).toBeUndefined()
+  })
+
+  it('does NOT trigger for owner', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'owner_no_mortgage', home_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'home_01_tenant_no_coverage')).toBeUndefined()
+  })
+})
+
+describe('home_02: owner with mortgage gap', () => {
+  it('triggers for owner_with_mortgage and no coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'owner_with_mortgage', home_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'home_02_owner_mortgage_gap')).toBeDefined()
+  })
+
+  it('triggers for owner_with_mortgage and unknown coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'owner_with_mortgage', home_coverage_existing: 'unknown' })
+    expect(recs.find(r => r.id === 'home_02_owner_mortgage_gap')).toBeDefined()
+  })
+
+  it('does NOT trigger with basic coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_status: 'owner_with_mortgage', home_coverage_existing: 'basic_baloise' })
+    expect(recs.find(r => r.id === 'home_02_owner_mortgage_gap')).toBeUndefined()
+  })
+})
+
+describe('home_03: garden/pool', () => {
+  it('triggers for garden without options coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['garden'], home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_03_garden_pool')).toBeDefined()
+  })
+
+  it('triggers for pool without options coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['pool'], home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_03_garden_pool')).toBeDefined()
+  })
+
+  it('does NOT trigger with with_options coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['garden', 'pool'], home_coverage_existing: 'with_options' })
+    expect(recs.find(r => r.id === 'home_03_garden_pool')).toBeUndefined()
+  })
+})
+
+describe('home_04: solar panels', () => {
+  it('triggers for solar_panels without options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['solar_panels'], home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_04_solar_panels')).toBeDefined()
+  })
+
+  it('does NOT trigger with with_options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['solar_panels'], home_coverage_existing: 'with_options' })
+    expect(recs.find(r => r.id === 'home_04_solar_panels')).toBeUndefined()
+  })
+})
+
+describe('home_05: wine cellar', () => {
+  it('triggers when wine_cellar in home_specifics', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['wine_cellar'] })
+    const rec = recs.find(r => r.id === 'home_05_wine_cellar')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(2)
+  })
+
+  it('does NOT trigger without wine_cellar', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_specifics: ['garden'] })
+    expect(recs.find(r => r.id === 'home_05_wine_cellar')).toBeUndefined()
+  })
+})
+
+describe('home_06: multimedia', () => {
+  it('triggers for multimedia possessions without options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { valuable_possessions: ['multimedia'], home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_06_multimedia')).toBeDefined()
+  })
+
+  it('does NOT trigger with with_options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { valuable_possessions: ['multimedia'], home_coverage_existing: 'with_options' })
+    expect(recs.find(r => r.id === 'home_06_multimedia')).toBeUndefined()
+  })
+})
+
+describe('home_07: sustainable mobility', () => {
+  it('triggers for sustainable_mobility possessions', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { valuable_possessions: ['sustainable_mobility'] })
+    expect(recs.find(r => r.id === 'home_07_sustainable_mobility')).toBeDefined()
+  })
+})
+
+describe('home_08: high value items', () => {
+  it('triggers for jewelry + 15k_50k without options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      valuable_possessions: ['jewelry'], valuable_total_estimate: '15k_50k', home_coverage_existing: 'basic',
+    })
+    const rec = recs.find(r => r.id === 'home_08_high_value_items')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(4)
+    expect(rec!.type).toBe('immediate')
+  })
+
+  it('triggers for art + 50k_plus', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      valuable_possessions: ['art'], valuable_total_estimate: '50k_plus', home_coverage_existing: 'basic',
+    })
+    expect(recs.find(r => r.id === 'home_08_high_value_items')).toBeDefined()
+  })
+
+  it('does NOT trigger for low value estimate', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      valuable_possessions: ['jewelry'], valuable_total_estimate: '5k_15k', home_coverage_existing: 'basic',
+    })
+    expect(recs.find(r => r.id === 'home_08_high_value_items')).toBeUndefined()
+  })
+
+  it('does NOT trigger with with_options coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      valuable_possessions: ['jewelry'], valuable_total_estimate: '50k_plus', home_coverage_existing: 'with_options',
+    })
+    expect(recs.find(r => r.id === 'home_08_high_value_items')).toBeUndefined()
+  })
+})
+
+describe('home_09: sports equipment', () => {
+  it('triggers for sports_leisure possessions', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { valuable_possessions: ['sports_leisure'] })
+    expect(recs.find(r => r.id === 'home_09_sports_equipment')).toBeDefined()
+  })
+})
+
+describe('home_10: RC Vie Privee', () => {
+  it('triggers when no RC + children', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'no', children_count: 2 })
+    const rec = recs.find(r => r.id === 'home_10_rc_vie_privee')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(4)
+  })
+
+  it('triggers when unsure RC + sports activities', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'unsure', sports_activities: ['running_cycling'], children_count: 0 })
+    expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeDefined()
+  })
+
+  it('does NOT trigger when has RC', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'yes', children_count: 3 })
+    expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeUndefined()
+  })
+
+  it('does NOT trigger with no children and sports=none', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'no', children_count: 0, sports_activities: ['none'] })
+    expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeUndefined()
+  })
+})
+
+describe('home_11: no security with valuables', () => {
+  it('triggers when no security measures + valuables declared', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { security_measures: ['none'], valuable_possessions: ['jewelry'] })
+    expect(recs.find(r => r.id === 'home_11_no_security_valuables')).toBeDefined()
+  })
+
+  it('does NOT trigger when has alarm', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { security_measures: ['alarm'], valuable_possessions: ['jewelry'] })
+    expect(recs.find(r => r.id === 'home_11_no_security_valuables')).toBeUndefined()
+  })
+
+  it('does NOT trigger when no valuables', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { security_measures: ['none'], valuable_possessions: ['none'] })
+    expect(recs.find(r => r.id === 'home_11_no_security_valuables')).toBeUndefined()
+  })
+})
+
+describe('home_12: reequipement', () => {
+  it('triggers for high contents value without options', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_contents_value: '50k_100k', home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_12_reequipement')).toBeDefined()
+  })
+
+  it('triggers for 100k_plus', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_contents_value: '100k_plus', home_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'home_12_reequipement')).toBeDefined()
+  })
+
+  it('does NOT trigger for low value', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { home_contents_value: '20k_50k', home_coverage_existing: 'basic_other' })
+    expect(recs.find(r => r.id === 'home_12_reequipement')).toBeUndefined()
+  })
+})
+
+describe('home_13: property purchase event', () => {
+  it('triggers for property_purchase life event', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { life_event: ['property_purchase'] })
+    const rec = recs.find(r => r.id === 'home_13_property_purchase')
+    expect(rec).toBeDefined()
+    expect(rec!.type).toBe('event')
+    expect(rec!.priority).toBe(5)
+  })
+})
+
+describe('home_14: renovation event', () => {
+  it('triggers for renovation life event', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { life_event: ['renovation'] })
+    const rec = recs.find(r => r.id === 'home_14_renovation')
+    expect(rec).toBeDefined()
+    expect(rec!.type).toBe('event')
+    expect(rec!.priority).toBe(3)
+  })
+})
+
+describe('home_15: other properties', () => {
+  it('triggers when other_properties is not none', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'secondary' })
+    expect(recs.find(r => r.id === 'home_15_other_properties')).toBeDefined()
+  })
+
+  it('does NOT trigger when other_properties is none', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'none' })
+    expect(recs.find(r => r.id === 'home_15_other_properties')).toBeUndefined()
+  })
+
+  it('does NOT trigger when other_properties is empty', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: '' })
+    expect(recs.find(r => r.id === 'home_15_other_properties')).toBeUndefined()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — TRAVEL rules (5)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('travel_01: frequent no annual', () => {
+  it('triggers for several_year frequency without annual coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_frequency: 'several_year', travel_coverage_existing: 'none' })
+    const rec = recs.find(r => r.id === 'travel_01_frequent_no_annual')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(4)
+    expect(rec!.type).toBe('immediate')
+  })
+
+  it('triggers for frequent with credit_card coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_frequency: 'frequent', travel_coverage_existing: 'credit_card' })
+    expect(recs.find(r => r.id === 'travel_01_frequent_no_annual')).toBeDefined()
+  })
+
+  it('does NOT trigger with annual coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_frequency: 'frequent', travel_coverage_existing: 'annual' })
+    expect(recs.find(r => r.id === 'travel_01_frequent_no_annual')).toBeUndefined()
+  })
+
+  it('does NOT trigger for once_year frequency', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_frequency: 'once_year', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_01_frequent_no_annual')).toBeUndefined()
+  })
+})
+
+describe('travel_02: worldwide with credit card', () => {
+  it('triggers for worldwide destinations with credit_card', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_destinations: ['worldwide'], travel_coverage_existing: 'credit_card' })
+    const rec = recs.find(r => r.id === 'travel_02_worldwide_credit_card')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(5)
+  })
+
+  it('does NOT trigger for europe_only destinations', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_destinations: ['europe'], travel_coverage_existing: 'credit_card' })
+    expect(recs.find(r => r.id === 'travel_02_worldwide_credit_card')).toBeUndefined()
+  })
+
+  it('does NOT trigger with annual coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_destinations: ['worldwide'], travel_coverage_existing: 'annual' })
+    expect(recs.find(r => r.id === 'travel_02_worldwide_credit_card')).toBeUndefined()
+  })
+})
+
+describe('travel_03: high budget no cancel', () => {
+  it('triggers for 3k_5k budget with no coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_budget: '3k_5k', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_03_high_budget_no_cancel')).toBeDefined()
+  })
+
+  it('triggers for 5k_plus budget with credit_card', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_budget: '5k_plus', travel_coverage_existing: 'credit_card' })
+    expect(recs.find(r => r.id === 'travel_03_high_budget_no_cancel')).toBeDefined()
+  })
+
+  it('does NOT trigger for low budget', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_budget: '1k_3k', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_03_high_budget_no_cancel')).toBeUndefined()
+  })
+})
+
+describe('travel_04: adventure no accident', () => {
+  it('triggers for adventure destinations with no coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_destinations: ['adventure'], travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_04_adventure_no_accident')).toBeDefined()
+  })
+
+  it('does NOT trigger with annual coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { travel_destinations: ['adventure'], travel_coverage_existing: 'annual' })
+    expect(recs.find(r => r.id === 'travel_04_adventure_no_accident')).toBeUndefined()
+  })
+})
+
+describe('travel_05: family travel', () => {
+  it('triggers for family with children who travels without coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { children_count: 2, travel_frequency: 'several_year', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_05_family_travel')).toBeDefined()
+  })
+
+  it('does NOT trigger for travel_frequency=never', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { children_count: 2, travel_frequency: 'never', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_05_family_travel')).toBeUndefined()
+  })
+
+  it('does NOT trigger without children', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { children_count: 0, travel_frequency: 'frequent', travel_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'travel_05_family_travel')).toBeUndefined()
+  })
+
+  it('does NOT trigger with annual coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { children_count: 2, travel_frequency: 'frequent', travel_coverage_existing: 'annual' })
+    expect(recs.find(r => r.id === 'travel_05_family_travel')).toBeUndefined()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// NON-REGRESSION: all 4 products present in full profile
+// ═══════════════════════════════════════════════════════════════════
+
+describe('rules - non-regression: all four products', () => {
+  it('full profile triggers recommendations across all products', () => {
     const allAnswers = {
       vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'none',
       vehicle_usage: 'professional', vehicle_options_interest: ['new_vehicle_value'],
@@ -928,14 +1343,47 @@ describe('rules - non-regression: no home/travel products', () => {
       professional_status: 'independent', accident_coverage_existing: 'none',
       sports_activities: ['winter_sports'], health_concerns: ['physical_job', 'aging_parents'],
       work_incapacity_concern: 'less_1_month', income_range: '8k_12k',
-      life_event: ['birth', 'new_vehicle', 'retirement', 'divorce'],
-      housing_status: 'owner_with_mortgage', savings_protection: ['none'],
-      children_count: 2, age_range: '46_55',
+      life_event: ['birth', 'new_vehicle', 'retirement', 'divorce', 'property_purchase'],
+      housing_status: 'owner_with_mortgage', home_coverage_existing: 'none',
+      home_specifics: ['garden', 'solar_panels'], valuable_possessions: ['jewelry'],
+      valuable_total_estimate: '50k_plus', security_measures: ['none'],
+      home_contents_value: '100k_plus', has_rc_vie_privee: 'no',
+      savings_protection: ['none'], children_count: 2, age_range: '46_55',
+      travel_frequency: 'frequent', travel_destinations: ['worldwide', 'adventure'],
+      travel_budget: '5k_plus', travel_coverage_existing: 'credit_card',
     }
     const result = computeDiagnostic(allAnswers)
-    for (const rec of result.recommendations) {
-      expect(rec.product).not.toBe('home')
-      expect(rec.product).not.toBe('travel')
+    const products = [...new Set(result.recommendations.map(r => r.product))]
+    expect(products).toContain('drive')
+    expect(products).toContain('bsafe')
+    expect(products).toContain('home')
+    expect(products).toContain('travel')
+    // Expect significant number of recommendations
+    expect(result.recommendations.length).toBeGreaterThanOrEqual(15)
+  })
+
+  it('all 40 rule IDs are unique', () => {
+    const allAnswers = {
+      vehicle_count: 1, vehicle_details: 'electric', vehicle_coverage_existing: 'none',
+      vehicle_usage: 'daily_commute',
+      vehicle_options_interest: ['bonus_important', 'vehicle_customized', 'professional_equipment', 'replacement_needed'],
+      life_event: ['birth', 'new_vehicle', 'divorce', 'retirement', 'property_purchase', 'renovation'],
+      family_status: 'single_parent', income_contributors: 'one',
+      professional_status: 'independent', accident_coverage_existing: 'none',
+      children_count: 3, sports_activities: ['winter_sports', 'motor_sports'],
+      health_concerns: ['physical_job', 'aging_parents'],
+      work_incapacity_concern: 'less_1_month', income_range: '8k_12k',
+      age_range: '46_55', housing_status: 'owner_with_mortgage',
+      home_coverage_existing: 'none', home_specifics: ['garden', 'pool', 'solar_panels', 'wine_cellar'],
+      home_contents_value: '100k_plus', valuable_possessions: ['jewelry', 'art', 'multimedia', 'sustainable_mobility', 'sports_leisure', 'collections'],
+      valuable_total_estimate: '50k_plus', security_measures: ['none'],
+      has_rc_vie_privee: 'no', savings_protection: ['none'],
+      other_properties: 'rental_property',
+      travel_frequency: 'frequent', travel_destinations: ['worldwide', 'adventure'],
+      travel_budget: '5k_plus', travel_coverage_existing: 'credit_card',
     }
+    const result = computeDiagnostic(allAnswers)
+    const ids = result.recommendations.map(r => r.id)
+    expect(ids.length).toBe(new Set(ids).size)
   })
 })
