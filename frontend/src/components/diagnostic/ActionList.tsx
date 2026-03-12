@@ -1,11 +1,11 @@
-import type { RecommendedAction } from '../../shared/scoring/types.ts'
+import type { Recommendation } from '../../shared/scoring/types.ts'
 import Badge from '../ui/Badge.tsx'
 import Card from '../ui/Card.tsx'
 import EmptyState from '../ui/EmptyState.tsx'
-import { UNIVERSE_SHORT_LABELS, ACTION_TYPE_LABELS } from '../../lib/constants.ts'
+import { ACTION_TYPE_LABELS, PRODUCT_LABELS } from '../../lib/constants.ts'
 
 interface ActionListProps {
-  actions: RecommendedAction[]
+  actions: Recommendation[]
   showType?: boolean
 }
 
@@ -31,19 +31,14 @@ export default function ActionList({ actions, showType = false }: ActionListProp
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <h4 className="font-bold text-primary-700 text-sm">{action.title}</h4>
-                <Badge color="blue">{UNIVERSE_SHORT_LABELS[action.universe as keyof typeof UNIVERSE_SHORT_LABELS]}</Badge>
+                <Badge color="blue">{PRODUCT_LABELS[action.product]}</Badge>
                 {showType && (
                   <Badge color={action.type === 'immediate' ? 'red' : action.type === 'deferred' ? 'orange' : 'gray'}>
                     {ACTION_TYPE_LABELS[action.type]}
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-grey-400 leading-relaxed">{action.description}</p>
-              {action.productName && (
-                <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold text-primary-700 bg-primary-50 px-2 py-0.5 rounded-md">
-                  {action.productName}
-                </span>
-              )}
+              <p className="text-sm text-grey-400 leading-relaxed">{action.message}</p>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0 pt-1">
               {Array.from({ length: 5 }).map((_, j) => (

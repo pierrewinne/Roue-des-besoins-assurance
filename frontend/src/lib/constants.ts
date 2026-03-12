@@ -1,25 +1,25 @@
-import type { Universe } from '../shared/scoring/types.ts'
+import type { Quadrant, Product } from '../shared/scoring/types.ts'
 
-export const UNIVERSE_LABELS = {
-  auto: 'Auto / Mobilité',
-  habitation: 'Habitation / Propriétaire',
-  prevoyance: 'Prévoyance',
-  objets_valeur: 'Objets de valeur',
-} as const
+export const QUADRANT_LABELS: Record<Quadrant, string> = {
+  biens: 'Protection des biens',
+  personnes: 'Protection des personnes',
+  projets: 'Protection des projets',
+  futur: 'Protection du futur',
+}
 
-export const UNIVERSE_SHORT_LABELS = {
-  auto: 'Auto',
-  habitation: 'Habitation',
-  prevoyance: 'Prévoyance',
-  objets_valeur: 'Objets',
-} as const
+export const QUADRANT_SHORT_LABELS: Record<Quadrant, string> = {
+  biens: 'Biens',
+  personnes: 'Personnes',
+  projets: 'Projets',
+  futur: 'Futur',
+}
 
-export const UNIVERSE_COLORS = {
-  auto: '#293485',
-  habitation: '#656ea8',
-  prevoyance: '#0014aa',
-  objets_valeur: '#3d4691',
-} as const
+export const QUADRANT_COLORS: Record<Quadrant, string> = {
+  biens: '#293485',
+  personnes: '#0014aa',
+  projets: '#00b28f',
+  futur: '#9f52cc',
+}
 
 export const NEED_COLORS = {
   low: '#168741',
@@ -67,6 +67,7 @@ export const ACTION_TYPE_LABELS = {
   immediate: 'Action immédiate',
   deferred: 'Action différée',
   event: 'Événement de vie',
+  optimization: 'Optimisation',
 } as const
 
 export function getScoreColorClass(score: number): string {
@@ -75,45 +76,50 @@ export function getScoreColorClass(score: number): string {
   return 'text-[#d9304c]'
 }
 
-/* ─── Trivial Pursuit Wheel Config ─── */
+/* ─── Wheel Config (4 quadrants) ─── */
 
-export const UNIVERSE_WHEEL_LABELS: Record<Universe, { lines: [string, string]; subtitle: string }> = {
-  auto: { lines: ['Vos', 'd\u00e9placements'], subtitle: '~2 min' },
-  habitation: { lines: ['Votre', 'logement'], subtitle: '~2 min' },
-  prevoyance: { lines: ['Votre', 'famille'], subtitle: '~1 min' },
-  objets_valeur: { lines: ['Vos biens', 'pr\u00e9cieux'], subtitle: '~2 min' },
-} as const
+export const QUADRANT_WHEEL_LABELS: Record<Quadrant, { lines: [string, string]; subtitle: string }> = {
+  biens: { lines: ['Vos', 'biens'], subtitle: '~1m30' },
+  personnes: { lines: ['Vos', 'personnes'], subtitle: '~2 min' },
+  projets: { lines: ['Vos', 'projets'], subtitle: 'Bientôt' },
+  futur: { lines: ['Votre', 'futur'], subtitle: 'Bientôt' },
+}
 
-export const UNIVERSE_WHEEL_COLORS: Record<Universe, { base: string; light: string; dark: string; glow: string }> = {
-  auto: { base: '#293485', light: '#3d4691', dark: '#1a2260', glow: 'rgba(41, 52, 133, 0.30)' },
-  habitation: { base: '#0014aa', light: '#0029d4', dark: '#000d6e', glow: 'rgba(0, 20, 170, 0.30)' },
-  prevoyance: { base: '#00b28f', light: '#2dd4bf', dark: '#008a6e', glow: 'rgba(0, 178, 143, 0.30)' },
-  objets_valeur: { base: '#9f52cc', light: '#b87ee6', dark: '#7b3da3', glow: 'rgba(159, 82, 204, 0.30)' },
-} as const
+export const QUADRANT_WHEEL_COLORS: Record<Quadrant, { base: string; light: string; dark: string; glow: string }> = {
+  biens: { base: '#293485', light: '#3d4691', dark: '#1a2260', glow: 'rgba(41, 52, 133, 0.30)' },
+  personnes: { base: '#0014aa', light: '#0029d4', dark: '#000d6e', glow: 'rgba(0, 20, 170, 0.30)' },
+  projets: { base: '#00b28f', light: '#2dd4bf', dark: '#008a6e', glow: 'rgba(0, 178, 143, 0.30)' },
+  futur: { base: '#9f52cc', light: '#b87ee6', dark: '#7b3da3', glow: 'rgba(159, 82, 204, 0.30)' },
+}
 
-export const UNIVERSE_ICONS: Record<Universe, 'car' | 'home' | 'shield-check' | 'gift'> = {
-  auto: 'car',
-  habitation: 'home',
-  prevoyance: 'shield-check',
-  objets_valeur: 'gift',
-} as const
+export const PRODUCT_LABELS: Record<Product, string> = {
+  drive: 'Baloise Drive',
+  home: 'Baloise Home',
+  travel: 'Baloise Travel',
+  bsafe: 'Baloise B-Safe',
+}
 
-export const UNIVERSE_ORDER: Universe[] = ['prevoyance', 'habitation', 'objets_valeur', 'auto']
+export const QUADRANT_ICONS: Record<Quadrant, string> = {
+  biens: 'home',
+  personnes: 'shield-check',
+  projets: 'car',
+  futur: 'gift',
+}
 
-// Angles for each universe on the wheel (clockwise from top)
-export const UNIVERSE_ANGLES: Record<Universe, number> = {
-  prevoyance: 0,
-  habitation: 90,
-  objets_valeur: 180,
-  auto: 270,
-} as const
+export const QUADRANT_ORDER: Quadrant[] = ['biens', 'personnes', 'projets', 'futur']
 
-// Quadrant mapping for NeedsWheel (new dual-ring layout)
-export const UNIVERSE_TO_QUADRANT: Record<Universe, number> = {
-  auto: 0,          // biens
-  prevoyance: 1,    // personnes
-  objets_valeur: 2, // futur
-  habitation: 3,    // projets
-} as const
+// Angles for each quadrant on the wheel (clockwise from top)
+export const QUADRANT_ANGLES: Record<Quadrant, number> = {
+  biens: 0,
+  personnes: 90,
+  projets: 180,
+  futur: 270,
+}
 
-export const QUADRANT_TO_UNIVERSE = ['auto', 'prevoyance', 'objets_valeur', 'habitation'] as const satisfies readonly Universe[]
+// Aliases for DiagnosticWheel.tsx and UniverseCard.tsx (will remove when those components migrate)
+export const UNIVERSE_LABELS = QUADRANT_LABELS
+export const UNIVERSE_WHEEL_LABELS = QUADRANT_WHEEL_LABELS
+export const UNIVERSE_WHEEL_COLORS = QUADRANT_WHEEL_COLORS
+export const UNIVERSE_ICONS = QUADRANT_ICONS
+export const UNIVERSE_ORDER = QUADRANT_ORDER
+export const UNIVERSE_ANGLES = QUADRANT_ANGLES

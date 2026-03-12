@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
-import { getProfilQuestions, isProfilComplete } from '../../shared/questionnaire/universe-mapping.ts'
+import { getProfilQuestions, isProfilComplete } from '../../shared/questionnaire/quadrant-mapping.ts'
 import { isQuestionVisible } from '../../shared/questionnaire/schema.ts'
 
 export default function ProfilPage() {

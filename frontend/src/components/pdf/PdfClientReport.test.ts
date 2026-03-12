@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
 import PdfClientReport from './PdfClientReport'
-import type { DiagnosticResult, UniverseScore, RecommendedAction, NeedLevel, Universe } from '../../shared/scoring/types'
+import type { DiagnosticResult, QuadrantScore, Recommendation, NeedLevel, Quadrant } from '../../shared/scoring/types'
 
-function makeScore(universe: Universe, overrides: Partial<UniverseScore> = {}): UniverseScore {
+function makeScore(quadrant: Quadrant, overrides: Partial<QuadrantScore> = {}): QuadrantScore {
   return {
-    universe,
+    quadrant,
     exposure: 50,
     coverage: 50,
     needScore: 60,
@@ -18,26 +18,28 @@ function makeScore(universe: Universe, overrides: Partial<UniverseScore> = {}): 
 
 function makeDiagnostic(overrides: Partial<DiagnosticResult> = {}): DiagnosticResult {
   return {
-    universeScores: {
-      auto: makeScore('auto'),
-      habitation: makeScore('habitation'),
-      prevoyance: makeScore('prevoyance'),
-      objets_valeur: makeScore('objets_valeur'),
+    quadrantScores: {
+      biens: makeScore('biens'),
+      personnes: makeScore('personnes'),
+      projets: makeScore('projets'),
+      futur: makeScore('futur'),
     },
     globalScore: 65,
-    weightings: { auto: 25, habitation: 30, prevoyance: 35, objets_valeur: 10 },
-    actions: [],
+    weightings: { biens: 25, personnes: 25, projets: 25, futur: 25 },
+    productScores: [],
+    recommendations: [],
     ...overrides,
   }
 }
 
-function makeAction(overrides: Partial<RecommendedAction> = {}): RecommendedAction {
+function makeRecommendation(overrides: Partial<Recommendation> = {}): Recommendation {
   return {
+    id: 'test_rec_01',
+    product: 'drive',
     type: 'immediate',
-    universe: 'auto',
     priority: 5,
-    title: 'Action test',
-    description: 'Description test',
+    title: 'Recommendation test',
+    message: 'Message test',
     ...overrides,
   }
 }
@@ -93,32 +95,32 @@ describe('PdfClientReport', () => {
     })
   })
 
-  describe('filtrage des univers actifs', () => {
-    it('génère un PDF quand tous les univers sont actifs', async () => {
+  describe('filtrage des quadrants actifs', () => {
+    it('génère un PDF quand tous les quadrants sont actifs', async () => {
       const buffer = await render(makeDiagnostic())
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('génère un PDF quand certains univers sont inactifs', async () => {
+    it('génère un PDF quand certains quadrants sont inactifs', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { active: false, needScore: 0, needLevel: 'low' }),
-          habitation: makeScore('habitation'),
-          prevoyance: makeScore('prevoyance'),
-          objets_valeur: makeScore('objets_valeur', { active: false, needScore: 0, needLevel: 'low' }),
+        quadrantScores: {
+          biens: makeScore('biens', { active: false, needScore: 0, needLevel: 'low' }),
+          personnes: makeScore('personnes'),
+          projets: makeScore('projets'),
+          futur: makeScore('futur', { active: false, needScore: 0, needLevel: 'low' }),
         },
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('génère un PDF quand aucun univers n\'est actif', async () => {
+    it('génère un PDF quand aucun quadrant n\'est actif', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { active: false }),
-          habitation: makeScore('habitation', { active: false }),
-          prevoyance: makeScore('prevoyance', { active: false }),
-          objets_valeur: makeScore('objets_valeur', { active: false }),
+        quadrantScores: {
+          biens: makeScore('biens', { active: false }),
+          personnes: makeScore('personnes', { active: false }),
+          projets: makeScore('projets', { active: false }),
+          futur: makeScore('futur', { active: false }),
         },
       })
       const buffer = await render(diag)
@@ -126,16 +128,16 @@ describe('PdfClientReport', () => {
     })
   })
 
-  describe('page des actions', () => {
-    it('génère un PDF plus gros avec actions immédiates (2 pages)', async () => {
-      const diagSans = makeDiagnostic({ actions: [] })
+  describe('page des recommandations', () => {
+    it('génère un PDF plus gros avec recommandations immédiates (2 pages)', async () => {
+      const diagSans = makeDiagnostic({ recommendations: [] })
       const bufferSans = await render(diagSans)
 
       const diagAvec = makeDiagnostic({
-        actions: [
-          makeAction({ title: 'Action 1' }),
-          makeAction({ title: 'Action 2' }),
-          makeAction({ title: 'Action 3' }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', title: 'Recommendation 1' }),
+          makeRecommendation({ id: 'rec_02', title: 'Recommendation 2' }),
+          makeRecommendation({ id: 'rec_03', title: 'Recommendation 3' }),
         ],
       })
       const bufferAvec = await render(diagAvec)
@@ -143,31 +145,31 @@ describe('PdfClientReport', () => {
       expect(bufferAvec.length).toBeGreaterThan(bufferSans.length)
     })
 
-    it('génère un PDF avec des actions de types mixtes', async () => {
+    it('génère un PDF avec des recommandations de types mixtes', async () => {
       const diag = makeDiagnostic({
-        actions: [
-          makeAction({ type: 'immediate', title: 'Immédiate' }),
-          makeAction({ type: 'deferred', title: 'Différée' }),
-          makeAction({ type: 'event', title: 'Événement' }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', type: 'immediate', title: 'Immédiate' }),
+          makeRecommendation({ id: 'rec_02', type: 'deferred', title: 'Différée' }),
+          makeRecommendation({ id: 'rec_03', type: 'event', title: 'Événement' }),
         ],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('n\'ajoute pas de page 2 si seules des actions non-immédiates existent', async () => {
+    it('n\'ajoute pas de page 2 si seules des recommandations non-immédiates existent', async () => {
       const diagDeferred = makeDiagnostic({
-        actions: [
-          makeAction({ type: 'deferred', title: 'Différée 1' }),
-          makeAction({ type: 'deferred', title: 'Différée 2' }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', type: 'deferred', title: 'Différée 1' }),
+          makeRecommendation({ id: 'rec_02', type: 'deferred', title: 'Différée 2' }),
         ],
       })
       const bufferDeferred = await render(diagDeferred)
 
-      const diagSans = makeDiagnostic({ actions: [] })
+      const diagSans = makeDiagnostic({ recommendations: [] })
       const bufferSans = await render(diagSans)
 
-      // Même taille approximative car aucune action immédiate = pas de page 2
+      // Même taille approximative car aucune recommandation immédiate = pas de page 2
       const ratio = bufferDeferred.length / bufferSans.length
       expect(ratio).toBeGreaterThan(0.9)
       expect(ratio).toBeLessThan(1.1)
@@ -178,13 +180,13 @@ describe('PdfClientReport', () => {
     const levels: NeedLevel[] = ['low', 'moderate', 'high', 'critical']
 
     for (const level of levels) {
-      it(`génère un PDF avec des univers en niveau "${level}"`, async () => {
+      it(`génère un PDF avec des quadrants en niveau "${level}"`, async () => {
         const diag = makeDiagnostic({
-          universeScores: {
-            auto: makeScore('auto', { needLevel: level }),
-            habitation: makeScore('habitation', { needLevel: level }),
-            prevoyance: makeScore('prevoyance', { needLevel: level }),
-            objets_valeur: makeScore('objets_valeur', { needLevel: level }),
+          quadrantScores: {
+            biens: makeScore('biens', { needLevel: level }),
+            personnes: makeScore('personnes', { needLevel: level }),
+            projets: makeScore('projets', { needLevel: level }),
+            futur: makeScore('futur', { needLevel: level }),
           },
         })
         const buffer = await render(diag)
@@ -193,12 +195,12 @@ describe('PdfClientReport', () => {
     }
   })
 
-  describe('priorités des actions', () => {
-    it('génère un PDF avec des actions de toutes priorités (1-5)', async () => {
-      const actions = [1, 2, 3, 4, 5].map(p =>
-        makeAction({ priority: p, title: `Priorité ${p}` })
+  describe('priorités des recommandations', () => {
+    it('génère un PDF avec des recommandations de toutes priorités (1-5)', async () => {
+      const recommendations = [1, 2, 3, 4, 5].map(p =>
+        makeRecommendation({ id: `rec_p${p}`, priority: p, title: `Priorité ${p}` })
       )
-      const diag = makeDiagnostic({ actions })
+      const diag = makeDiagnostic({ recommendations })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
@@ -215,11 +217,11 @@ describe('PdfClientReport', () => {
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('génère un PDF avec beaucoup d\'actions', async () => {
-      const actions = Array.from({ length: 15 }, (_, i) =>
-        makeAction({ title: `Action numéro ${i + 1}`, priority: Math.min(5, i + 1) })
+    it('génère un PDF avec beaucoup de recommandations', async () => {
+      const recommendations = Array.from({ length: 15 }, (_, i) =>
+        makeRecommendation({ id: `rec_${i + 1}`, title: `Recommendation numéro ${i + 1}`, priority: Math.min(5, i + 1) })
       )
-      const diag = makeDiagnostic({ actions })
+      const diag = makeDiagnostic({ recommendations })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })

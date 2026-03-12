@@ -1,6 +1,6 @@
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
-import { UNIVERSE_LABELS, NEED_LEGEND_MESSAGES } from '../../lib/constants.ts'
+import { QUADRANT_LABELS, NEED_LEGEND_MESSAGES } from '../../lib/constants.ts'
 
 interface WheelLegendProps {
   diagnostic: DiagnosticResult
@@ -10,7 +10,7 @@ interface WheelLegendProps {
 export default function WheelLegend({ diagnostic, showScores = false }: WheelLegendProps) {
   return (
     <div className="space-y-2 mt-6">
-      {Object.entries(diagnostic.universeScores).map(([key, score]) => {
+      {Object.entries(diagnostic.quadrantScores).map(([key, score]) => {
         if (!score.active) return null
         const color = getNeedColor(score.needLevel)
         return (
@@ -18,7 +18,7 @@ export default function WheelLegend({ diagnostic, showScores = false }: WheelLeg
             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-primary-700">{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</span>
+                <span className="text-sm font-bold text-primary-700">{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</span>
                 {showScores && (
                   <span className="text-sm font-bold tabular-nums" style={{ color }}>{score.needScore}/100</span>
                 )}

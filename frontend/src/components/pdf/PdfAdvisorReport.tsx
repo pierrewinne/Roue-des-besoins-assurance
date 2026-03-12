@@ -1,11 +1,12 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import type { DiagnosticResult, Universe } from '../../shared/scoring/types.ts'
-import { UNIVERSE_LABELS, NEED_COLORS } from '../../lib/constants.ts'
+import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
+import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   immediate: 'Immédiate',
   deferred: 'Différée',
   event: 'Événementielle',
+  optimization: 'Optimisation',
 }
 
 const styles = StyleSheet.create({
@@ -40,8 +41,8 @@ interface PdfAdvisorReportProps {
 }
 
 export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, answers, wheelImageUri }: PdfAdvisorReportProps) {
-  const activeUniverses = Object.entries(diagnostic.universeScores).filter(([, s]) => s.active)
-  const pageCount = diagnostic.actions.length > 0 ? 3 : 2
+  const activeUniverses = Object.entries(diagnostic.quadrantScores).filter(([, s]) => s.active) as [string, QuadrantScore][]
+  const pageCount = diagnostic.recommendations.length > 0 ? 3 : 2
 
   return (
     <Document>
@@ -73,7 +74,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             </View>
             <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
               <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#d9304c' }}>
-                {diagnostic.actions.filter(a => a.type === 'immediate').length}
+                {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}
               </Text>
               <Text style={{ fontSize: 8, color: '#64748b' }}>Actions immédiates</Text>
             </View>
@@ -94,10 +95,10 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <Text style={{ ...styles.tableCell, width: '25%', fontFamily: 'Helvetica-Bold' }}>Pondération</Text>
               <Text style={{ ...styles.tableCell, width: '25%', fontFamily: 'Helvetica-Bold' }}>Score besoin</Text>
             </View>
-            {Object.entries(diagnostic.universeScores).map(([key, score]) => (
+            {Object.entries(diagnostic.quadrantScores).map(([key, score]) => (
               <View key={key} style={styles.tableRow}>
-                <Text style={{ ...styles.tableCell, width: '50%' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}{!score.active ? ' (désactivé)' : ''}</Text>
-                <Text style={{ ...styles.tableCell, width: '25%' }}>{diagnostic.weightings[key as Universe]}%</Text>
+                <Text style={{ ...styles.tableCell, width: '50%' }}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}{!score.active ? ' (désactivé)' : ''}</Text>
+                <Text style={{ ...styles.tableCell, width: '25%' }}>{diagnostic.weightings[key as Quadrant]}%</Text>
                 <Text style={{ ...styles.tableCell, width: '25%', color: NEED_COLORS[score.needLevel] }}>{score.active ? `${score.needScore}/100` : '—'}</Text>
               </View>
             ))}
@@ -117,7 +118,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           {activeUniverses.map(([key, score]) => (
             <View key={key} style={{ ...styles.universeCard, borderLeftColor: NEED_COLORS[score.needLevel] }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</Text>
+                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
                 <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: NEED_COLORS[score.needLevel] }}>
                   {score.needScore}/100
                 </Text>
@@ -170,26 +171,26 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
       </Page>
 
       {/* Page 3: Action plan */}
-      {diagnostic.actions.length > 0 && (
+      {diagnostic.recommendations.length > 0 && (
         <Page size="A4" style={styles.page}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Plan d'actions</Text>
 
-            {['immediate', 'deferred', 'event'].map(type => {
-              const typeActions = diagnostic.actions.filter(a => a.type === type)
+            {['immediate', 'deferred', 'event', 'optimization'].map(type => {
+              const typeActions = diagnostic.recommendations.filter((a: Recommendation) => a.type === type)
               if (typeActions.length === 0) return null
               return (
                 <View key={type} style={{ marginBottom: 12 }}>
                   <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#475569', marginBottom: 6 }}>
                     {TYPE_LABELS[type]} ({typeActions.length})
                   </Text>
-                  {typeActions.map((action, i) => (
+                  {typeActions.map((action: Recommendation, i: number) => (
                     <View key={i} style={styles.actionItem}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{action.title}</Text>
-                        <Text style={{ fontSize: 8, color: '#64748b' }}>{UNIVERSE_LABELS[action.universe]}</Text>
+                        <Text style={{ fontSize: 8, color: '#64748b' }}>{PRODUCT_LABELS[action.product] ?? action.product}</Text>
                       </View>
-                      <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.description}</Text>
+                      <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.message}</Text>
                       <Text style={{ fontSize: 7, color: '#d9304c', marginTop: 2 }}>
                         {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
                       </Text>
@@ -204,7 +205,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#065f46', marginBottom: 4 }}>Opportunités commerciales</Text>
             <Text style={{ fontSize: 8, color: '#047857' }}>
               {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length}{' univers avec besoin élevé/critique identifié.\n'}
-              {diagnostic.actions.filter(a => a.type === 'immediate').length}{' actions immédiates à proposer au client.\n'}
+              {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}{' actions immédiates à proposer au client.\n'}
               {'Potentiel de cross-selling : '}{activeUniverses.length > 2 ? 'Élevé' : 'Modéré'}.
             </Text>
           </View>

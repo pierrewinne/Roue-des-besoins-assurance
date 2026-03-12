@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
 import PdfAdvisorReport from './PdfAdvisorReport'
-import type { DiagnosticResult, UniverseScore, RecommendedAction, NeedLevel, Universe } from '../../shared/scoring/types'
+import type { DiagnosticResult, QuadrantScore, Recommendation, NeedLevel, Quadrant } from '../../shared/scoring/types'
 
-function makeScore(universe: Universe, overrides: Partial<UniverseScore> = {}): UniverseScore {
+function makeScore(quadrant: Quadrant, overrides: Partial<QuadrantScore> = {}): QuadrantScore {
   return {
-    universe,
+    quadrant,
     exposure: 50,
     coverage: 50,
     needScore: 60,
@@ -18,26 +18,28 @@ function makeScore(universe: Universe, overrides: Partial<UniverseScore> = {}): 
 
 function makeDiagnostic(overrides: Partial<DiagnosticResult> = {}): DiagnosticResult {
   return {
-    universeScores: {
-      auto: makeScore('auto'),
-      habitation: makeScore('habitation'),
-      prevoyance: makeScore('prevoyance'),
-      objets_valeur: makeScore('objets_valeur'),
+    quadrantScores: {
+      biens: makeScore('biens'),
+      personnes: makeScore('personnes'),
+      projets: makeScore('projets'),
+      futur: makeScore('futur'),
     },
     globalScore: 65,
-    weightings: { auto: 25, habitation: 30, prevoyance: 35, objets_valeur: 10 },
-    actions: [],
+    weightings: { biens: 25, personnes: 25, projets: 25, futur: 25 },
+    productScores: [],
+    recommendations: [],
     ...overrides,
   }
 }
 
-function makeAction(overrides: Partial<RecommendedAction> = {}): RecommendedAction {
+function makeRecommendation(overrides: Partial<Recommendation> = {}): Recommendation {
   return {
+    id: 'test_rec_01',
+    product: 'drive',
     type: 'immediate',
-    universe: 'auto',
     priority: 5,
-    title: 'Action test',
-    description: 'Description test',
+    title: 'Recommendation test',
+    message: 'Message test',
     ...overrides,
   }
 }
@@ -96,13 +98,13 @@ describe('PdfAdvisorReport', () => {
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('affiche le nombre correct d\'univers actifs', async () => {
+    it('affiche le nombre correct de quadrants actifs', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { active: false }),
-          habitation: makeScore('habitation'),
-          prevoyance: makeScore('prevoyance'),
-          objets_valeur: makeScore('objets_valeur', { active: false }),
+        quadrantScores: {
+          biens: makeScore('biens', { active: false }),
+          personnes: makeScore('personnes'),
+          projets: makeScore('projets'),
+          futur: makeScore('futur', { active: false }),
         },
       })
       const buffer = await render(diag)
@@ -111,14 +113,14 @@ describe('PdfAdvisorReport', () => {
   })
 
   describe('nombre de pages', () => {
-    it('PDF plus gros avec actions (3 pages) que sans (2 pages)', async () => {
-      const diagSans = makeDiagnostic({ actions: [] })
+    it('PDF plus gros avec recommendations (3 pages) que sans (2 pages)', async () => {
+      const diagSans = makeDiagnostic({ recommendations: [] })
       const bufferSans = await render(diagSans)
 
       const diagAvec = makeDiagnostic({
-        actions: [
-          makeAction({ type: 'immediate' }),
-          makeAction({ type: 'deferred' }),
+        recommendations: [
+          makeRecommendation({ type: 'immediate' }),
+          makeRecommendation({ id: 'test_rec_02', type: 'deferred' }),
         ],
       })
       const bufferAvec = await render(diagAvec)
@@ -130,38 +132,38 @@ describe('PdfAdvisorReport', () => {
   describe('pondérations et tableau', () => {
     it('génère un PDF avec pondérations normalisées', async () => {
       const diag = makeDiagnostic({
-        weightings: { auto: 30, habitation: 30, prevoyance: 30, objets_valeur: 10 },
+        weightings: { biens: 30, personnes: 25, projets: 25, futur: 20 },
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('génère un PDF avec univers désactivés dans le tableau', async () => {
+    it('génère un PDF avec quadrants désactivés dans le tableau', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { active: false, needScore: 0, needLevel: 'low' }),
-          habitation: makeScore('habitation'),
-          prevoyance: makeScore('prevoyance'),
-          objets_valeur: makeScore('objets_valeur', { active: false, needScore: 0, needLevel: 'low' }),
+        quadrantScores: {
+          biens: makeScore('biens', { active: false, needScore: 0, needLevel: 'low' }),
+          personnes: makeScore('personnes'),
+          projets: makeScore('projets'),
+          futur: makeScore('futur', { active: false, needScore: 0, needLevel: 'low' }),
         },
-        weightings: { auto: 0, habitation: 46, prevoyance: 54, objets_valeur: 0 },
+        weightings: { biens: 0, personnes: 46, projets: 54, futur: 0 },
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
   })
 
-  describe('analyse détaillée par univers', () => {
+  describe('analyse détaillée par quadrant', () => {
     const levels: NeedLevel[] = ['low', 'moderate', 'high', 'critical']
 
     for (const level of levels) {
       it(`affiche correctement le niveau "${level}"`, async () => {
         const diag = makeDiagnostic({
-          universeScores: {
-            auto: makeScore('auto', { needLevel: level, needScore: level === 'low' ? 10 : level === 'moderate' ? 40 : level === 'high' ? 65 : 90 }),
-            habitation: makeScore('habitation', { needLevel: level }),
-            prevoyance: makeScore('prevoyance', { needLevel: level }),
-            objets_valeur: makeScore('objets_valeur', { needLevel: level }),
+          quadrantScores: {
+            biens: makeScore('biens', { needLevel: level, needScore: level === 'low' ? 10 : level === 'moderate' ? 40 : level === 'high' ? 65 : 90 }),
+            personnes: makeScore('personnes', { needLevel: level }),
+            projets: makeScore('projets', { needLevel: level }),
+            futur: makeScore('futur', { needLevel: level }),
           },
         })
         const buffer = await render(diag)
@@ -171,11 +173,11 @@ describe('PdfAdvisorReport', () => {
 
     it('affiche les barres d\'exposition et couverture', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { exposure: 100, coverage: 0 }),
-          habitation: makeScore('habitation', { exposure: 0, coverage: 100 }),
-          prevoyance: makeScore('prevoyance', { exposure: 75, coverage: 25 }),
-          objets_valeur: makeScore('objets_valeur', { exposure: 50, coverage: 50 }),
+        quadrantScores: {
+          biens: makeScore('biens', { exposure: 100, coverage: 0 }),
+          personnes: makeScore('personnes', { exposure: 0, coverage: 100 }),
+          projets: makeScore('projets', { exposure: 75, coverage: 25 }),
+          futur: makeScore('futur', { exposure: 50, coverage: 50 }),
         },
       })
       const buffer = await render(diag)
@@ -186,13 +188,11 @@ describe('PdfAdvisorReport', () => {
   describe('données collectées', () => {
     it('génère un PDF avec les réponses du questionnaire', async () => {
       const answers = {
-        vehicleCount: 2,
-        vehicleAge: 3,
-        isOwner: true,
-        hasMortgage: true,
-        familyStatus: 'family',
-        hasValuables: true,
-        valuablesAmount: '10k-50k',
+        vehicle_count: 2,
+        vehicle_details: 'car_new',
+        housing_status: 'owner_with_mortgage',
+        family_status: 'couple_with_children',
+        home_contents_value: '50k_100k',
       }
       const buffer = await render(makeDiagnostic(), { answers })
       expect(buffer.length).toBeGreaterThan(0)
@@ -209,23 +209,23 @@ describe('PdfAdvisorReport', () => {
     })
   })
 
-  describe('plan d\'actions', () => {
-    it('regroupe les actions par type (immediate/deferred/event)', async () => {
+  describe('plan de recommandations', () => {
+    it('regroupe les recommandations par type (immediate/deferred/event)', async () => {
       const diag = makeDiagnostic({
-        actions: [
-          makeAction({ type: 'immediate', title: 'Action immédiate 1', universe: 'auto' }),
-          makeAction({ type: 'immediate', title: 'Action immédiate 2', universe: 'habitation' }),
-          makeAction({ type: 'deferred', title: 'Action différée', universe: 'prevoyance' }),
-          makeAction({ type: 'event', title: 'Événement de vie', universe: 'objets_valeur' }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', type: 'immediate', title: 'Recommandation immédiate 1', product: 'drive' }),
+          makeRecommendation({ id: 'rec_02', type: 'immediate', title: 'Recommandation immédiate 2', product: 'home' }),
+          makeRecommendation({ id: 'rec_03', type: 'deferred', title: 'Recommandation différée', product: 'bsafe' }),
+          makeRecommendation({ id: 'rec_04', type: 'event', title: 'Événement de vie', product: 'travel' }),
         ],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('gère un seul type d\'action', async () => {
+    it('gère un seul type de recommandation', async () => {
       const diag = makeDiagnostic({
-        actions: [makeAction({ type: 'deferred' })],
+        recommendations: [makeRecommendation({ type: 'deferred' })],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
@@ -233,37 +233,37 @@ describe('PdfAdvisorReport', () => {
   })
 
   describe('opportunités commerciales', () => {
-    it('identifie les univers avec besoin élevé/critique', async () => {
+    it('identifie les quadrants avec besoin élevé/critique', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { needLevel: 'critical' }),
-          habitation: makeScore('habitation', { needLevel: 'high' }),
-          prevoyance: makeScore('prevoyance', { needLevel: 'low' }),
-          objets_valeur: makeScore('objets_valeur', { needLevel: 'moderate' }),
+        quadrantScores: {
+          biens: makeScore('biens', { needLevel: 'critical' }),
+          personnes: makeScore('personnes', { needLevel: 'high' }),
+          projets: makeScore('projets', { needLevel: 'low' }),
+          futur: makeScore('futur', { needLevel: 'moderate' }),
         },
-        actions: [makeAction()],
+        recommendations: [makeRecommendation()],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('potentiel de cross-selling élevé si > 2 univers actifs', async () => {
+    it('potentiel de cross-selling élevé si > 2 quadrants actifs', async () => {
       const diag = makeDiagnostic({
-        actions: [makeAction()],
+        recommendations: [makeRecommendation()],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
     })
 
-    it('potentiel de cross-selling modéré si ≤ 2 univers actifs', async () => {
+    it('potentiel de cross-selling modéré si ≤ 2 quadrants actifs', async () => {
       const diag = makeDiagnostic({
-        universeScores: {
-          auto: makeScore('auto', { active: false }),
-          habitation: makeScore('habitation'),
-          prevoyance: makeScore('prevoyance'),
-          objets_valeur: makeScore('objets_valeur', { active: false }),
+        quadrantScores: {
+          biens: makeScore('biens', { active: false }),
+          personnes: makeScore('personnes'),
+          projets: makeScore('projets'),
+          futur: makeScore('futur', { active: false }),
         },
-        actions: [makeAction()],
+        recommendations: [makeRecommendation()],
       })
       const buffer = await render(diag)
       expect(buffer.length).toBeGreaterThan(0)
@@ -274,11 +274,11 @@ describe('PdfAdvisorReport', () => {
     it('génère un PDF avec score 0 et tout couvert', async () => {
       const diag = makeDiagnostic({
         globalScore: 0,
-        universeScores: {
-          auto: makeScore('auto', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
-          habitation: makeScore('habitation', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
-          prevoyance: makeScore('prevoyance', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
-          objets_valeur: makeScore('objets_valeur', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
+        quadrantScores: {
+          biens: makeScore('biens', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
+          personnes: makeScore('personnes', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
+          projets: makeScore('projets', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
+          futur: makeScore('futur', { needScore: 0, needLevel: 'low', exposure: 0, coverage: 100 }),
         },
       })
       const buffer = await render(diag)
@@ -288,17 +288,17 @@ describe('PdfAdvisorReport', () => {
     it('génère un PDF avec score 100 et rien couvert', async () => {
       const diag = makeDiagnostic({
         globalScore: 100,
-        universeScores: {
-          auto: makeScore('auto', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
-          habitation: makeScore('habitation', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
-          prevoyance: makeScore('prevoyance', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
-          objets_valeur: makeScore('objets_valeur', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
+        quadrantScores: {
+          biens: makeScore('biens', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
+          personnes: makeScore('personnes', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
+          projets: makeScore('projets', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
+          futur: makeScore('futur', { needScore: 95, needLevel: 'critical', exposure: 100, coverage: 0 }),
         },
-        actions: [
-          makeAction({ type: 'immediate', universe: 'auto' }),
-          makeAction({ type: 'immediate', universe: 'habitation' }),
-          makeAction({ type: 'immediate', universe: 'prevoyance' }),
-          makeAction({ type: 'immediate', universe: 'objets_valeur' }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', type: 'immediate', product: 'drive' }),
+          makeRecommendation({ id: 'rec_02', type: 'immediate', product: 'home' }),
+          makeRecommendation({ id: 'rec_03', type: 'immediate', product: 'bsafe' }),
+          makeRecommendation({ id: 'rec_04', type: 'immediate', product: 'travel' }),
         ],
       })
       const buffer = await render(diag)
@@ -308,23 +308,21 @@ describe('PdfAdvisorReport', () => {
     it('génère un PDF complet avec toutes les options', async () => {
       const diag = makeDiagnostic({
         globalScore: 72,
-        actions: [
-          makeAction({ type: 'immediate', universe: 'auto', priority: 5 }),
-          makeAction({ type: 'deferred', universe: 'habitation', priority: 3 }),
-          makeAction({ type: 'event', universe: 'prevoyance', priority: 2 }),
+        recommendations: [
+          makeRecommendation({ id: 'rec_01', type: 'immediate', product: 'drive', priority: 5 }),
+          makeRecommendation({ id: 'rec_02', type: 'deferred', product: 'home', priority: 3 }),
+          makeRecommendation({ id: 'rec_03', type: 'event', product: 'bsafe', priority: 2 }),
         ],
       })
       const buffer = await render(diag, {
         clientName: 'Pierre Dupont',
         clientEmail: 'pierre@example.com',
         answers: {
-          vehicleCount: 1,
-          vehicleAge: 2,
-          isOwner: true,
-          hasMortgage: true,
-          familyStatus: 'family',
-          hasValuables: true,
-          valuablesAmount: '50k+',
+          vehicle_count: 1,
+          vehicle_details: 'car_new',
+          housing_status: 'owner_with_mortgage',
+          family_status: 'couple_with_children',
+          home_contents_value: '100k_plus',
         },
       })
       expect(buffer.length).toBeGreaterThan(0)

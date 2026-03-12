@@ -9,10 +9,10 @@ import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
-import { QUADRANT_TO_UNIVERSE, getScoreColorClass, UNIVERSE_WHEEL_LABELS, UNIVERSE_WHEEL_COLORS, UNIVERSE_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
-import { ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
+import { QUADRANT_ORDER, getScoreColorClass, QUADRANT_WHEEL_LABELS, QUADRANT_WHEEL_COLORS, QUADRANT_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
+import { ALL_QUADRANTS } from '../../shared/questionnaire/quadrant-mapping.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
-import type { Universe, NeedLevel } from '../../shared/scoring/types.ts'
+import type { Quadrant, NeedLevel } from '../../shared/scoring/types.ts'
 
 interface PastDiagnostic {
   id: string
@@ -44,20 +44,20 @@ export default function ClientDashboard() {
     loadPast()
   }, [user])
 
-  function handleUniverseClick(universe: Universe) {
+  function handleQuadrantClick(quadrant: Quadrant) {
     if (!progress.profilCompleted) {
       navigate('/questionnaire/profil')
       return
     }
-    if (progress.completedUniverses[universe]) {
+    if (progress.completedUniverses[quadrant]) {
       return
     }
-    navigate(`/questionnaire/${universe}`)
+    navigate(`/questionnaire/${quadrant}`)
   }
 
   function handleSegmentClick(index: number) {
-    const universe = QUADRANT_TO_UNIVERSE[index]
-    handleUniverseClick(universe)
+    const quadrant = QUADRANT_ORDER[index]
+    handleQuadrantClick(quadrant)
   }
 
   async function handleFinishDiagnostic() {
@@ -160,17 +160,17 @@ export default function ClientDashboard() {
       {progress.profilCompleted && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {ALL_UNIVERSES.map(u => {
-              const state = progress.universeStates[u]
-              const labels = UNIVERSE_WHEEL_LABELS[u]
-              const colors = UNIVERSE_WHEEL_COLORS[u]
-              const icon = UNIVERSE_ICONS[u]
+            {ALL_QUADRANTS.map(u => {
+              const state = progress.quadrantStates[u]
+              const labels = QUADRANT_WHEEL_LABELS[u]
+              const colors = QUADRANT_WHEEL_COLORS[u]
+              const icon = QUADRANT_ICONS[u]
               const isCompleted = state.status === 'completed'
 
               return (
                 <button
                   key={u}
-                  onClick={() => handleUniverseClick(u)}
+                  onClick={() => handleQuadrantClick(u)}
                   disabled={isCompleted}
                   className={`p-5 rounded-xl text-left transition-all duration-300 ring-1 ${
                     isCompleted

@@ -1,0 +1,70 @@
+import type { Quadrant } from '../scoring/types.ts'
+import { QUESTIONS, isQuestionVisible, type Question } from './schema.ts'
+
+// O(1) question lookup by ID
+const QUESTION_BY_ID = new Map(QUESTIONS.map(q => [q.id, q]))
+
+// Profil express question IDs (asked first, feed all quadrants)
+export const PROFIL_QUESTION_IDS = [
+  'age_range', 'family_status', 'children_count', 'professional_status',
+  'income_contributors', 'life_event',
+]
+
+// Quadrant-specific question IDs
+export const QUADRANT_QUESTION_IDS: Record<Quadrant, string[]> = {
+  biens: [
+    'vehicle_count', 'vehicle_details', 'vehicle_usage',
+    'vehicle_coverage_existing', 'vehicle_options_interest',
+  ],
+  personnes: [
+    'sports_activities', 'has_rc_vie_privee', 'accident_coverage_existing',
+    'income_range', 'financial_dependents', 'work_incapacity_concern',
+    'health_concerns', 'savings_protection', 'other_properties',
+  ],
+  projets: [],
+  futur: [],
+}
+
+export const ALL_QUADRANTS: Quadrant[] = ['biens', 'personnes', 'projets', 'futur']
+
+function isAnswered(val: unknown): boolean {
+  if (val === undefined || val === null || val === '') return false
+  if (Array.isArray(val) && val.length === 0) return false
+  return true
+}
+
+export function getProfilQuestions(): Question[] {
+  return PROFIL_QUESTION_IDS
+    .map(id => QUESTION_BY_ID.get(id)!)
+    .filter(Boolean)
+}
+
+export function getQuadrantQuestions(quadrant: Quadrant): Question[] {
+  return QUADRANT_QUESTION_IDS[quadrant]
+    .map(id => QUESTION_BY_ID.get(id)!)
+    .filter(Boolean)
+}
+
+export function getVisibleQuadrantQuestions(quadrant: Quadrant, answers: Record<string, unknown>): Question[] {
+  return getQuadrantQuestions(quadrant).filter(q => isQuestionVisible(q, answers))
+}
+
+export function isProfilComplete(answers: Record<string, unknown>): boolean {
+  return getProfilQuestions()
+    .filter(q => isQuestionVisible(q, answers))
+    .filter(q => q.required)
+    .every(q => isAnswered(answers[q.id]))
+}
+
+export function isQuadrantComplete(quadrant: Quadrant, answers: Record<string, unknown>): boolean {
+  return getVisibleQuadrantQuestions(quadrant, answers)
+    .filter(q => q.required)
+    .every(q => isAnswered(answers[q.id]))
+}
+
+export function getQuadrantProgress(quadrant: Quadrant, answers: Record<string, unknown>): { answered: number; total: number } {
+  const questions = getVisibleQuadrantQuestions(quadrant, answers)
+  const required = questions.filter(q => q.required)
+  const answered = required.filter(q => isAnswered(answers[q.id])).length
+  return { answered, total: required.length }
+}

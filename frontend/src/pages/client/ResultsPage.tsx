@@ -14,7 +14,7 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
 import { getScoreColorClass } from '../../lib/constants.ts'
-import type { DiagnosticResult, UniverseScore, RecommendedAction, Universe } from '../../shared/scoring/types.ts'
+import type { DiagnosticResult, QuadrantScore, Recommendation, Quadrant } from '../../shared/scoring/types.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
 export default function ResultsPage() {
@@ -50,25 +50,27 @@ export default function ResultsPage() {
         .order('priority', { ascending: false })
 
       if (diag) {
-        const scores = diag.scores as Record<Universe, UniverseScore>
+        const scores = diag.scores as Record<Quadrant, QuadrantScore>
         // Restore needLevel from needScore
-        for (const key of Object.keys(scores) as Universe[]) {
+        for (const key of Object.keys(scores) as Quadrant[]) {
           scores[key].needLevel = getNeedLevel(scores[key].needScore)
         }
 
-        const actions: RecommendedAction[] = (actionsData || []).map(a => ({
-          type: a.type as 'immediate' | 'deferred' | 'event',
-          universe: a.universe as Universe,
+        const recommendations: Recommendation[] = (actionsData || []).map(a => ({
+          id: a.id as string,
+          product: (a.universe ?? 'drive') as Recommendation['product'],
+          type: a.type as 'immediate' | 'deferred' | 'event' | 'optimization',
           priority: a.priority,
           title: a.title,
-          description: a.description || '',
+          message: a.description || '',
         }))
 
         setDiagnostic({
-          universeScores: scores,
+          quadrantScores: scores,
           globalScore: Number(diag.global_score),
-          weightings: diag.weightings as Record<Universe, number>,
-          actions,
+          weightings: diag.weightings as Record<Quadrant, number>,
+          productScores: [],
+          recommendations,
         })
       }
       setLoading(false)
@@ -137,7 +139,7 @@ export default function ResultsPage() {
           <section>
             <h2 className="text-lg font-bold text-primary-700 mb-4">Détail par univers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.entries(diagnostic.universeScores).map(([key, score]) => (
+              {Object.entries(diagnostic.quadrantScores).map(([key, score]) => (
                 <UniverseCard key={key} universe={key} score={score} />
               ))}
             </div>
@@ -145,7 +147,7 @@ export default function ResultsPage() {
 
           <section>
             <h2 className="text-lg font-bold text-primary-700 mb-4">Actions recommandées</h2>
-            <ActionList actions={diagnostic.actions} />
+            <ActionList actions={diagnostic.recommendations} />
           </section>
         </div>
       </div>

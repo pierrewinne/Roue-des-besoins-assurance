@@ -7,15 +7,14 @@ import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 import type { QuadrantState } from '../../components/landing/NeedsWheel.tsx'
-import { QUADRANT_TO_UNIVERSE, UNIVERSE_TO_QUADRANT } from '../../lib/constants.ts'
+import { QUADRANT_ORDER, QUADRANT_WHEEL_LABELS } from '../../lib/constants.ts'
 import Card from '../../components/ui/Card.tsx'
-import { getVisibleUniverseQuestions, isUniverseComplete, getUniverseProgress, ALL_UNIVERSES } from '../../shared/questionnaire/universe-mapping.ts'
-import { computeUniverseScore } from '../../shared/scoring/engine.ts'
-import { UNIVERSE_WHEEL_LABELS } from '../../lib/constants.ts'
-import type { Universe } from '../../shared/scoring/types.ts'
+import { getVisibleQuadrantQuestions, isQuadrantComplete, getQuadrantProgress, ALL_QUADRANTS } from '../../shared/questionnaire/quadrant-mapping.ts'
+import { computeQuadrantScore } from '../../shared/scoring/engine.ts'
+import type { Quadrant } from '../../shared/scoring/types.ts'
 
-function isValidUniverse(s: string | undefined): s is Universe {
-  return s !== undefined && ALL_UNIVERSES.includes(s as Universe)
+function isValidQuadrant(s: string | undefined): s is Quadrant {
+  return s !== undefined && ALL_QUADRANTS.includes(s as Quadrant)
 }
 
 export default function UniverseQuestionnairePage() {
@@ -29,8 +28,8 @@ export default function UniverseQuestionnairePage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  const validUniverse = isValidUniverse(universeParam)
-  const universe: Universe = validUniverse ? universeParam : 'auto'
+  const validUniverse = isValidQuadrant(universeParam)
+  const universe: Quadrant = validUniverse ? universeParam : 'biens'
 
   // Cleanup timeout on unmount
   useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
@@ -124,22 +123,22 @@ export default function UniverseQuestionnairePage() {
     return <Navigate to="/dashboard" replace />
   }
 
-  const visibleQuestions = getVisibleUniverseQuestions(universe, answers)
-  const labels = UNIVERSE_WHEEL_LABELS[universe]
-  const isValid = isUniverseComplete(universe, answers)
+  const visibleQuestions = getVisibleQuadrantQuestions(universe, answers)
+  const labels = QUADRANT_WHEEL_LABELS[universe]
+  const isValid = isQuadrantComplete(universe, answers)
 
   // Build wheel states for sidebar (memoized to avoid recomputing scores on every render)
   const { segmentStates, completedCount } = useMemo(() => {
     const states: QuadrantState[] = new Array(4)
     let count = 0
-    for (const u of ALL_UNIVERSES) {
-      const qi = UNIVERSE_TO_QUADRANT[u]
+    for (const u of ALL_QUADRANTS) {
+      const qi = QUADRANT_ORDER.indexOf(u)
       if (completedUniverses[u]) {
-        const score = computeUniverseScore(u, answers)
+        const score = computeQuadrantScore(u, answers)
         states[qi] = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
         count++
       } else if (u === universe) {
-        const prog = getUniverseProgress(u, answers)
+        const prog = getQuadrantProgress(u, answers)
         states[qi] = { status: 'in_progress', progress: prog.total > 0 ? prog.answered / prog.total : 0 }
       } else {
         states[qi] = { status: 'available' }
@@ -204,7 +203,7 @@ export default function UniverseQuestionnairePage() {
               compact
               className="w-full max-w-[220px] mx-auto"
               onSegmentClick={(i) => {
-                const u = QUADRANT_TO_UNIVERSE[i]
+                const u = QUADRANT_ORDER[i]
                 if (u !== universe && !completedUniverses[u]) {
                   flushAndNavigate(`/questionnaire/${u}`)
                 }

@@ -80,3 +80,104 @@ describe('computeNeedFromMatrix', () => {
     expect(computeNeedFromMatrix(1.5, 1)).toBe(85)  // rounds to 2
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS COMPLEMENTAIRES — SEUILS (THRESHOLDS)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('getNeedLevel - bornes exactes', () => {
+  it('returns low for score = 0 (minimum)', () => {
+    expect(getNeedLevel(0)).toBe('low')
+  })
+
+  it('returns low for score = 25 (boundary)', () => {
+    expect(getNeedLevel(25)).toBe('low')
+  })
+
+  it('returns moderate for score = 26 (just above low boundary)', () => {
+    expect(getNeedLevel(26)).toBe('moderate')
+  })
+
+  it('returns moderate for score = 50 (boundary)', () => {
+    expect(getNeedLevel(50)).toBe('moderate')
+  })
+
+  it('returns high for score = 51 (just above moderate boundary)', () => {
+    expect(getNeedLevel(51)).toBe('high')
+  })
+
+  it('returns high for score = 75 (boundary)', () => {
+    expect(getNeedLevel(75)).toBe('high')
+  })
+
+  it('returns critical for score = 76 (just above high boundary)', () => {
+    expect(getNeedLevel(76)).toBe('critical')
+  })
+
+  it('returns critical for score = 100 (maximum)', () => {
+    expect(getNeedLevel(100)).toBe('critical')
+  })
+})
+
+describe('NEED_MATRIX - valeurs specifiques', () => {
+  it('low exposure + complete coverage = minimal need (10)', () => {
+    expect(NEED_MATRIX[0][0]).toBe(10)
+  })
+
+  it('high exposure + no coverage = maximal need (95)', () => {
+    expect(NEED_MATRIX[2][2]).toBe(95)
+  })
+
+  it('medium exposure + partial coverage = moderate need (60)', () => {
+    expect(NEED_MATRIX[1][1]).toBe(60)
+  })
+
+  it('all values in matrix are between 0 and 100', () => {
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        expect(NEED_MATRIX[row][col]).toBeGreaterThanOrEqual(0)
+        expect(NEED_MATRIX[row][col]).toBeLessThanOrEqual(100)
+      }
+    }
+  })
+
+  it('diagonal values increase from top-left to bottom-right', () => {
+    expect(NEED_MATRIX[0][0]).toBeLessThan(NEED_MATRIX[1][1])
+    expect(NEED_MATRIX[1][1]).toBeLessThan(NEED_MATRIX[2][2])
+  })
+})
+
+describe('computeNeedFromMatrix - edge cases extremes', () => {
+  it('negative indices are clamped to 0', () => {
+    expect(computeNeedFromMatrix(-100, -100)).toBe(NEED_MATRIX[0][0])
+  })
+
+  it('very large indices are clamped to 2', () => {
+    expect(computeNeedFromMatrix(1000, 1000)).toBe(NEED_MATRIX[2][2])
+  })
+
+  it('mixed extreme indices work correctly', () => {
+    expect(computeNeedFromMatrix(-5, 1000)).toBe(NEED_MATRIX[0][2])
+    expect(computeNeedFromMatrix(1000, -5)).toBe(NEED_MATRIX[2][0])
+  })
+})
+
+describe('getNeedColor - exhaustivite', () => {
+  it('each need level has a distinct color', () => {
+    const colors = new Set([
+      getNeedColor('low'),
+      getNeedColor('moderate'),
+      getNeedColor('high'),
+      getNeedColor('critical'),
+    ])
+    expect(colors.size).toBe(4)
+  })
+
+  it('colors are valid hex strings', () => {
+    const hexRegex = /^#[0-9a-fA-F]{6}$/
+    expect(getNeedColor('low')).toMatch(hexRegex)
+    expect(getNeedColor('moderate')).toMatch(hexRegex)
+    expect(getNeedColor('high')).toMatch(hexRegex)
+    expect(getNeedColor('critical')).toMatch(hexRegex)
+  })
+})

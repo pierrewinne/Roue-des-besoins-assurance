@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
-import type { DiagnosticResult } from '../../shared/scoring/types.ts'
-import { UNIVERSE_LABELS, NEED_COLORS, NEED_MESSAGES } from '../../lib/constants.ts'
+import type { DiagnosticResult, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
+import { QUADRANT_LABELS, NEED_COLORS, NEED_MESSAGES, PRODUCT_LABELS } from '../../lib/constants.ts'
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: '#1e293b' },
@@ -58,8 +58,8 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
 
   const qualitativeMessage = SCORE_MESSAGES.find(m => diagnostic.globalScore <= m.max)?.message ?? SCORE_MESSAGES[3].message
 
-  const activeUniverses = Object.entries(diagnostic.universeScores).filter(([, s]) => s.active)
-  const priorityActions = diagnostic.actions.filter(a => a.type === 'immediate' || a.type === 'event')
+  const activeUniverses = Object.entries(diagnostic.quadrantScores).filter(([, s]) => s.active) as [string, QuadrantScore][]
+  const priorityActions = diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate' || a.type === 'event')
 
   return (
     <Document>
@@ -91,7 +91,7 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
             <View key={key} style={styles.universeRow}>
               <View style={{ ...styles.universeIndicator, backgroundColor: NEED_COLORS[score.needLevel] }} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.universeName}>{UNIVERSE_LABELS[key as keyof typeof UNIVERSE_LABELS]}</Text>
+                <Text style={styles.universeName}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
                 <Text style={styles.universeMessage}>{NEED_MESSAGES[score.needLevel]}</Text>
               </View>
             </View>
@@ -121,16 +121,14 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
             <Text style={{ fontSize: 9, color: '#64748b', marginBottom: 12 }}>
               Voici les actions prioritaires identifiées lors de votre diagnostic.
             </Text>
-            {priorityActions.map((action, i) => (
+            {priorityActions.map((action: Recommendation, i: number) => (
               <View key={i} style={styles.actionItem}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.actionTitle}>{action.title}</Text>
-                  <Text style={styles.actionDesc}>{action.description}</Text>
-                  {action.productName && (
-                    <Text style={styles.actionProduct}>{'Solution : '}{action.productName}</Text>
-                  )}
+                  <Text style={styles.actionDesc}>{action.message}</Text>
+                  <Text style={styles.actionProduct}>{'Solution : '}{PRODUCT_LABELS[action.product] ?? action.product}</Text>
                   <Text style={styles.actionPriority}>
-                    {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}{' — '}{UNIVERSE_LABELS[action.universe]}
+                    {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
                   </Text>
                 </View>
               </View>

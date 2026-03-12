@@ -3,12 +3,7 @@ import type { PieLabelRenderProps } from 'recharts'
 import type { DiagnosticResult, NeedLevel } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 
-const UNIVERSE_LABELS: Record<string, string> = {
-  auto: 'Auto / Mobilité',
-  habitation: 'Habitation',
-  prevoyance: 'Prévoyance',
-  objets_valeur: 'Objets de valeur',
-}
+import { QUADRANT_LABELS } from '../../lib/constants.ts'
 
 interface InsuranceWheelProps {
   diagnostic: DiagnosticResult
@@ -47,11 +42,11 @@ function renderCustomLabel(props: PieLabelRenderProps) {
 }
 
 export default function InsuranceWheel({ diagnostic, size = 350, showLabels = true }: InsuranceWheelProps) {
-  const entries = Object.entries(diagnostic.universeScores)
+  const entries = Object.entries(diagnostic.quadrantScores)
   const activeEntries = entries.filter(([, s]) => s.active)
 
   const data = activeEntries.map(([key, score]) => ({
-    name: UNIVERSE_LABELS[key] || key,
+    name: QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS] || key,
     value: 1,
     needScore: score.needScore,
     needLevel: score.needLevel,

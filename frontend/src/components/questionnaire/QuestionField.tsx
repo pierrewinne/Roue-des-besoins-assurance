@@ -70,6 +70,60 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
         </fieldset>
       )
 
+    case 'multi_select': {
+      const selected = Array.isArray(value) ? (value as string[]) : []
+      const toggleOption = (optionValue: string) => {
+        if (optionValue === 'none') {
+          // "none" is exclusive — deselect everything else
+          onChange(['none'])
+          return
+        }
+        // Remove "none" if selecting a real option
+        let next = selected.filter(v => v !== 'none')
+        if (next.includes(optionValue)) {
+          next = next.filter(v => v !== optionValue)
+        } else {
+          next = [...next, optionValue]
+        }
+        onChange(next.length > 0 ? next : [])
+      }
+
+      return (
+        <fieldset className="space-y-2.5" aria-labelledby={`label-${question.id}`}>
+          <legend id={`label-${question.id}`} className="block text-sm font-bold text-primary-700">{question.label}</legend>
+          {question.helpText && <p className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
+          <div className="grid gap-2">
+            {question.options?.map(option => {
+              const isSelected = selected.includes(option.value)
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={isSelected}
+                  onClick={() => toggleOption(option.value)}
+                  className={`w-full text-left py-3 px-4 rounded-lg border text-sm transition-all duration-300 ${
+                    isSelected
+                      ? 'border-primary-700 bg-primary-50 text-primary-700 font-bold'
+                      : 'border-grey-200 text-grey-400 hover:border-grey-300 hover:text-primary-700'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded border text-xs ${
+                      isSelected ? 'border-primary-700 bg-primary-700 text-white' : 'border-grey-300'
+                    }`}>
+                      {isSelected ? '✓' : ''}
+                    </span>
+                    {option.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      )
+    }
+
     case 'number':
       return (
         <div className="space-y-2.5">
