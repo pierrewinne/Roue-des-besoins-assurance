@@ -40,6 +40,74 @@ html {
   --color-accent-yellow-bg: #fff9e8;
   --color-accent-yellow-dark: #c97612;
 
+  /* Baloise light-blue family */
+  --color-blue-50: #e5f1fe;
+  --color-blue-100: #b3d4fc;
+  --color-blue-200: #80b8f9;
+  --color-blue-300: #56a7f5;
+  --color-blue-400: #2b8ae8;
+  --color-blue-500: #0014aa;
+
+  /* Baloise green family */
+  --color-green-50: #cbf2ec;
+  --color-green-100: #97e5d9;
+  --color-green-200: #21d9ac;
+  --color-green-300: #00b28f;
+  --color-green-400: #1b5951;
+  --color-green-500: #0e3630;
+
+  /* Baloise purple family */
+  --color-purple-50: #f1e8ff;
+  --color-purple-100: #d4bcf5;
+  --color-purple-200: #b87ee6;
+  --color-purple-300: #9f52cc;
+  --color-purple-400: #7b3da3;
+  --color-purple-500: #4d1f6f;
+
+  /* Baloise red family */
+  --color-red-50: #ffd7d7;
+  --color-red-100: #ffaab3;
+  --color-red-200: #ff596f;
+  --color-red-300: #d9304c;
+  --color-red-400: #99172d;
+  --color-red-500: #66101d;
+
+  /* Baloise yellow family */
+  --color-yellow-50: #ffecbc;
+  --color-yellow-100: #ffd76e;
+  --color-yellow-200: #ffbe19;
+  --color-yellow-300: #fa9319;
+  --color-yellow-400: #b24a00;
+  --color-yellow-500: #6e2e00;
+
+  /* Semantic colors */
+  --color-success: #168741;
+  --color-success-light: #cbf2ec;
+  --color-warning: #c97612;
+  --color-warning-light: #ffecbc;
+  --color-danger: #d9304c;
+  --color-danger-light: #ffd7d7;
+  --color-info: #0014aa;
+  --color-info-light: #e5f1fe;
+
+  /* Product identity tokens */
+  --color-product-drive: #fa9319;
+  --color-product-home: #d9304c;
+  --color-product-travel: #00b28f;
+  --color-product-bsafe: #0014aa;
+
+  /* Radius tokens */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* Transition tokens */
+  --transition-duration: 300ms;
+  --transition-easing: cubic-bezier(0.25, 0.8, 0.5, 1);
+
   /* Navy-tinted shadows (Baloise official) */
   --shadow-card: 0 0 10px 0 rgba(0, 7, 57, 0.15);
   --shadow-card-hover: 0 0 30px 0 rgba(0, 7, 57, 0.15);

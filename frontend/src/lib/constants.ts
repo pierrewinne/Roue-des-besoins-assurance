@@ -1,4 +1,5 @@
-import type { Quadrant, Product } from '../shared/scoring/types.ts'
+import type { Quadrant, Product, NeedLevel } from '../shared/scoring/types.ts'
+import type { IconName } from '../components/ui/Icon.tsx'
 
 export const QUADRANT_LABELS: Record<Quadrant, string> = {
   biens: 'Protection des biens',
@@ -99,7 +100,7 @@ export const PRODUCT_LABELS: Record<Product, string> = {
   bsafe: 'Baloise B-Safe',
 }
 
-export const QUADRANT_ICONS: Record<Quadrant, string> = {
+export const QUADRANT_ICONS: Record<Quadrant, IconName> = {
   biens: 'home',
   personnes: 'shield-check',
   projets: 'car',
@@ -115,6 +116,34 @@ export const QUADRANT_ANGLES: Record<Quadrant, number> = {
   projets: 180,
   futur: 270,
 }
+
+/* ─── Product Design Tokens ─── */
+
+export const PRODUCT_COLORS: Record<Product, { primary: string; accent: string; light: string; dark: string; bg: string }> = {
+  drive: { primary: '#fa9319', accent: '#ffbe19', light: '#ffecbc', dark: '#b24a00', bg: '#fff9e8' },
+  home: { primary: '#d9304c', accent: '#ff596f', light: '#ffd7d7', dark: '#99172d', bg: '#ffeef1' },
+  travel: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
+  bsafe: { primary: '#0014aa', accent: '#56a7f5', light: '#e5f1fe', dark: '#000a55', bg: '#e5f1fe' },
+}
+
+export const PRODUCT_ICONS: Record<Product, IconName> = {
+  drive: 'car',
+  home: 'home',
+  travel: 'plane',
+  bsafe: 'shield-check',
+}
+
+export const SCORING_COLORS: Record<NeedLevel, { primary: string; light: string; bg: string; text: string; border: string }> = {
+  low: { primary: '#168741', light: '#cbf2ec', bg: '#e9fbf7', text: '#0e3630', border: '#168741' },
+  moderate: { primary: '#c97612', light: '#ffecbc', bg: '#fff9e8', text: '#6e2e00', border: '#c97612' },
+  high: { primary: '#d9304c', light: '#ffd7d7', bg: '#ffeef1', text: '#66101d', border: '#d9304c' },
+  critical: { primary: '#99172d', light: '#ffd7d7', bg: '#ffeef1', text: '#66101d', border: '#99172d' },
+}
+
+export const TRANSITION = {
+  duration: '300ms',
+  easing: 'cubic-bezier(0.25, 0.8, 0.5, 1)',
+} as const
 
 // Aliases for DiagnosticWheel.tsx and UniverseCard.tsx (will remove when those components migrate)
 export const UNIVERSE_LABELS = QUADRANT_LABELS
