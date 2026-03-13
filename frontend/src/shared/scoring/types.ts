@@ -47,10 +47,3 @@ export interface DiagnosticResult {
   productScores: ProductScore[]
   recommendations: Recommendation[]
 }
-
-// === Backward compatibility aliases (deprecated — will be removed) ===
-
-/** @deprecated Use Quadrant instead */
-export type Universe = Quadrant
-/** @deprecated Use QuadrantScore instead */
-export type UniverseScore = QuadrantScore

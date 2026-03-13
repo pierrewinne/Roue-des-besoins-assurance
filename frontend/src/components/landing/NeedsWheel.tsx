@@ -292,7 +292,6 @@ export default function NeedsWheel({
             className="wheel-segment-premium focus:outline-none focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-[-2px]"
             style={{
               cursor: isClickable ? 'pointer' : 'default',
-              outline: 'none',
               filter: isOther && !isCompleted ? 'saturate(0.25)' : undefined,
               transition: reducedMotion.current ? 'none' : `opacity 300ms ${ease}, filter 300ms ${ease}`,
             }}

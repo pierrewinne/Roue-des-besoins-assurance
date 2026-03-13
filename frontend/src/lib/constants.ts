@@ -1,4 +1,4 @@
-import type { Quadrant, Product, NeedLevel } from '../shared/scoring/types.ts'
+import type { Quadrant, Product } from '../shared/scoring/types.ts'
 import type { IconName } from '../components/ui/Icon.tsx'
 
 export const QUADRANT_LABELS: Record<Quadrant, string> = {
@@ -140,22 +140,8 @@ export const PRODUCT_ICONS: Record<Product, IconName> = {
   bsafe: 'shield-check',
 }
 
-export const SCORING_COLORS: Record<NeedLevel, { primary: string; light: string; bg: string; text: string; border: string }> = {
-  low: { primary: '#168741', light: '#cbf2ec', bg: '#e9fbf7', text: '#0e3630', border: '#168741' },
-  moderate: { primary: '#c97612', light: '#ffecbc', bg: '#fff9e8', text: '#6e2e00', border: '#c97612' },
-  high: { primary: '#d9304c', light: '#ffd7d7', bg: '#ffeef1', text: '#66101d', border: '#d9304c' },
-  critical: { primary: '#99172d', light: '#ffd7d7', bg: '#ffeef1', text: '#66101d', border: '#99172d' },
-}
-
 export const TRANSITION = {
   duration: '300ms',
   easing: 'cubic-bezier(0.25, 0.8, 0.5, 1)',
 } as const
 
-// Aliases for DiagnosticWheel.tsx and UniverseCard.tsx (will remove when those components migrate)
-export const UNIVERSE_LABELS = QUADRANT_LABELS
-export const UNIVERSE_WHEEL_LABELS = QUADRANT_WHEEL_LABELS
-export const UNIVERSE_WHEEL_COLORS = QUADRANT_WHEEL_COLORS
-export const UNIVERSE_ICONS = QUADRANT_ICONS
-export const UNIVERSE_ORDER = QUADRANT_ORDER
-export const UNIVERSE_ANGLES = QUADRANT_ANGLES

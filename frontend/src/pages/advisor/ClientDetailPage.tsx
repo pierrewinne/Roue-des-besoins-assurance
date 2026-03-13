@@ -49,31 +49,34 @@ export default function ClientDetailPage() {
         return
       }
 
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, email, phone')
-        .eq('id', clientId)
-        .single()
-      setClientProfile(prof)
+      // Parallelize independent queries (P3-05)
+      const [profResult, qrResult, diagResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('first_name, last_name, email, phone')
+          .eq('id', clientId)
+          .single(),
+        supabase
+          .from('questionnaire_responses')
+          .select('responses')
+          .eq('profile_id', clientId)
+          .eq('completed', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from('diagnostics')
+          .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
+          .eq('profile_id', clientId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+      ])
 
-      // Fetch questionnaire answers
-      const { data: qr } = await supabase
-        .from('questionnaire_responses')
-        .select('responses')
-        .eq('profile_id', clientId)
-        .eq('completed', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-      if (qr) setAnswers(qr.responses as Record<string, unknown>)
+      setClientProfile(profResult.data)
+      if (qrResult.data) setAnswers(qrResult.data.responses as Record<string, unknown>)
 
-      const { data: diag } = await supabase
-        .from('diagnostics')
-        .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
-        .eq('profile_id', clientId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
+      const diag = diagResult.data
 
       if (diag) {
         // Audit advisor access to client data (SEC-03/P12)

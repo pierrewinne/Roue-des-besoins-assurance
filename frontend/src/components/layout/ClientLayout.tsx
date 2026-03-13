@@ -8,7 +8,9 @@ export default function ClientLayout() {
   const navigate = useNavigate()
 
   async function handleSignOut() {
-    await signOut()
+    try {
+      await signOut()
+    } catch { /* user stays on page if signOut fails */ }
     navigate('/login')
   }
 

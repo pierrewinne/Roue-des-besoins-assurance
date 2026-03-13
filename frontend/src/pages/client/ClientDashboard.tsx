@@ -10,7 +10,7 @@ import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
 import { QUADRANT_ORDER, getScoreColorClass, QUADRANT_WHEEL_LABELS, QUADRANT_WHEEL_COLORS, QUADRANT_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
-import { ALL_QUADRANTS } from '../../shared/questionnaire/quadrant-mapping.ts'
+import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS } from '../../shared/questionnaire/quadrant-mapping.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 import type { Quadrant, NeedLevel } from '../../shared/scoring/types.ts'
 
@@ -45,6 +45,7 @@ export default function ClientDashboard() {
   }, [user])
 
   function handleQuadrantClick(quadrant: Quadrant) {
+    if (QUADRANT_QUESTION_IDS[quadrant].length === 0) return
     if (!progress.profilCompleted) {
       navigate('/questionnaire/profil')
       return
@@ -112,7 +113,7 @@ export default function ClientDashboard() {
       setIsDeleting(false)
       return
     }
-    await signOut()
+    try { await signOut() } catch { /* account already deleted */ }
     navigate('/login', { replace: true })
   }
 
@@ -166,16 +167,20 @@ export default function ClientDashboard() {
               const colors = QUADRANT_WHEEL_COLORS[u]
               const icon = QUADRANT_ICONS[u]
               const isCompleted = state.status === 'completed'
+              const hasQuestions = QUADRANT_QUESTION_IDS[u].length > 0
+              const isDisabled = isCompleted || !hasQuestions
 
               return (
                 <button
                   key={u}
                   onClick={() => handleQuadrantClick(u)}
-                  disabled={isCompleted}
+                  disabled={isDisabled}
                   className={`p-5 rounded-xl text-left transition-all duration-300 ring-1 ${
-                    isCompleted
-                      ? 'bg-white ring-grey-100 cursor-default'
-                      : 'bg-white ring-grey-100 hover:ring-primary-200 hover:shadow-card cursor-pointer'
+                    !hasQuestions
+                      ? 'bg-grey-50 ring-grey-100 cursor-default opacity-60'
+                      : isCompleted
+                        ? 'bg-white ring-grey-100 cursor-default'
+                        : 'bg-white ring-grey-100 hover:ring-primary-200 hover:shadow-card cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -183,11 +188,11 @@ export default function ClientDashboard() {
                       className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: isCompleted && state.needLevel ? `${getNeedColor(state.needLevel)}15` : `${colors.base}10` }}
                     >
-                      <Icon name={icon} size={22} className={isCompleted ? 'text-grey-400' : ''} style={!isCompleted ? { color: colors.base } : undefined} />
+                      <Icon name={icon} size={22} className={isCompleted || !hasQuestions ? 'text-grey-400' : ''} style={!isCompleted && hasQuestions ? { color: colors.base } : undefined} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-primary-700">
+                        <h3 className={`text-sm font-bold ${hasQuestions ? 'text-primary-700' : 'text-grey-300'}`}>
                           {labels.lines[0]} {labels.lines[1]}
                         </h3>
                         {isCompleted && state.needLevel && (
@@ -195,9 +200,14 @@ export default function ClientDashboard() {
                             {NEED_BADGE_LABELS[state.needLevel]}
                           </span>
                         )}
+                        {!hasQuestions && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-grey-100 text-grey-300">
+                            Bientôt
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-grey-300 mt-0.5">
-                        {isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} - Cliquez pour commencer`}
+                        {!hasQuestions ? 'Ce domaine sera bientôt disponible' : isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} - Cliquez pour commencer`}
                       </p>
                     </div>
                   </div>

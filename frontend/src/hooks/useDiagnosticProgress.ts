@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { supabase } from '../lib/supabase.ts'
 import { computeQuadrantScore, computeDiagnostic } from '../shared/scoring/engine.ts'
 import { getNeedLevel } from '../shared/scoring/thresholds.ts'
-import { ALL_QUADRANTS } from '../shared/questionnaire/quadrant-mapping.ts'
+import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS } from '../shared/questionnaire/quadrant-mapping.ts'
 import type { Quadrant, NeedLevel } from '../shared/scoring/types.ts'
 import type { QuadrantState } from '../components/landing/NeedsWheel.tsx'
 import { QUADRANT_ORDER } from '../lib/constants.ts'
@@ -60,9 +60,15 @@ export function useDiagnosticProgress(): DiagnosticProgress {
     const segments: QuadrantState[] = new Array(4)
     let count = 0
 
+    const activeQuadrants = ALL_QUADRANTS.filter(q => QUADRANT_QUESTION_IDS[q].length > 0)
+
     for (const q of ALL_QUADRANTS) {
+      const hasQuestions = QUADRANT_QUESTION_IDS[q].length > 0
       let s: QuadrantState
-      if (completedUniverses[q]) {
+      if (!hasQuestions) {
+        // Quadrants without questions are locked (ANO-06)
+        s = { status: 'locked' }
+      } else if (completedUniverses[q]) {
         const score = computeQuadrantScore(q, answers)
         s = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
         count++
@@ -75,7 +81,7 @@ export function useDiagnosticProgress(): DiagnosticProgress {
       segments[QUADRANT_ORDER.indexOf(q)] = s
     }
 
-    const all = count === 4
+    const all = count === activeQuadrants.length
     let gScore: number | undefined
     let gNeedLevel: NeedLevel | undefined
 

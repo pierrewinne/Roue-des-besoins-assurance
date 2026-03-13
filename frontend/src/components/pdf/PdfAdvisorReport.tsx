@@ -2,6 +2,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
 import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant } from '../../shared/questionnaire/schema.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   immediate: 'Immédiate',
@@ -151,19 +152,44 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           ))}
         </View>
 
-        {answers && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Données collectées</Text>
-            <View style={styles.table}>
-              {Object.entries(answers).map(([key, val]) => (
-                <View key={key} style={styles.tableRow}>
-                  <Text style={{ ...styles.tableCell, width: '40%', color: '#64748b' }}>{key}</Text>
-                  <Text style={{ ...styles.tableCell, width: '60%' }}>{String(val)}</Text>
-                </View>
-              ))}
+        {answers && (() => {
+          // Group answered questions by section with human-readable labels (P3-08)
+          const sections: { section: QuestionQuadrant; label: string; items: { label: string; value: string }[] }[] = []
+          const sectionOrder: QuestionQuadrant[] = ['profil_express', 'biens', 'personnes', 'projets', 'futur']
+
+          for (const sec of sectionOrder) {
+            const items: { label: string; value: string }[] = []
+            for (const q of QUESTIONS.filter(q => q.quadrant === sec)) {
+              const raw = answers[q.id]
+              if (raw === undefined || raw === null) continue
+
+              let display: string
+              if (Array.isArray(raw)) {
+                display = raw.map(v => q.options?.find(o => o.value === v)?.label ?? String(v)).join(', ')
+              } else if (q.options) {
+                display = q.options.find(o => o.value === raw)?.label ?? String(raw)
+              } else {
+                display = String(raw)
+              }
+              items.push({ label: q.label, value: display })
+            }
+            if (items.length > 0) sections.push({ section: sec, label: SECTION_LABELS[sec], items })
+          }
+
+          return sections.map(sec => (
+            <View key={sec.section} style={styles.section}>
+              <Text style={styles.sectionTitle}>{sec.label}</Text>
+              <View style={styles.table}>
+                {sec.items.map((item, idx) => (
+                  <View key={idx} style={styles.tableRow}>
+                    <Text style={{ ...styles.tableCell, width: '45%', color: '#64748b' }}>{item.label}</Text>
+                    <Text style={{ ...styles.tableCell, width: '55%' }}>{item.value}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          </View>
-        )}
+          ))
+        })()}
 
         <View style={styles.footer}>
           <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>

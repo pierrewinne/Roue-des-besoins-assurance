@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import { useAuth } from '../../contexts/AuthContext.tsx'
 
 export default function NotFoundPage() {
+  const { profile } = useAuth()
+  const homeLink = profile?.role === 'advisor' ? '/conseiller/dashboard' : '/'
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-grey-50 px-4">
       <div className="text-center max-w-md">
@@ -12,7 +16,7 @@ export default function NotFoundPage() {
         <p className="text-7xl font-bold text-grey-100 tracking-tight mb-2">404</p>
         <h1 className="text-lg font-bold text-primary-700 mb-2">Page introuvable</h1>
         <p className="text-sm text-grey-400 mb-8">La page que vous recherchez n'existe pas ou a été déplacée.</p>
-        <Link to="/">
+        <Link to={homeLink}>
           <Button>Retour à l'accueil</Button>
         </Link>
       </div>
