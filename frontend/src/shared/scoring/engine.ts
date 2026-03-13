@@ -5,6 +5,17 @@ import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK
 
 import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
+// === Shared lookup tables (reused across quadrants) ===
+
+const DEPENDENTS_RISK: Record<string, number> = {
+  none: 10, partner: 40, children: 60, partner_children: 90, extended: 80,
+}
+
+const AUTONOMY_RISK: Record<string, number> = {
+  less_1_month: 100, '1_3_months': 80, '3_6_months': 55,
+  '6_12_months': 30, more_12_months: 10,
+}
+
 // === Biens (DRIVE) — Exposure ===
 
 function computeBiensExposure(a: Answers): number {
@@ -96,19 +107,12 @@ function computePersonnesExposure(a: Answers): number {
   weights += 0.25
 
   // Financial dependents (weight 20)
-  const dependentsRisk: Record<string, number> = {
-    none: 10, partner: 40, children: 60, partner_children: 90, extended: 80,
-  }
-  score += (dependentsRisk[asString(a.financial_dependents)] ?? 30) * 0.20
+  score += (DEPENDENTS_RISK[asString(a.financial_dependents)] ?? 30) * 0.20
   weights += 0.20
 
   // Work incapacity vulnerability (weight 15)
-  const autonomyRisk: Record<string, number> = {
-    less_1_month: 100, '1_3_months': 80, '3_6_months': 55,
-    '6_12_months': 30, more_12_months: 10,
-  }
   const wic = asString(a.work_incapacity_concern)
-  score += (wic ? (autonomyRisk[wic] ?? 50) : 30) * 0.15
+  score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 30) * 0.15
   weights += 0.15
 
   // Income level at risk (weight 10)
@@ -197,10 +201,7 @@ function computeFuturExposure(a: Answers): number {
   let score = 0
 
   // Financial dependents (weight 25%)
-  const dependentsRisk: Record<string, number> = {
-    none: 10, partner: 40, children: 60, partner_children: 90, extended: 80,
-  }
-  score += (dependentsRisk[asString(a.financial_dependents)] ?? 30) * 0.25
+  score += (DEPENDENTS_RISK[asString(a.financial_dependents)] ?? 30) * 0.25
 
   // Savings gap (weight 25%) — less existing coverage = more exposure
   const savingsItems = asStringArray(a.savings_protection)
@@ -209,12 +210,8 @@ function computeFuturExposure(a: Answers): number {
   score += savingsScore * 0.25
 
   // Financial autonomy (weight 20%)
-  const autonomyRisk: Record<string, number> = {
-    less_1_month: 100, '1_3_months': 80, '3_6_months': 55,
-    '6_12_months': 30, more_12_months: 10,
-  }
   const wic = asString(a.work_incapacity_concern)
-  score += (wic ? (autonomyRisk[wic] ?? 50) : 50) * 0.20
+  score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 50) * 0.20
 
   // Income level (weight 15%) — higher income = more to protect
   const incomeRisk: Record<string, number> = {
@@ -318,10 +315,12 @@ export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): Quad
 // === Weightings ===
 
 function computeWeightings(answers: Answers): Record<Quadrant, number> {
+  const eligible = isFuturEligible(answers)
+
   // 3 active quadrants: biens, personnes, futur — projets gets 0
   let biensWeight = 35
   let personnesWeight = 35
-  let futurWeight = isFuturEligible(answers) ? 30 : 0
+  let futurWeight = eligible ? 30 : 0
 
   const familyStatus = asString(answers.family_status)
   const proStatus = asString(answers.professional_status)
@@ -329,8 +328,8 @@ function computeWeightings(answers: Answers): Record<Quadrant, number> {
   // Family with children → personnes + futur increase
   if (['couple_with_children', 'single_parent', 'recomposed'].includes(familyStatus)) {
     personnesWeight += 5
-    futurWeight += isFuturEligible(answers) ? 5 : 0
-    biensWeight -= isFuturEligible(answers) ? 10 : 5
+    futurWeight += eligible ? 5 : 0
+    biensWeight -= eligible ? 10 : 5
   }
 
   // Single parent → personnes is critical
@@ -342,8 +341,8 @@ function computeWeightings(answers: Answers): Record<Quadrant, number> {
   // Independent/business owner → personnes + futur increase
   if (['independent', 'business_owner'].includes(proStatus)) {
     personnesWeight += 5
-    futurWeight += isFuturEligible(answers) ? 5 : 0
-    biensWeight -= isFuturEligible(answers) ? 10 : 5
+    futurWeight += eligible ? 5 : 0
+    biensWeight -= eligible ? 10 : 5
   }
 
   // Multiple vehicles → biens increases
@@ -359,17 +358,9 @@ function computeWeightings(answers: Answers): Record<Quadrant, number> {
   }
 
   // Mid-career (36-55) → futur increases
-  if (isFuturEligible(answers) && ['36_45', '46_55'].includes(asString(answers.age_range))) {
+  if (eligible && ['36_45', '46_55'].includes(asString(answers.age_range))) {
     futurWeight += 5
     biensWeight -= 5
-  }
-
-  // If futur not eligible, redistribute to biens/personnes
-  if (!isFuturEligible(answers)) {
-    const extra = futurWeight
-    biensWeight += Math.round(extra / 2)
-    personnesWeight += extra - Math.round(extra / 2)
-    futurWeight = 0
   }
 
   // Normalize to 100

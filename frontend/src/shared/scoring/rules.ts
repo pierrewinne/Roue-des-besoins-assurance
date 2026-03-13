@@ -708,7 +708,7 @@ const futurRules: RuleDefinition[] = [
       type: 'immediate', priority: 5,
       title: 'Sécuriser votre retraite d\'indépendant',
       message: 'En tant qu\'indépendant, votre pension légale sera probablement insuffisante. Le Pension Plan (art. 111bis) est le pilier essentiel de votre stratégie retraite, avec 4 500 EUR/an déductibles.',
-      advisorNote: 'PP art. 111bis — indépendant/chef d\'entreprise = pension légale faible + pas de 2ème pilier employeur. Double argumentaire : fiscal + gap retraite. Priorité absolue.',
+      advisorNote: 'PP art. 111bis — 4 500 EUR/an déductibles. Indépendant/chef d\'entreprise = pension légale faible + pas de 2ème pilier employeur. Double argumentaire : fiscal + gap retraite. Priorité absolue.',
     },
   },
   {
@@ -734,7 +734,7 @@ const futurRules: RuleDefinition[] = [
       type: 'deferred', priority: 4,
       title: 'Compléter votre pension employeur',
       message: 'Votre pension employeur (2ème pilier) est un bon début, mais le Pension Plan individuel (art. 111bis) offre un avantage fiscal supplémentaire de 4 500 EUR/an, indépendant de votre employeur.',
-      advisorNote: 'PP art. 111bis en complément du 2ème pilier. Le plafond 111bis est individuel et cumulable avec le 2ème pilier. Argument : portabilité (le PP suit le client, pas l\'employeur).',
+      advisorNote: 'PP art. 111bis — 4 500 EUR/an déductibles en complément du 2ème pilier. Le plafond 111bis est individuel et cumulable avec le 2ème pilier. Argument : portabilité (le PP suit le client, pas l\'employeur).',
     },
   },
   // --- Life Plan (3-5 rules) ---
