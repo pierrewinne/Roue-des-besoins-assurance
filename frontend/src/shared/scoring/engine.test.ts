@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { computeDiagnostic } from './engine'
+import { computeDiagnostic as _computeDiagnostic } from './engine'
+
+// Auto-inject residence_status: 'resident_gdl' unless explicitly overridden
+function computeDiagnostic(answers: Record<string, unknown>) {
+  return _computeDiagnostic({ residence_status: 'resident_gdl', ...answers })
+}
 
 describe('computeBiensScore (DRIVE)', () => {
   it('returns a valid quadrant score for biens', () => {

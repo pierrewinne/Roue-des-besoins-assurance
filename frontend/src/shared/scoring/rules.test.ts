@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { generateRecommendations } from './rules'
+import { generateRecommendations as _generateRecommendations } from './rules'
 import type { Quadrant, QuadrantScore } from './types'
-import { computeDiagnostic } from './engine'
+import { computeDiagnostic as _computeDiagnostic } from './engine'
+
+// Auto-inject residence_status: 'resident_gdl' unless explicitly overridden by the test
+function generateRecommendations(scores: Record<Quadrant, QuadrantScore>, answers: Record<string, unknown>) {
+  return _generateRecommendations(scores, { residence_status: 'resident_gdl', ...answers })
+}
+function computeDiagnostic(answers: Record<string, unknown>) {
+  return _computeDiagnostic({ residence_status: 'resident_gdl', ...answers })
+}
 
 function makeScore(quadrant: Quadrant, overrides: Partial<QuadrantScore> = {}): QuadrantScore {
   return {
@@ -1539,15 +1547,16 @@ describe('POG guards: residence_status', () => {
     expect(recs.filter(r => r.product === 'travel')).toHaveLength(0)
   })
 
-  it('all rules still work when residence_status is empty (backward compat)', () => {
+  it('no rules trigger when residence_status is empty (restrictive POG)', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, {
+    const recs = _generateRecommendations(scores, {
       family_status: 'couple_with_children', income_contributors: 'one',
       accident_coverage_existing: 'none',
       housing_status: 'tenant', home_coverage_existing: 'none',
     })
-    expect(recs.filter(r => r.product === 'bsafe').length).toBeGreaterThan(0)
-    expect(recs.filter(r => r.product === 'home').length).toBeGreaterThan(0)
+    expect(recs.filter(r => r.product === 'bsafe')).toHaveLength(0)
+    expect(recs.filter(r => r.product === 'home')).toHaveLength(0)
+    expect(recs.filter(r => r.product === 'drive')).toHaveLength(0)
   })
 })
 

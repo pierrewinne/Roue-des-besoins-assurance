@@ -6,17 +6,21 @@ const QUESTION_BY_ID = new Map(QUESTIONS.map(q => [q.id, q]))
 
 // Profil express question IDs (asked first, feed all quadrants)
 export const PROFIL_QUESTION_IDS = [
-  'age_range', 'family_status', 'children_count', 'professional_status',
-  'income_contributors', 'life_event',
+  'residence_status', 'age_range', 'family_status', 'children_count',
+  'professional_status', 'income_contributors', 'life_event',
 ]
 
 // Quadrant-specific question IDs
 export const QUADRANT_QUESTION_IDS: Record<Quadrant, string[]> = {
   biens: [
+    'housing_status', 'housing_type', 'home_specifics', 'home_contents_value',
+    'valuable_possessions', 'valuable_total_estimate', 'security_measures',
     'vehicle_count', 'vehicle_details', 'vehicle_usage',
     'vehicle_coverage_existing', 'vehicle_options_interest',
+    'home_coverage_existing',
   ],
   personnes: [
+    'travel_frequency', 'travel_destinations', 'travel_budget', 'travel_coverage_existing',
     'sports_activities', 'has_rc_vie_privee', 'accident_coverage_existing',
     'income_range', 'financial_dependents', 'work_incapacity_concern',
     'health_concerns', 'savings_protection', 'other_properties',

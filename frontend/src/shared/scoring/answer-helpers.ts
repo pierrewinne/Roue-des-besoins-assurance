@@ -33,16 +33,16 @@ export const POG_FRONTALIER = ['frontalier_fr', 'frontalier_be', 'frontalier_de'
 
 type Answers = Record<string, unknown>
 
-/** B-SAFE, HOME, DRIVE: résident GDL uniquement. Vide = pas encore répondu (éligible). */
+/** B-SAFE, HOME, DRIVE: résident GDL uniquement. Vide = non éligible (restrictif par défaut). */
 export function isResidentGDL(a: Answers): boolean {
   const r = asString(a.residence_status)
-  return r === '' || r === 'resident_gdl'
+  return r === 'resident_gdl'
 }
 
-/** TRAVEL: résidents GDL + frontaliers éligibles. */
+/** TRAVEL: résidents GDL + frontaliers éligibles. Vide = non éligible (restrictif par défaut). */
 export function isResidentOrFrontalier(a: Answers): boolean {
   const r = asString(a.residence_status)
-  return r === '' || r === 'resident_gdl' || POG_FRONTALIER.includes(r)
+  return r === 'resident_gdl' || POG_FRONTALIER.includes(r)
 }
 
 /** TRAVEL: résidence éligible + âge < 80 ans. */
