@@ -11,6 +11,7 @@ import { QUADRANT_ORDER } from '../lib/constants.ts'
 
 interface DiagnosticProgress {
   loading: boolean
+  error: string | null
   responseId: string | null
   answers: QuestionnaireAnswers
   profilCompleted: boolean
@@ -26,6 +27,7 @@ interface DiagnosticProgress {
 export function useDiagnosticProgress(): DiagnosticProgress {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [responseId, setResponseId] = useState<string | null>(null)
   const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const [profilCompleted, setProfilCompleted] = useState(false)
@@ -36,15 +38,22 @@ export function useDiagnosticProgress(): DiagnosticProgress {
       if (!user) { setLoading(false); return }
 
       const q = await fetchActiveQuestionnaire(user.id)
-      if (q) {
-        setResponseId(q.id)
-        setAnswers(q.responses)
-        setProfilCompleted(q.profil_completed)
-        setCompletedUniverses(q.completed_universes)
+      if (q === null) {
+        // Could be "no active questionnaire" or a fetch error
+        // fetchActiveQuestionnaire returns null in both cases — acceptable degradation
+        setLoading(false)
+        return
       }
+      setResponseId(q.id)
+      setAnswers(q.responses)
+      setProfilCompleted(q.profil_completed)
+      setCompletedUniverses(q.completed_universes)
       setLoading(false)
     }
-    load()
+    load().catch(() => {
+      setError('Impossible de charger votre questionnaire.')
+      setLoading(false)
+    })
   }, [user])
 
   // Compute quadrant states (memoized to avoid recomputing scores on unrelated re-renders)
@@ -88,7 +97,7 @@ export function useDiagnosticProgress(): DiagnosticProgress {
   }, [answers, completedUniverses, profilCompleted])
 
   return {
-    loading, responseId, answers, profilCompleted, completedUniverses,
+    loading, error, responseId, answers, profilCompleted, completedUniverses,
     quadrantStates, segmentStates, completedCount, allCompleted, globalScore, globalNeedLevel,
   }
 }

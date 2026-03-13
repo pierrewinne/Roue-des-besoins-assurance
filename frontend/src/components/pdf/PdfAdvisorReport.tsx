@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
-import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_LABELS, NEED_COLORS, NEED_LABELS, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant, type QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 import { BALOISE, ACTION_STYLES, PRIORITY_DOTS } from './pdf-tokens.ts'
@@ -58,10 +58,19 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             <Text style={styles.title}>Rapport Diagnostic Assurance</Text>
             <Text style={styles.subtitle}>{clientName}{clientEmail ? ` — ${clientEmail}` : ''}</Text>
             <Text style={{ fontSize: 8, color: BALOISE.grey300, marginTop: 3 }}>
-              {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {diagnostic.createdAt
+                ? new Date(diagnostic.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                : new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
             </Text>
           </View>
-          <Text style={styles.badge}>CONSEILLER</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.badge}>CONSEILLER</Text>
+            {diagnostic.id && (
+              <Text style={{ fontSize: 6.5, color: BALOISE.grey300, marginTop: 4 }}>
+                {'Réf : '}{diagnostic.id.slice(0, 8).toUpperCase()}
+              </Text>
+            )}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -111,7 +120,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         </View>
 
         <View style={styles.footer}>
-          <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
+          <Text>{'Roue des Besoins — Rapport conseiller confidentiel'}{diagnostic.scoringVersion ? ` — Scoring ${diagnostic.scoringVersion}` : ''}</Text>
           <Text>Page 1/{pageCount}</Text>
         </View>
       </Page>
@@ -148,7 +157,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <View style={{ ...styles.row, marginTop: 6 }}>
                 <Text style={styles.label}>Niveau de besoin</Text>
                 <Text style={{ ...styles.value, color: NEED_COLORS[score.needLevel] }}>
-                  {score.needLevel === 'low' ? 'Faible' : score.needLevel === 'moderate' ? 'Modéré' : score.needLevel === 'high' ? 'Élevé' : 'Critique'}
+                  {NEED_LABELS[score.needLevel]}
                 </Text>
               </View>
             </View>
@@ -194,7 +203,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         })()}
 
         <View style={styles.footer}>
-          <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
+          <Text>{'Roue des Besoins — Rapport conseiller confidentiel'}{diagnostic.scoringVersion ? ` — Scoring ${diagnostic.scoringVersion}` : ''}</Text>
           <Text>Page 2/{pageCount}</Text>
         </View>
       </Page>
@@ -221,6 +230,9 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                         <Text style={{ fontSize: 8, color: BALOISE.grey400 }}>{PRODUCT_LABELS[action.product] ?? action.product}</Text>
                       </View>
                       <Text style={{ fontSize: 8, color: BALOISE.grey400, marginTop: 2 }}>{action.message}</Text>
+                      {action.advisorNote && (
+                        <Text style={{ fontSize: 7.5, color: BALOISE.navy, marginTop: 3, fontStyle: 'italic' }}>{'Note conseiller : '}{action.advisorNote}</Text>
+                      )}
                       <View style={styles.priorityRow}>
                         {PRIORITY_DOTS.map(j => (
                           <View key={j} style={{ ...styles.priorityBar, backgroundColor: j < action.priority ? aStyle.border : BALOISE.grey200 }} />
@@ -251,7 +263,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           </View>
 
           <View style={styles.footer}>
-            <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
+            <Text>{'Roue des Besoins — Rapport conseiller confidentiel'}{diagnostic.scoringVersion ? ` — Scoring ${diagnostic.scoringVersion}` : ''}</Text>
             <Text>Page 3/{pageCount}</Text>
           </View>
         </Page>

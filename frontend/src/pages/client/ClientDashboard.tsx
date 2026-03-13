@@ -32,11 +32,13 @@ export default function ClientDashboard() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
   const [finishError, setFinishError] = useState<string | null>(null)
+  const [historyError, setHistoryError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadPast() {
       if (!user) return
-      const { data } = await fetchDiagnosticHistory(user.id)
+      const { data, error } = await fetchDiagnosticHistory(user.id)
+      if (error) { setHistoryError('Impossible de charger l\'historique des diagnostics.'); return }
       if (data) setDiagnostics(data)
     }
     loadPast()
@@ -112,6 +114,17 @@ export default function ClientDashboard() {
 
   if (progress.loading) return <Spinner />
 
+  if (progress.error) {
+    return (
+      <div>
+        <PageHeader title="Mon espace" />
+        <div className="p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
+          <p className="text-sm text-danger">{progress.error}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <PageHeader
@@ -141,7 +154,7 @@ export default function ClientDashboard() {
       {progress.profilCompleted && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {ALL_QUADRANTS.map(u => {
+            {ALL_QUADRANTS.map((u, idx) => {
               const state = progress.quadrantStates[u]
               const labels = QUADRANT_WHEEL_LABELS[u]
               const colors = QUADRANT_WHEEL_COLORS[u]
@@ -155,12 +168,13 @@ export default function ClientDashboard() {
                   key={u}
                   onClick={() => handleQuadrantClick(u)}
                   disabled={isDisabled}
-                  className={`p-5 rounded-xl text-left transition-all duration-300 ring-1 ${
+                  style={{ animation: `bal-fade-in 500ms cubic-bezier(0.25,0.8,0.5,1) both`, animationDelay: `${idx * 100}ms` }}
+                  className={`p-5 rounded-xl text-left transition-all duration-300 ${
                     !hasQuestions
-                      ? 'bg-grey-50 ring-grey-100 cursor-default opacity-60'
+                      ? 'bg-grey-50 shadow-card cursor-default opacity-60'
                       : isCompleted
-                        ? 'bg-white ring-grey-100 cursor-default'
-                        : 'bg-white ring-grey-100 hover:ring-primary-200 hover:shadow-card cursor-pointer'
+                        ? 'bg-white shadow-card cursor-default'
+                        : 'bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -213,7 +227,7 @@ export default function ClientDashboard() {
       )}
 
       {/* Past diagnostics */}
-      <DiagnosticHistory diagnostics={diagnostics} />
+      <DiagnosticHistory diagnostics={diagnostics} error={historyError} />
 
       {/* GDPR section */}
       <GdprSection

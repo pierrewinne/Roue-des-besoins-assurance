@@ -4,7 +4,7 @@ import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
 /** Hydrate raw DB diagnostic + actions into a DiagnosticResult */
 export function hydrateDiagnostic(
-  diag: { scores: unknown; global_score: number; weightings: unknown },
+  diag: { id: string; scores: unknown; global_score: number; weightings: unknown; created_at: string; scoring_version?: string },
   actionsData: { id: string; type: string; universe: string | null; priority: number; title: string; description: string | null }[] = [],
 ): DiagnosticResult {
   const scores = diag.scores as Record<Quadrant, QuadrantScore>
@@ -22,6 +22,9 @@ export function hydrateDiagnostic(
   }))
 
   return {
+    id: diag.id,
+    createdAt: diag.created_at,
+    scoringVersion: diag.scoring_version ?? 'v1',
     quadrantScores: scores,
     globalScore: Number(diag.global_score),
     weightings: diag.weightings as Record<Quadrant, number>,
@@ -34,7 +37,7 @@ export function hydrateDiagnostic(
 export async function fetchDiagnosticById(diagnosticId: string, profileId: string) {
   return supabase
     .from('diagnostics')
-    .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
+    .select('id, questionnaire_id, profile_id, scores, global_score, weightings, scoring_version, created_at')
     .eq('id', diagnosticId)
     .eq('profile_id', profileId)
     .single()
@@ -44,7 +47,7 @@ export async function fetchDiagnosticById(diagnosticId: string, profileId: strin
 export async function fetchLatestDiagnostic(profileId: string) {
   return supabase
     .from('diagnostics')
-    .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
+    .select('id, questionnaire_id, profile_id, scores, global_score, weightings, scoring_version, created_at')
     .eq('profile_id', profileId)
     .order('created_at', { ascending: false })
     .limit(1)

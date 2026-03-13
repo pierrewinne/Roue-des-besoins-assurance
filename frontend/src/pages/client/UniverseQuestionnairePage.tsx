@@ -135,6 +135,8 @@ export default function UniverseQuestionnairePage() {
     .filter(q => q.quadrant === universe || !isAnsweredValue(answers[q.id]))
   const labels = QUADRANT_WHEEL_LABELS[universe]
   const isValid = isQuadrantComplete(universe, answers)
+  const questionProgress = getQuadrantProgress(universe, answers)
+  const progressPct = questionProgress.total > 0 ? (questionProgress.answered / questionProgress.total) * 100 : 0
 
   // Build wheel states for sidebar (memoized to avoid recomputing scores on every render)
   const { segmentStates, completedCount } = useMemo(() => {
@@ -167,6 +169,16 @@ export default function UniverseQuestionnairePage() {
       <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-card p-8">
+            {/* Progress bar (QW-07) */}
+            <div className="mb-6 pb-6 border-b border-grey-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-grey-400">{questionProgress.answered}/{questionProgress.total} questions</span>
+                <span className="text-xs font-bold text-primary-700">{Math.round(progressPct)}%</span>
+              </div>
+              <div className="h-1.5 bg-grey-100 rounded-full overflow-hidden">
+                <div className="h-full bg-primary-700 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPct}%` }} />
+              </div>
+            </div>
             <div className="space-y-7">
               {visibleQuestions.map(q => (
                 <QuestionField

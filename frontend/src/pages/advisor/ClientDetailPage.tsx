@@ -32,14 +32,15 @@ export default function ClientDetailPage() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null)
   const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const wheelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function load() {
       if (!clientId || !user) return
 
-      const { data: relation } = await verifyAdvisorRelation(user.id, clientId)
-      if (!relation) {
+      const { data: relation, error: relError } = await verifyAdvisorRelation(user.id, clientId)
+      if (relError || !relation) {
         navigate('/conseiller/dashboard', { replace: true })
         return
       }
@@ -50,6 +51,12 @@ export default function ClientDetailPage() {
         fetchCompletedAnswers(clientId),
         fetchLatestDiagnostic(clientId),
       ])
+
+      if (profResult.error) {
+        setError('Impossible de charger le profil client.')
+        setLoading(false)
+        return
+      }
 
       setClientProfile(profResult.data)
       if (qrAnswers) setAnswers(qrAnswers)
@@ -68,6 +75,18 @@ export default function ClientDetailPage() {
 
   if (loading) {
     return <Spinner />
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Fiche client"
+          backLink={{ to: '/conseiller/dashboard', label: 'Retour au tableau de bord' }}
+        />
+        <EmptyState icon="exclamation-circle" description={error} />
+      </div>
+    )
   }
 
   const subtitle = [clientProfile?.email, clientProfile?.phone].filter(Boolean).join(' · ')

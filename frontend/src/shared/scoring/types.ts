@@ -41,6 +41,9 @@ export interface Recommendation {
 }
 
 export interface DiagnosticResult {
+  id?: string                // for traceability (from DB)
+  createdAt?: string         // ISO date (from DB)
+  scoringVersion?: string    // e.g. 'v1' (from DB)
   quadrantScores: Record<Quadrant, QuadrantScore>
   globalScore: number        // 0-100
   weightings: Record<Quadrant, number>

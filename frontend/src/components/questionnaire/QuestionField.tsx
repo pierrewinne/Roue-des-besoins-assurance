@@ -10,16 +10,16 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
   switch (question.type) {
     case 'boolean':
       return (
-        <fieldset className="space-y-2.5" role="radiogroup" aria-labelledby={`label-${question.id}`}>
+        <fieldset className="space-y-2.5" role="radiogroup" aria-labelledby={`label-${question.id}`} aria-describedby={question.helpText ? `help-${question.id}` : undefined}>
           <legend id={`label-${question.id}`} className="block text-sm font-bold text-primary-700">{question.label}</legend>
-          {question.helpText && <p className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
+          {question.helpText && <p id={`help-${question.id}`} className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
           <div className="flex gap-3">
             <button
               type="button"
               role="radio"
               aria-checked={value === true}
               onClick={() => onChange(true)}
-              className={`flex-1 py-3 px-4 rounded-lg border text-sm font-bold transition-all duration-300 ${
+              className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition-all duration-300 active:scale-[0.98] ${
                 value === true
                   ? 'border-primary-700 bg-primary-50 text-primary-700'
                   : 'border-grey-200 text-grey-400 hover:border-grey-300 hover:text-primary-700'
@@ -32,7 +32,7 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
               role="radio"
               aria-checked={value === false}
               onClick={() => onChange(false)}
-              className={`flex-1 py-3 px-4 rounded-lg border text-sm font-bold transition-all duration-300 ${
+              className={`flex-1 py-3 px-4 rounded-xl border text-sm font-bold transition-all duration-300 active:scale-[0.98] ${
                 value === false
                   ? 'border-primary-700 bg-primary-50 text-primary-700'
                   : 'border-grey-200 text-grey-400 hover:border-grey-300 hover:text-primary-700'
@@ -46,9 +46,9 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
 
     case 'select':
       return (
-        <fieldset className="space-y-2.5" role="radiogroup" aria-labelledby={`label-${question.id}`}>
+        <fieldset className="space-y-2.5" role="radiogroup" aria-labelledby={`label-${question.id}`} aria-describedby={question.helpText ? `help-${question.id}` : undefined}>
           <legend id={`label-${question.id}`} className="block text-sm font-bold text-primary-700">{question.label}</legend>
-          {question.helpText && <p className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
+          {question.helpText && <p id={`help-${question.id}`} className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
           <div className="grid gap-2">
             {question.options?.map(option => (
               <button
@@ -57,7 +57,7 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
                 role="radio"
                 aria-checked={value === option.value}
                 onClick={() => onChange(option.value)}
-                className={`w-full text-left py-3 px-4 rounded-lg border text-sm transition-all duration-300 ${
+                className={`w-full text-left py-3 px-4 rounded-xl border text-sm transition-all duration-300 active:scale-[0.98] ${
                   value === option.value
                     ? 'border-primary-700 bg-primary-50 text-primary-700 font-bold'
                     : 'border-grey-200 text-grey-400 hover:border-grey-300 hover:text-primary-700'
@@ -89,9 +89,9 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
       }
 
       return (
-        <fieldset className="space-y-2.5" aria-labelledby={`label-${question.id}`}>
+        <fieldset className="space-y-2.5" aria-labelledby={`label-${question.id}`} aria-describedby={question.helpText ? `help-${question.id}` : undefined}>
           <legend id={`label-${question.id}`} className="block text-sm font-bold text-primary-700">{question.label}</legend>
-          {question.helpText && <p className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
+          {question.helpText && <p id={`help-${question.id}`} className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
           <div className="grid gap-2">
             {question.options?.map(option => {
               const isSelected = selected.includes(option.value)
@@ -102,7 +102,7 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
                   role="checkbox"
                   aria-checked={isSelected}
                   onClick={() => toggleOption(option.value)}
-                  className={`w-full text-left py-3 px-4 rounded-lg border text-sm transition-all duration-300 ${
+                  className={`w-full text-left py-3 px-4 rounded-xl border text-sm transition-all duration-300 active:scale-[0.98] ${
                     isSelected
                       ? 'border-primary-700 bg-primary-50 text-primary-700 font-bold'
                       : 'border-grey-200 text-grey-400 hover:border-grey-300 hover:text-primary-700'
@@ -128,19 +128,25 @@ export default function QuestionField({ question, value, onChange }: QuestionFie
       return (
         <div className="space-y-2.5">
           <label htmlFor={question.id} className="block text-sm font-bold text-primary-700">{question.label}</label>
-          {question.helpText && <p className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
+          {question.helpText && <p id={`help-${question.id}`} className="text-xs text-grey-400 leading-relaxed">{question.helpText}</p>}
           <input
             id={question.id}
             type="number"
+            aria-describedby={question.helpText ? `help-${question.id}` : undefined}
+            inputMode="numeric"
             min="0"
             max="99"
             value={typeof value === 'number' ? value : ''}
+            onKeyDown={e => {
+              // Block -, +, e, E, . to prevent invalid numeric input (ANO-10)
+              if (['-', '+', 'e', 'E', '.'].includes(e.key)) e.preventDefault()
+            }}
             onChange={e => {
               if (e.target.value === '') { onChange(undefined); return }
               const parsed = parseInt(e.target.value, 10)
               onChange(isNaN(parsed) ? undefined : Math.max(0, Math.min(99, parsed)))
             }}
-            className="w-full px-4 py-3 bg-white border border-grey-200 rounded text-sm text-primary-700 placeholder:text-grey-300 focus:outline-none focus:border-2 focus:border-primary-700 focus:ring-2 focus:ring-primary-200/50 transition-all duration-300"
+            className="w-full px-4 py-3 bg-white border border-grey-200 rounded text-sm text-primary-700 placeholder:text-grey-300 focus-visible:outline-none focus-visible:border-2 focus-visible:border-primary-700 focus-visible:ring-2 focus-visible:ring-primary-200/50 transition-all duration-300"
           />
         </div>
       )

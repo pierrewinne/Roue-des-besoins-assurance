@@ -1,8 +1,9 @@
 import type { Recommendation } from '../../shared/scoring/types.ts'
 import Badge from '../ui/Badge.tsx'
 import Card from '../ui/Card.tsx'
+import Icon from '../ui/Icon.tsx'
 import EmptyState from '../ui/EmptyState.tsx'
-import { ACTION_TYPE_LABELS, PRODUCT_LABELS, PRODUCT_BADGE_COLORS } from '../../lib/constants.ts'
+import { ACTION_TYPE_LABELS, PRODUCT_LABELS, PRODUCT_BADGE_COLORS, PRODUCT_ICONS, PRODUCT_COLORS, getPriorityBarColor } from '../../lib/constants.ts'
 
 interface ActionListProps {
   actions: Recommendation[]
@@ -27,7 +28,10 @@ export default function ActionList({ actions, showType = false }: ActionListProp
     <div className="space-y-3">
       {actions.map((action, i) => (
         <div key={i} className="bg-white rounded-xl shadow-card p-5 transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] hover:shadow-card-hover hover:-translate-y-0.5">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: PRODUCT_COLORS[action.product].bg }}>
+              <Icon name={PRODUCT_ICONS[action.product]} size={18} style={{ color: PRODUCT_COLORS[action.product].primary }} />
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <h4 className="font-bold text-primary-700 text-sm">{action.title}</h4>
@@ -44,9 +48,7 @@ export default function ActionList({ actions, showType = false }: ActionListProp
               {Array.from({ length: 5 }).map((_, j) => (
                 <div
                   key={j}
-                  className={`w-1.5 h-5 rounded-full transition-colors ${
-                    j < action.priority ? 'bg-danger' : 'bg-grey-100'
-                  }`}
+                  className={`w-1.5 h-5 rounded-full transition-colors ${getPriorityBarColor(j < action.priority, action.priority)}`}
                 />
               ))}
             </div>

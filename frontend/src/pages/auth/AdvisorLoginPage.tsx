@@ -121,7 +121,7 @@ export default function AdvisorLoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
+                <div role="alert" className="p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
                   {error}
                 </div>
               )}
@@ -129,6 +129,7 @@ export default function AdvisorLoginPage() {
               <Input
                 label="Email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -138,6 +139,7 @@ export default function AdvisorLoginPage() {
               <Input
                 label="Mot de passe"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required

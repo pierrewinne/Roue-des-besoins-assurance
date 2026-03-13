@@ -45,9 +45,11 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
         : <PdfAdvisorReport diagnostic={diagnostic} clientName={clientName} clientEmail={clientEmail} answers={answers} wheelImageUri={wheelImageUri} />
 
       // Audit PDF generation (P3-07)
+      const { logAuditEvent } = await import('../../lib/api/diagnostics.ts')
       if (type === 'advisor') {
-        const { logAuditEvent } = await import('../../lib/api/diagnostics.ts')
-        await logAuditEvent('generate_pdf_advisor', 'diagnostics', '', {}).catch(() => {})
+        await logAuditEvent('generate_pdf_advisor', 'diagnostics', diagnostic.id ?? '', { client_name: clientName }).catch(() => {})
+      } else {
+        await logAuditEvent('generate_pdf_client', 'diagnostics', diagnostic.id ?? '', {}).catch(() => {})
       }
 
       const blob = await pdf(doc).toBlob()

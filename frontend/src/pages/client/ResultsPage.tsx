@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { fetchDiagnosticById, fetchActions, hydrateDiagnostic } from '../../lib/api/diagnostics.ts'
-import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
+import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
+import type { QuadrantState } from '../../components/landing/NeedsWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
 import ActionList from '../../components/diagnostic/ActionList.tsx'
@@ -13,24 +14,29 @@ import ScoreGauge from '../../components/ui/ScoreGauge.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
-import { getScoreColorClass } from '../../lib/constants.ts'
-import type { DiagnosticResult } from '../../shared/scoring/types.ts'
+import Icon from '../../components/ui/Icon.tsx'
+import { getScoreColorClass, QUADRANT_ORDER } from '../../lib/constants.ts'
+import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import type { DiagnosticResult, Quadrant } from '../../shared/scoring/types.ts'
 
 export default function ResultsPage() {
   const { diagnosticId } = useParams<{ diagnosticId: string }>()
   const { user } = useAuth()
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const wheelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     async function load() {
       if (!diagnosticId || !user) return
 
-      const { data: diag } = await fetchDiagnosticById(diagnosticId, user.id)
+      const { data: diag, error: diagError } = await fetchDiagnosticById(diagnosticId, user.id)
+      if (diagError) { setError('Impossible de charger votre diagnostic. Veuillez réessayer.'); setLoading(false); return }
       if (!diag) { setLoading(false); return }
 
-      const { data: actionsData } = await fetchActions(diagnosticId, user.id)
+      const { data: actionsData, error: actionsError } = await fetchActions(diagnosticId, user.id)
+      if (actionsError) { setError('Impossible de charger les recommandations. Veuillez réessayer.'); setLoading(false); return }
       setDiagnostic(hydrateDiagnostic(diag, actionsData || []))
       setLoading(false)
     }
@@ -39,6 +45,16 @@ export default function ResultsPage() {
 
   if (loading) {
     return <Spinner />
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon="exclamation-circle"
+        description={error}
+        action={<Link to="/dashboard"><Button variant="outline">Retour</Button></Link>}
+      />
+    )
   }
 
   if (!diagnostic) {
@@ -53,14 +69,28 @@ export default function ResultsPage() {
 
   const scoreColor = getScoreColorClass(diagnostic.globalScore)
 
-  const scoreLabel = diagnostic.globalScore <= 25 ? 'Votre protection est bien adaptée à votre situation' :
-                     diagnostic.globalScore <= 50 ? 'Quelques points méritent votre attention' :
-                     diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées' :
-                     'Votre situation nécessite une action rapide'
+  const scoreLabel = diagnostic.globalScore <= 25 ? 'Votre protection est bien adaptée à votre situation.' :
+                     diagnostic.globalScore <= 50 ? 'Quelques points méritent votre attention.' :
+                     diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées.' :
+                     'Votre situation nécessite une action rapide.'
+
+  const scoreIcon = diagnostic.globalScore <= 25 ? 'check-circle' as const :
+                    diagnostic.globalScore <= 50 ? 'shield-check' as const :
+                    'alert-triangle' as const
 
   const scoreBg = diagnostic.globalScore <= 25 ? 'bg-success-light ring-success/10' :
                   diagnostic.globalScore <= 50 ? 'bg-warning-light ring-warning/10' :
                   'bg-danger-light ring-danger/10'
+
+  // Build NeedsWheel segment states from diagnostic scores (QW-02)
+  const { segmentStates, wheelCompletedCount } = useMemo(() => {
+    const states: QuadrantState[] = QUADRANT_ORDER.map(q => {
+      const score = diagnostic.quadrantScores[q as Quadrant]
+      if (!score || !score.active) return { status: 'locked' as const }
+      return { status: 'completed' as const, score: score.needScore, needLevel: score.needLevel }
+    })
+    return { segmentStates: states, wheelCompletedCount: states.filter(s => s.status === 'completed').length }
+  }, [diagnostic])
 
   return (
     <div>
@@ -80,7 +110,8 @@ export default function ResultsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
           <Card className="text-center">
-            <div className={`px-4 py-2.5 rounded-xl ring-1 mb-6 ${scoreBg}`}>
+            <div className={`px-4 py-3.5 rounded-xl ring-1 mb-6 ${scoreBg} flex items-center gap-3`}>
+              <Icon name={scoreIcon} size={20} strokeWidth={2} className={`flex-shrink-0 ${scoreColor}`} />
               <p className={`text-sm font-bold ${scoreColor}`}>{scoreLabel}</p>
             </div>
             <div className="mb-4">
@@ -88,7 +119,15 @@ export default function ResultsPage() {
             </div>
             <p className="text-xs text-grey-300 mb-6">Score de besoin : {diagnostic.globalScore}/100</p>
             <div ref={wheelRef}>
-              <InsuranceWheel diagnostic={diagnostic} size={280} />
+              <NeedsWheel
+                segmentStates={segmentStates}
+                completedCount={wheelCompletedCount}
+                globalScore={diagnostic.globalScore}
+                globalNeedLevel={getNeedLevel(diagnostic.globalScore)}
+                variant="light"
+                compact
+                className="w-full max-w-[280px] mx-auto"
+              />
             </div>
             <WheelLegend diagnostic={diagnostic} />
           </Card>
@@ -104,7 +143,7 @@ export default function ResultsPage() {
             </div>
           </section>
 
-          <section>
+          <section className="bg-grey-50/60 rounded-2xl p-6">
             <h2 className="text-lg font-bold text-primary-700 mb-4">Actions recommandées</h2>
             <ActionList actions={diagnostic.recommendations} />
           </section>

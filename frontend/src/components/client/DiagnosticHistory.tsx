@@ -11,14 +11,18 @@ interface PastDiagnostic {
 
 interface DiagnosticHistoryProps {
   diagnostics: PastDiagnostic[]
+  error?: string | null
 }
 
-export default function DiagnosticHistory({ diagnostics }: DiagnosticHistoryProps) {
-  if (diagnostics.length === 0) return null
+export default function DiagnosticHistory({ diagnostics, error }: DiagnosticHistoryProps) {
+  if (!error && diagnostics.length === 0) return null
 
   return (
     <Card>
       <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics précédents</h2>
+      {error && (
+        <p className="text-sm text-danger mb-4">{error}</p>
+      )}
       <div className="space-y-2">
         {diagnostics.map(d => (
           <Link

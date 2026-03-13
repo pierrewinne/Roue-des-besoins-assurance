@@ -10,6 +10,7 @@ import StatCard from '../../components/ui/StatCard.tsx'
 import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
+import Spinner from '../../components/ui/Spinner.tsx'
 
 interface ClientRow {
   client_id: string
@@ -28,11 +29,19 @@ export default function AdvisorDashboard() {
   const { profile } = useAuth()
   const [clients, setClients] = useState<ClientRow[]>([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
-      if (!profile) return
-      const { data } = await fetchAdvisorClients(profile.id)
+      if (!profile) { setLoading(false); return }
+      const { data, error: fetchErr } = await fetchAdvisorClients(profile.id)
+
+      if (fetchErr) {
+        setError('Impossible de charger la liste des clients.')
+        setLoading(false)
+        return
+      }
 
       if (data) {
         const rows = data as unknown as ClientRow[]
@@ -61,9 +70,21 @@ export default function AdvisorDashboard() {
         }))
         setClients(enriched)
       }
+      setLoading(false)
     }
     load()
   }, [profile])
+
+  if (loading) return <Spinner />
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader title="Tableau de bord conseiller" />
+        <EmptyState icon="exclamation-circle" description={error} />
+      </div>
+    )
+  }
 
   const filtered = clients.filter(c => {
     if (!search) return true
@@ -106,7 +127,7 @@ export default function AdvisorDashboard() {
               <Link
                 key={client.client_id}
                 to={`/conseiller/clients/${client.client_id}`}
-                className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-primary-50/30 rounded-lg transition-colors duration-300 group"
+                className="flex items-center justify-between py-4 px-3 -mx-3 hover:bg-primary-50/30 hover:shadow-card hover:translate-x-0.5 rounded-lg transition-all duration-300 group"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-grey-100 flex items-center justify-center flex-shrink-0">

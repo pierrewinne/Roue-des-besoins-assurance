@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { NEED_COLORS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
@@ -10,7 +11,12 @@ export default function ScoreGauge({ score, size = 160 }: ScoreGaugeProps) {
   const strokeWidth = 8
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
-  const offset = circumference - (score / 100) * circumference
+  const targetOffset = circumference - (score / 100) * circumference
+
+  // Start empty, animate to target after first paint (QW-01)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  const offset = mounted ? targetOffset : circumference
 
   const color = NEED_COLORS[getNeedLevel(score)]
 

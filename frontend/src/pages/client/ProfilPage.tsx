@@ -150,12 +150,13 @@ export default function ProfilPage() {
           </div>
 
           {/* RGPD consent checkbox (CRIT-3) */}
-          <label className="flex items-start gap-3 mt-8 p-4 bg-grey-50 rounded-xl ring-1 ring-grey-100 cursor-pointer select-none">
+          <label htmlFor="rgpd-consent" className="flex items-start gap-3 mt-8 p-4 bg-grey-50 rounded-xl ring-1 ring-grey-100 cursor-pointer select-none">
             <input
+              id="rgpd-consent"
               type="checkbox"
               checked={consent}
               onChange={e => setConsent(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded border-grey-300 text-primary-700 focus:ring-primary-200 flex-shrink-0"
+              className="mt-0.5 w-4 h-4 rounded border-grey-300 text-primary-700 focus-visible:ring-2 focus-visible:ring-primary-300 flex-shrink-0"
             />
             <span className="text-xs text-grey-500 leading-relaxed">
               J'accepte que mes données soient traitées par Baloise Assurances Luxembourg S.A. dans le cadre de l'analyse de mes besoins en assurance,
@@ -164,7 +165,7 @@ export default function ProfilPage() {
           </label>
 
           {error && (
-            <div className="mt-6 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
+            <div role="alert" className="mt-6 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
               {error}
             </div>
           )}

@@ -20,7 +20,7 @@ export default function Input({ label, icon, className = '', id: externalId, ...
         )}
         <input
           id={inputId}
-          className={`w-full px-3.5 py-3 bg-white border border-grey-200 rounded text-sm text-primary-700 placeholder:text-grey-300 focus:outline-none focus:border-2 focus:border-primary-700 focus:ring-2 focus:ring-primary-200/50 transition-all duration-300 ${icon ? 'pl-9' : ''} ${className}`}
+          className={`w-full px-3.5 py-3 bg-white border border-grey-200 rounded text-sm text-primary-700 placeholder:text-grey-300 focus-visible:outline-none focus-visible:border-2 focus-visible:border-primary-700 focus-visible:ring-2 focus-visible:ring-primary-200/50 transition-all duration-300 ${icon ? 'pl-9' : ''} ${className}`}
           {...props}
         />
       </div>
