@@ -41,7 +41,7 @@ export default function UniverseCard({ universe, score, showDetails = false }: U
               <span className="font-bold text-primary-700">{Math.round(score.exposure)}%</span>
             </div>
             <div className="w-full bg-grey-100 rounded-full h-2">
-              <div className="bg-[#c97612] h-2 rounded-full transition-all duration-500" style={{ width: `${score.exposure}%` }} />
+              <div className="bg-warning h-2 rounded-full transition-all duration-500" style={{ width: `${score.exposure}%` }} />
             </div>
           </div>
           <div>

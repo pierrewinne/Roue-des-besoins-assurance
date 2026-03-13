@@ -99,9 +99,9 @@ export default function ResultsPage() {
                      diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées' :
                      'Votre situation nécessite une action rapide'
 
-  const scoreBg = diagnostic.globalScore <= 25 ? 'bg-[#e8f3ec] ring-[#168741]/10' :
-                  diagnostic.globalScore <= 50 ? 'bg-accent-yellow-bg ring-accent-yellow-dark/10' :
-                  'bg-[#ffeef1] ring-[#d9304c]/10'
+  const scoreBg = diagnostic.globalScore <= 25 ? 'bg-success-light ring-success/10' :
+                  diagnostic.globalScore <= 50 ? 'bg-warning-light ring-warning/10' :
+                  'bg-danger-light ring-danger/10'
 
   return (
     <div>

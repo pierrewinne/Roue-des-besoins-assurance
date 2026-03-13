@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   scoreBar: { height: 6, borderRadius: 3, marginTop: 2 },
   scoreBarBg: { height: 6, borderRadius: 3, backgroundColor: '#e2e8f0', width: '100%' },
   universeCard: { padding: 10, marginBottom: 8, backgroundColor: '#f8fafc', borderRadius: 6, borderLeft: '3 solid #000d6e' },
-  actionItem: { padding: 8, marginBottom: 5, borderRadius: 4, borderLeft: '3 solid #d9304c', backgroundColor: '#fff' },
+  actionItem: { padding: 8, marginBottom: 5, borderRadius: 4, borderLeft: `3 solid ${NEED_COLORS.high}`, backgroundColor: '#fff' },
   footer: { position: 'absolute', bottom: 20, left: 35, right: 35, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#94a3b8', borderTop: '0.5 solid #e2e8f0', paddingTop: 6 },
 })
 
@@ -63,7 +63,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <Text style={styles.sectionTitle}>Synthèse globale</Text>
           <View style={{ flexDirection: 'row', gap: 20, marginBottom: 10 }}>
             <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? '#168741' : diagnostic.globalScore <= 50 ? '#c97612' : '#d9304c' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? NEED_COLORS.low : diagnostic.globalScore <= 50 ? NEED_COLORS.moderate : NEED_COLORS.high }}>
                 {diagnostic.globalScore}
               </Text>
               <Text style={{ fontSize: 8, color: '#64748b' }}>Score global /100</Text>
@@ -73,7 +73,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <Text style={{ fontSize: 8, color: '#64748b' }}>Univers actifs /4</Text>
             </View>
             <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#d9304c' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: NEED_COLORS.high }}>
                 {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}
               </Text>
               <Text style={{ fontSize: 8, color: '#64748b' }}>Actions immédiates</Text>
@@ -129,7 +129,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                 <Text style={styles.value}>{Math.round(score.exposure)}%</Text>
               </View>
               <View style={styles.scoreBarBg}>
-                <View style={{ ...styles.scoreBar, width: `${score.exposure}%`, backgroundColor: '#c97612' }} />
+                <View style={{ ...styles.scoreBar, width: `${score.exposure}%`, backgroundColor: NEED_COLORS.moderate }} />
               </View>
 
               <View style={{ ...styles.row, marginTop: 6 }}>
@@ -191,7 +191,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                         <Text style={{ fontSize: 8, color: '#64748b' }}>{PRODUCT_LABELS[action.product] ?? action.product}</Text>
                       </View>
                       <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.message}</Text>
-                      <Text style={{ fontSize: 7, color: '#d9304c', marginTop: 2 }}>
+                      <Text style={{ fontSize: 7, color: NEED_COLORS.high, marginTop: 2 }}>
                         {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
                       </Text>
                     </View>

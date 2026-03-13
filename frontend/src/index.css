@@ -82,11 +82,11 @@ html {
 
   /* Semantic colors */
   --color-success: #168741;
-  --color-success-light: #cbf2ec;
+  --color-success-light: #e8f3ec;
   --color-warning: #c97612;
-  --color-warning-light: #ffecbc;
+  --color-warning-light: #fff9e8;
   --color-danger: #d9304c;
-  --color-danger-light: #ffd7d7;
+  --color-danger-light: #ffeef1;
   --color-info: #0014aa;
   --color-info-light: #e5f1fe;
 

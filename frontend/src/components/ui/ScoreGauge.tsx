@@ -1,3 +1,6 @@
+import { NEED_COLORS } from '../../lib/constants.ts'
+import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+
 interface ScoreGaugeProps {
   score: number
   size?: number
@@ -9,7 +12,7 @@ export default function ScoreGauge({ score, size = 160 }: ScoreGaugeProps) {
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
 
-  const color = score <= 25 ? '#168741' : score <= 50 ? '#c97612' : '#d9304c'
+  const color = NEED_COLORS[getNeedLevel(score)]
 
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>

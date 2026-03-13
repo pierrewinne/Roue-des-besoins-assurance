@@ -145,7 +145,7 @@ export default function ProfilPage() {
           </div>
 
           {error && (
-            <div className="mt-6 p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
+            <div className="mt-6 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
               {error}
             </div>
           )}

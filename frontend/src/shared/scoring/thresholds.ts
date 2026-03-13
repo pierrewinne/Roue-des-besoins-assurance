@@ -1,4 +1,5 @@
 import type { NeedLevel } from './types.ts'
+import { NEED_COLORS } from '../../lib/constants.ts'
 
 export function getNeedLevel(needScore: number): NeedLevel {
   if (needScore <= 25) return 'low'
@@ -8,12 +9,7 @@ export function getNeedLevel(needScore: number): NeedLevel {
 }
 
 export function getNeedColor(level: NeedLevel): string {
-  switch (level) {
-    case 'low': return '#168741'
-    case 'moderate': return '#c97612'
-    case 'high': return '#d9304c'
-    case 'critical': return '#99172d'
-  }
+  return NEED_COLORS[level]
 }
 
 // Exposure x Coverage matrix → need score

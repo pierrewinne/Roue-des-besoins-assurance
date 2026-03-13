@@ -210,8 +210,8 @@ export default function ClientDashboard() {
           {progress.allCompleted && (
             <div className="text-center mb-8">
               {finishError && (
-                <div className="mb-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
-                  <p className="text-sm text-[#d9304c]">{finishError}</p>
+                <div className="mb-4 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
+                  <p className="text-sm text-danger">{finishError}</p>
                 </div>
               )}
               <Button onClick={handleFinishDiagnostic} size="lg" disabled={isFinishing}>
@@ -251,7 +251,7 @@ export default function ClientDashboard() {
       {/* GDPR section */}
       <div className="mt-10 pt-6 border-t border-grey-100">
         {rgpdError && (
-          <div className="mb-4 p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
+          <div className="mb-4 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
             {rgpdError}
           </div>
         )}
@@ -267,7 +267,7 @@ export default function ClientDashboard() {
             <Button
               variant="outline"
               size="sm"
-              className="text-[#d9304c] border-[#d9304c]/20 hover:bg-[#ffeef1]"
+              className="text-danger border-danger/20 hover:bg-danger-light"
               onClick={() => setShowDeleteConfirm(true)}
             >
               Supprimer mon compte
@@ -276,13 +276,13 @@ export default function ClientDashboard() {
         </div>
 
         {showDeleteConfirm && (
-          <div className="mt-4 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
-            <p className="text-sm text-[#d9304c] font-bold mb-2">Cette action est irréversible</p>
+          <div className="mt-4 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
+            <p className="text-sm text-danger font-bold mb-2">Cette action est irréversible</p>
             <p className="text-xs text-grey-400 mb-4">
               Toutes vos données seront définitivement supprimées : profil, questionnaires, diagnostics et actions recommandées.
             </p>
             <div className="flex gap-2">
-              <Button size="sm" className="bg-[#d9304c] hover:bg-[#99172d]" disabled={isDeleting} onClick={handleDeleteAccount}>
+              <Button size="sm" className="bg-danger hover:bg-red-400" disabled={isDeleting} onClick={handleDeleteAccount}>
                 {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
@@ -299,9 +299,9 @@ export default function ClientDashboard() {
 // Helper functions
 function getBadgeClass(level: NeedLevel): string {
   switch (level) {
-    case 'low': return 'bg-[#e8f3ec] text-[#168741]'
-    case 'moderate': return 'bg-[#fef3e2] text-[#c97612]'
+    case 'low': return 'bg-success-light text-success'
+    case 'moderate': return 'bg-warning-light text-warning'
     case 'high':
-    case 'critical': return 'bg-[#ffeef1] text-[#d9304c]'
+    case 'critical': return 'bg-danger-light text-danger'
   }
 }

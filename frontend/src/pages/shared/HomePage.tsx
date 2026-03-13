@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel, { WHEEL_SEGMENTS } from '../../components/landing/NeedsWheel.tsx'
+import { QUADRANT_WHEEL_COLORS } from '../../lib/constants.ts'
 
 /* ─────────────────────────────────────────
    Universe detail data
@@ -13,7 +14,7 @@ const universeDetails = [
     label: 'Protection des biens',
     product: 'Home · Drive',
     icon: 'home' as const,
-    color: '#3D4691',
+    color: QUADRANT_WHEEL_COLORS.biens.light,
     desc: 'Habitation, véhicules, objets de valeur : protégez votre patrimoine matériel au quotidien.',
     covers: ['Habitation & contenu', 'Auto & moto', 'Objets de valeur', 'Responsabilité civile'],
   },
@@ -22,7 +23,7 @@ const universeDetails = [
     label: 'Protection des personnes',
     product: 'Bsafe · Travel',
     icon: 'shield-check' as const,
-    color: '#1A3BC2',
+    color: QUADRANT_WHEEL_COLORS.personnes.light,
     desc: 'Accidents, hospitalisation, voyages : sécurisez votre famille contre les aléas de la vie.',
     covers: ['Accidents de la vie', 'Hospitalisation & soins', 'Assistance voyage 24/7', 'Protection juridique'],
   },
@@ -31,7 +32,7 @@ const universeDetails = [
     label: 'Protection du futur',
     product: 'Pension Plan',
     icon: 'gift' as const,
-    color: '#0A1F8C',
+    color: QUADRANT_WHEEL_COLORS.futur.dark,
     desc: 'Épargne, retraite, prévoyance : préparez l\'avenir sereinement avec les solutions Baloise.',
     covers: ['Épargne-pension (art. 111bis)', 'Assurance vie', 'Capital retraite', 'Prévoyance fiscale'],
   },
@@ -40,7 +41,7 @@ const universeDetails = [
     label: 'Protection des projets',
     product: 'GoodStart',
     icon: 'chart-pie' as const,
-    color: '#656EA8',
+    color: QUADRANT_WHEEL_COLORS.projets.light,
     desc: 'Immobilier, investissements, nouveaux projets : accompagnez vos ambitions en toute sérénité.',
     covers: ['Acquisition immobilière', 'Solde restant dû', 'Projets d\'investissement', 'Épargne projet'],
   },

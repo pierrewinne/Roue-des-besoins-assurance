@@ -72,9 +72,16 @@ export const ACTION_TYPE_LABELS = {
 } as const
 
 export function getScoreColorClass(score: number): string {
-  if (score <= 25) return 'text-[#168741]'
-  if (score <= 50) return 'text-[#c97612]'
-  return 'text-[#d9304c]'
+  if (score <= 25) return 'text-success'
+  if (score <= 50) return 'text-warning'
+  return 'text-danger'
+}
+
+export const PRODUCT_BADGE_COLORS: Record<Product, 'green' | 'orange' | 'red' | 'blue'> = {
+  drive: 'orange',
+  home: 'red',
+  travel: 'green',
+  bsafe: 'blue',
 }
 
 /* ─── Wheel Config (4 quadrants) ─── */

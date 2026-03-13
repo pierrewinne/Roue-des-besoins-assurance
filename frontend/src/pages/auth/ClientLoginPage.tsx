@@ -135,8 +135,8 @@ export default function ClientLoginPage() {
           <div className="w-full max-w-sm">
             {signupPending ? (
               <div className="text-center">
-                <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
-                  <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
+                <div className="w-14 h-14 bg-success-light rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-success/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-success" />
                 </div>
                 <h2 className="text-xl font-bold text-primary-700 mb-2">Compte créé</h2>
                 <p className="text-grey-400 mb-6 text-sm leading-relaxed">
@@ -153,8 +153,8 @@ export default function ClientLoginPage() {
               </div>
             ) : magicLinkSent ? (
               <div className="text-center">
-                <div className="w-14 h-14 bg-[#e8f3ec] rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-[#168741]/10">
-                  <Icon name="check" size={28} strokeWidth={2} className="text-[#168741]" />
+                <div className="w-14 h-14 bg-success-light rounded-xl flex items-center justify-center mx-auto mb-5 ring-1 ring-success/10">
+                  <Icon name="check" size={28} strokeWidth={2} className="text-success" />
                 </div>
                 <h2 className="text-xl font-bold text-primary-700 mb-2">Vérifiez votre boîte mail</h2>
                 <p className="text-grey-400 mb-6 text-sm leading-relaxed">
@@ -195,7 +195,7 @@ export default function ClientLoginPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
-                    <div className="p-3 bg-[#ffeef1] text-[#d9304c] text-sm rounded-lg ring-1 ring-[#d9304c]/10">
+                    <div className="p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
                       {error}
                     </div>
                   )}

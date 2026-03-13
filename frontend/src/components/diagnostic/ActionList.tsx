@@ -2,7 +2,7 @@ import type { Recommendation } from '../../shared/scoring/types.ts'
 import Badge from '../ui/Badge.tsx'
 import Card from '../ui/Card.tsx'
 import EmptyState from '../ui/EmptyState.tsx'
-import { ACTION_TYPE_LABELS, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { ACTION_TYPE_LABELS, PRODUCT_LABELS, PRODUCT_BADGE_COLORS } from '../../lib/constants.ts'
 
 interface ActionListProps {
   actions: Recommendation[]
@@ -16,8 +16,8 @@ export default function ActionList({ actions, showType = false }: ActionListProp
         <EmptyState
           icon="check-circle"
           description="Aucune action recommandée pour le moment."
-          iconColor="text-[#168741]"
-          iconBg="bg-[#e8f3ec] ring-1 ring-[#168741]/10"
+          iconColor="text-success"
+          iconBg="bg-success-light ring-1 ring-success/10"
         />
       </Card>
     )
@@ -31,7 +31,7 @@ export default function ActionList({ actions, showType = false }: ActionListProp
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <h4 className="font-bold text-primary-700 text-sm">{action.title}</h4>
-                <Badge color="blue">{PRODUCT_LABELS[action.product]}</Badge>
+                <Badge color={PRODUCT_BADGE_COLORS[action.product]}>{PRODUCT_LABELS[action.product]}</Badge>
                 {showType && (
                   <Badge color={action.type === 'immediate' ? 'red' : action.type === 'deferred' ? 'orange' : 'gray'}>
                     {ACTION_TYPE_LABELS[action.type]}
@@ -45,7 +45,7 @@ export default function ActionList({ actions, showType = false }: ActionListProp
                 <div
                   key={j}
                   className={`w-1.5 h-5 rounded-full transition-colors ${
-                    j < action.priority ? 'bg-[#d9304c]' : 'bg-grey-100'
+                    j < action.priority ? 'bg-danger' : 'bg-grey-100'
                   }`}
                 />
               ))}

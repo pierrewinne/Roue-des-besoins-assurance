@@ -176,8 +176,8 @@ export default function UniverseQuestionnairePage() {
             </div>
 
             {saveError && (
-              <div className="mt-6 p-4 bg-[#ffeef1] rounded-xl ring-1 ring-[#d9304c]/10">
-                <p className="text-sm text-[#d9304c]">{saveError}</p>
+              <div className="mt-6 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
+                <p className="text-sm text-danger">{saveError}</p>
               </div>
             )}
 

@@ -7,10 +7,10 @@ interface BadgeProps {
 }
 
 const colors = {
-  green: 'bg-[#e8f3ec] text-[#168741] ring-1 ring-[#168741]/15',
-  orange: 'bg-accent-yellow-bg text-accent-yellow-dark ring-1 ring-accent-yellow-dark/15',
-  red: 'bg-[#ffeef1] text-[#d9304c] ring-1 ring-[#d9304c]/15',
-  blue: 'bg-primary-50 text-primary-700 ring-1 ring-primary-700/15',
+  green: 'bg-success-light text-success ring-1 ring-success/15',
+  orange: 'bg-warning-light text-warning ring-1 ring-warning/15',
+  red: 'bg-danger-light text-danger ring-1 ring-danger/15',
+  blue: 'bg-info-light text-info ring-1 ring-info/15',
   gray: 'bg-grey-100 text-grey-400 ring-1 ring-grey-400/10',
   purple: 'bg-accent-purple-bg text-accent-purple-dark ring-1 ring-accent-purple-dark/15',
 }
