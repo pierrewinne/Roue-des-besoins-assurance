@@ -1331,6 +1331,248 @@ describe('travel_05: family travel', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════
+// TESTS — NEW DRIVE rules (drive_09, drive_10)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('drive_09: conducteur protege', () => {
+  it('triggers for vehicle owner without accident coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 1, accident_coverage_existing: 'none' })
+    const rec = recs.find(r => r.id === 'drive_09_conducteur_protege')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(5)
+    expect(rec!.type).toBe('immediate')
+  })
+
+  it('triggers with employer_only accident coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 1, accident_coverage_existing: 'employer_only' })
+    expect(recs.find(r => r.id === 'drive_09_conducteur_protege')).toBeDefined()
+  })
+
+  it('triggers with individual_basic accident coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 1, accident_coverage_existing: 'individual_basic' })
+    expect(recs.find(r => r.id === 'drive_09_conducteur_protege')).toBeDefined()
+  })
+
+  it('does NOT trigger with individual_complete coverage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 1, accident_coverage_existing: 'individual_complete' })
+    expect(recs.find(r => r.id === 'drive_09_conducteur_protege')).toBeUndefined()
+  })
+
+  it('does NOT trigger without vehicle', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 0, accident_coverage_existing: 'none' })
+    expect(recs.find(r => r.id === 'drive_09_conducteur_protege')).toBeUndefined()
+  })
+})
+
+describe('drive_10: multi vehicle 2+', () => {
+  it('triggers for 2+ vehicles', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 2 })
+    const rec = recs.find(r => r.id === 'drive_10_multi_vehicle_2plus')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(3)
+  })
+
+  it('triggers for 3 vehicles', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 3 })
+    expect(recs.find(r => r.id === 'drive_10_multi_vehicle_2plus')).toBeDefined()
+  })
+
+  it('does NOT trigger for 1 vehicle', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { vehicle_count: 1 })
+    expect(recs.find(r => r.id === 'drive_10_multi_vehicle_2plus')).toBeUndefined()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — NEW HOME rules (home_16-19)
+// ═══════════════════════════════════════════════════════════════════
+
+describe('home_16: loyers impayes', () => {
+  it('triggers for rental properties', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'rental' })
+    const rec = recs.find(r => r.id === 'home_16_loyers_impayes')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(4)
+    expect(rec!.type).toBe('immediate')
+  })
+
+  it('triggers for both (secondary + rental)', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'both' })
+    expect(recs.find(r => r.id === 'home_16_loyers_impayes')).toBeDefined()
+  })
+
+  it('does NOT trigger for secondary only', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'secondary' })
+    expect(recs.find(r => r.id === 'home_16_loyers_impayes')).toBeUndefined()
+  })
+
+  it('does NOT trigger for none', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'none' })
+    expect(recs.find(r => r.id === 'home_16_loyers_impayes')).toBeUndefined()
+  })
+})
+
+describe('home_17: deteriorations immobilieres', () => {
+  it('triggers for rental properties', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'rental' })
+    expect(recs.find(r => r.id === 'home_17_deteriorations_immobilieres')).toBeDefined()
+  })
+})
+
+describe('home_18: vacance locative', () => {
+  it('triggers for rental properties', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { other_properties: 'rental' })
+    expect(recs.find(r => r.id === 'home_18_vacance_locative')).toBeDefined()
+  })
+})
+
+describe('home_19: perte liquide cuves', () => {
+  it('triggers for house owner', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_type: 'house', housing_status: 'owner_with_mortgage' })
+    const rec = recs.find(r => r.id === 'home_19_perte_liquide_cuves')
+    expect(rec).toBeDefined()
+    expect(rec!.priority).toBe(3)
+  })
+
+  it('triggers for townhouse owner without mortgage', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_type: 'townhouse', housing_status: 'owner_no_mortgage' })
+    expect(recs.find(r => r.id === 'home_19_perte_liquide_cuves')).toBeDefined()
+  })
+
+  it('does NOT trigger for apartment', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_type: 'apartment', housing_status: 'owner_with_mortgage' })
+    expect(recs.find(r => r.id === 'home_19_perte_liquide_cuves')).toBeUndefined()
+  })
+
+  it('does NOT trigger for tenant', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, { housing_type: 'house', housing_status: 'tenant' })
+    expect(recs.find(r => r.id === 'home_19_perte_liquide_cuves')).toBeUndefined()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// TESTS — POG eligibility guards
+// ═══════════════════════════════════════════════════════════════════
+
+describe('POG guards: residence_status', () => {
+  it('B-SAFE rules do NOT trigger for frontalier', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'frontalier_fr',
+      family_status: 'couple_with_children', income_contributors: 'one',
+      accident_coverage_existing: 'none',
+    })
+    const bsafeRecs = recs.filter(r => r.product === 'bsafe')
+    expect(bsafeRecs).toHaveLength(0)
+  })
+
+  it('B-SAFE rules do NOT trigger for other residence', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'other',
+      family_status: 'couple_with_children', income_contributors: 'one',
+      accident_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'bsafe')).toHaveLength(0)
+  })
+
+  it('HOME rules do NOT trigger for frontalier', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'frontalier_de',
+      housing_status: 'tenant', home_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'home')).toHaveLength(0)
+  })
+
+  it('DRIVE rules do NOT trigger for frontalier', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'frontalier_be',
+      vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'drive')).toHaveLength(0)
+  })
+
+  it('TRAVEL rules DO trigger for frontalier', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'frontalier_fr',
+      travel_frequency: 'frequent', travel_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'travel').length).toBeGreaterThan(0)
+  })
+
+  it('TRAVEL rules DO trigger for resident_gdl', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'resident_gdl',
+      travel_frequency: 'frequent', travel_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'travel').length).toBeGreaterThan(0)
+  })
+
+  it('TRAVEL rules do NOT trigger for other residence', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      residence_status: 'other',
+      travel_frequency: 'frequent', travel_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'travel')).toHaveLength(0)
+  })
+
+  it('all rules still work when residence_status is empty (backward compat)', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      family_status: 'couple_with_children', income_contributors: 'one',
+      accident_coverage_existing: 'none',
+      housing_status: 'tenant', home_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'bsafe').length).toBeGreaterThan(0)
+    expect(recs.filter(r => r.product === 'home').length).toBeGreaterThan(0)
+  })
+})
+
+describe('POG guards: age 80+ TRAVEL filter', () => {
+  it('TRAVEL rules do NOT trigger for 80_plus', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      age_range: '80_plus',
+      travel_frequency: 'frequent', travel_destinations: ['worldwide'],
+      travel_coverage_existing: 'credit_card',
+    })
+    expect(recs.filter(r => r.product === 'travel')).toHaveLength(0)
+  })
+
+  it('TRAVEL rules DO trigger for 65_plus (65-80)', () => {
+    const scores = makeScores()
+    const recs = generateRecommendations(scores, {
+      age_range: '65_plus',
+      travel_frequency: 'frequent', travel_coverage_existing: 'none',
+    })
+    expect(recs.filter(r => r.product === 'travel').length).toBeGreaterThan(0)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
 // NON-REGRESSION: all 4 products present in full profile
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1362,9 +1604,10 @@ describe('rules - non-regression: all four products', () => {
     expect(result.recommendations.length).toBeGreaterThanOrEqual(15)
   })
 
-  it('all 40 rule IDs are unique', () => {
+  it('all 46 rule IDs are unique', () => {
     const allAnswers = {
-      vehicle_count: 1, vehicle_details: 'electric', vehicle_coverage_existing: 'none',
+      residence_status: 'resident_gdl',
+      vehicle_count: 2, vehicle_details: 'electric', vehicle_coverage_existing: 'none',
       vehicle_usage: 'daily_commute',
       vehicle_options_interest: ['bonus_important', 'vehicle_customized', 'professional_equipment', 'replacement_needed'],
       life_event: ['birth', 'new_vehicle', 'divorce', 'retirement', 'property_purchase', 'renovation'],
@@ -1374,16 +1617,19 @@ describe('rules - non-regression: all four products', () => {
       health_concerns: ['physical_job', 'aging_parents'],
       work_incapacity_concern: 'less_1_month', income_range: '8k_12k',
       age_range: '46_55', housing_status: 'owner_with_mortgage',
+      housing_type: 'house',
       home_coverage_existing: 'none', home_specifics: ['garden', 'pool', 'solar_panels', 'wine_cellar'],
       home_contents_value: '100k_plus', valuable_possessions: ['jewelry', 'art', 'multimedia', 'sustainable_mobility', 'sports_leisure', 'collections'],
       valuable_total_estimate: '50k_plus', security_measures: ['none'],
       has_rc_vie_privee: 'no', savings_protection: ['none'],
-      other_properties: 'rental_property',
+      other_properties: 'rental',
       travel_frequency: 'frequent', travel_destinations: ['worldwide', 'adventure'],
       travel_budget: '5k_plus', travel_coverage_existing: 'credit_card',
     }
     const result = computeDiagnostic(allAnswers)
     const ids = result.recommendations.map(r => r.id)
     expect(ids.length).toBe(new Set(ids).size)
+    // Should have at least 30 recommendations with this rich profile
+    expect(ids.length).toBeGreaterThanOrEqual(30)
   })
 })

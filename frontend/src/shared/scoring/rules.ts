@@ -1,5 +1,5 @@
 import type { Quadrant, QuadrantScore, Recommendation } from './types.ts'
-import { asString as s, asNumber as n, asStringArray as arr, includesAny, HIGH_RISK_SPORTS } from './answer-helpers.ts'
+import { asString as s, asNumber as n, asStringArray as arr, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isTravelEligible } from './answer-helpers.ts'
 
 type Answers = Record<string, unknown>
 
@@ -10,7 +10,21 @@ interface RuleDefinition {
 }
 
 // ═══════════════════════════════════════════
-// DRIVE rules (8)
+// POG guard wrapper — ensures new rules cannot accidentally skip eligibility
+// ═══════════════════════════════════════════
+
+function withGuard(
+  guard: (a: Answers) => boolean,
+  rules: RuleDefinition[],
+): RuleDefinition[] {
+  return rules.map(r => ({
+    ...r,
+    condition: (scores, a) => guard(a) && r.condition(scores, a),
+  }))
+}
+
+// ═══════════════════════════════════════════
+// DRIVE rules (10)
 // ═══════════════════════════════════════════
 
 const driveRules: RuleDefinition[] = [
@@ -23,8 +37,8 @@ const driveRules: RuleDefinition[] = [
       product: 'drive', optionId: 'drive_dommages_materiels',
       type: 'immediate', priority: 5,
       title: 'Protéger votre véhicule récent',
-      message: 'Votre véhicule représente un investissement important. Avec une couverture RC seule, un sinistre total, un vol ou un incendie ne serait pas remboursé. La couverture Omnium protège la valeur de votre véhicule.',
-      advisorNote: 'Véhicule < 3 ans ou électrique/SUV avec RC seule. Argumenter sur le coût de remplacement vs le coût de la prime Omnium.',
+      message: 'Votre véhicule représente un investissement important. Avec une couverture RC seule, un sinistre total, un vol ou un incendie ne serait pas remboursé. La couverture Omnium protège la valeur de votre véhicule au-delà de la seule responsabilité civile.',
+      advisorNote: 'Véhicule < 3 ans ou électrique/SUV avec RC seule. Argumenter sur le coût de remplacement vs le coût de la prime Omnium. Franchises : à adapter selon le profil financier du client.',
     },
   },
   {
@@ -47,7 +61,7 @@ const driveRules: RuleDefinition[] = [
       product: 'drive', optionId: 'drive_pack_indemnisation',
       type: 'immediate', priority: 4,
       title: 'Protéger votre véhicule électrique',
-      message: 'Les réparations d\'un véhicule électrique coûtent en moyenne 30% de plus qu\'un véhicule thermique, et la batterie représente une part importante de la valeur. Une couverture Omnium avec protection de la valeur est d\'autant plus pertinente.',
+      message: 'Les réparations d\'un véhicule électrique coûtent en moyenne 30 % de plus, et la batterie représente une part majeure de la valeur. La couverture Omnium avec le Pack Indemnisation protège votre investissement à sa juste valeur.',
       advisorNote: 'Argumenter sur le coût de la batterie (30-40% de la valeur du véhicule). Le pack indemnisation est un upsell naturel.',
     },
   },
@@ -67,7 +81,8 @@ const driveRules: RuleDefinition[] = [
   },
   {
     id: 'drive_05_bonus_protection',
-    condition: (_, a) => arr(a.vehicle_options_interest).includes('bonus_important'),
+    condition: (_, a) =>
+      arr(a.vehicle_options_interest).includes('bonus_important'),
     recommendation: {
       product: 'drive', optionId: 'drive_pack_indemnisation',
       type: 'deferred', priority: 3,
@@ -78,7 +93,8 @@ const driveRules: RuleDefinition[] = [
   },
   {
     id: 'drive_06_custom_vehicle',
-    condition: (_, a) => arr(a.vehicle_options_interest).includes('vehicle_customized'),
+    condition: (_, a) =>
+      arr(a.vehicle_options_interest).includes('vehicle_customized'),
     recommendation: {
       product: 'drive', optionId: 'drive_pack_amenagement',
       type: 'deferred', priority: 3,
@@ -89,24 +105,51 @@ const driveRules: RuleDefinition[] = [
   },
   {
     id: 'drive_07_professional_transport',
-    condition: (_, a) => arr(a.vehicle_options_interest).includes('professional_equipment'),
+    condition: (_, a) =>
+      arr(a.vehicle_options_interest).includes('professional_equipment'),
     recommendation: {
       product: 'drive', optionId: 'drive_pack_mobilite',
       type: 'deferred', priority: 3,
       title: 'Protéger votre matériel en déplacement',
-      message: 'Le matériel professionnel ou les bagages de valeur que vous transportez ne sont pas couverts par l\'assurance auto de base. Le Pack Mobilité étend la couverture aux biens transportés.',
+      message: 'Le matériel professionnel et les bagages que vous transportez ne sont pas couverts par la responsabilité civile automobile. Le Pack Mobilité étend votre couverture aux biens transportés.',
       advisorNote: 'Composante Bagages/Marchandises du Pack Mobilité. Évaluer la valeur du matériel transporté.',
     },
   },
   {
     id: 'drive_08_new_vehicle_event',
-    condition: (_, a) => arr(a.life_event).includes('new_vehicle'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('new_vehicle'),
     recommendation: {
       product: 'drive',
       type: 'event', priority: 4,
       title: 'Anticiper la couverture de votre futur véhicule',
       message: 'L\'achat d\'un véhicule est le moment idéal pour choisir une couverture adaptée. Votre conseiller peut préparer un devis personnalisé avant même la livraison.',
       advisorNote: 'Opportunité Omnium + packs. Proposer un RDV avant l\'achat pour optimiser la couverture.',
+    },
+  },
+  {
+    id: 'drive_09_conducteur_protege',
+    condition: (_, a) =>
+      n(a.vehicle_count) > 0 &&
+      ['none', 'employer_only', 'individual_basic'].includes(s(a.accident_coverage_existing)),
+    recommendation: {
+      product: 'drive', optionId: 'drive_conducteur_protege',
+      type: 'immediate', priority: 5,
+      title: 'Protéger le conducteur',
+      message: 'La responsabilité civile automobile couvre les dommages causés aux tiers, mais pas vos propres blessures en cas d\'accident responsable. La garantie Conducteur protégé couvre les conséquences financières d\'une invalidité ou d\'un décès suite à un accident de la route.',
+      advisorNote: 'Conducteur protégé : garantie la plus critique après la RC. Le conducteur responsable est le seul NON couvert par la RC obligatoire. Si B-Safe complet existant, priorité réduite (couverture partielle). Vérifier les plafonds.',
+    },
+  },
+  {
+    id: 'drive_10_multi_vehicle_2plus',
+    condition: (_, a) =>
+      n(a.vehicle_count) >= 2,
+    recommendation: {
+      product: 'drive',
+      type: 'deferred', priority: 3,
+      title: 'Offre multi-véhicules disponible',
+      message: 'Avec plusieurs véhicules, une offre groupée DRIVE 2+ peut vous faire bénéficier de conditions préférentielles. Cette offre est disponible exclusivement auprès de votre conseiller.',
+      advisorNote: 'DRIVE 2+ (autos particulières) non disponible en souscription Web — orienter vers agence ou courtier. Si le 2e véhicule est moto, remorque ou autre : DRIVE 2 (autres véhicules). Vérifier la nature des véhicules.',
     },
   },
 ]
@@ -126,7 +169,7 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_deces',
       type: 'immediate', priority: 5,
       title: 'Protéger votre famille',
-      message: 'Avec un seul revenu et des personnes à charge, un accident grave ou un décès aurait des conséquences financières immédiates pour votre famille. C\'est la priorité numéro un de votre protection.',
+      message: 'Avec un seul revenu et des personnes à charge, un accident grave ou un décès aurait des conséquences financières immédiates pour votre famille. En complément des prestations de la sécurité sociale, B-Safe protège l\'assuré ainsi que sa famille.',
       advisorNote: 'B-Safe complet : Décès + Invalidité + Incapacité. Capital décès à dimensionner sur 3-5 ans de revenus. C\'est LA recommandation prioritaire.',
     },
   },
@@ -139,7 +182,7 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_incapacite',
       type: 'immediate', priority: 5,
       title: 'Sécuriser votre activité',
-      message: 'En tant qu\'indépendant, vous ne bénéficiez pas des filets de sécurité d\'un salarié. Un arrêt de travail prolongé impacte directement vos revenus et votre activité. La couverture incapacité de travail est essentielle.',
+      message: 'En tant qu\'indépendant, les prestations de la sécurité sociale ne couvrent qu\'une partie de vos revenus en cas d\'arrêt. En complément, B-Safe vous protège contre les conséquences financières d\'une invalidité ou d\'une incapacité de travail suite à un accident.',
       advisorNote: 'B-Safe Incapacité de Travail en priorité. Puis Décès/Invalidité si personnes à charge. L\'indépendant est le profil à plus forte valeur B-Safe.',
     },
   },
@@ -152,7 +195,7 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_incapacite',
       type: 'immediate', priority: 5,
       title: 'Sécuriser vos revenus en cas d\'arrêt',
-      message: 'Avec moins de 3 mois d\'autonomie financière, un arrêt de travail prolongé mettrait votre foyer en difficulté rapidement. L\'assurance incapacité de travail maintient vos revenus pendant votre convalescence.',
+      message: 'Avec moins de 3 mois d\'autonomie financière, un arrêt prolongé suite à un accident mettrait votre foyer en difficulté. En complément des indemnités de la sécurité sociale, B-Safe maintient vos revenus pendant votre convalescence.',
       advisorNote: 'B-Safe Incapacité + Hospitalisation. Chiffrer : X EUR de revenus mensuels x 6 mois = Y EUR de manque à gagner. Argument imbattable.',
     },
   },
@@ -166,8 +209,8 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_invalidite',
       type: 'immediate', priority: 4,
       title: 'Vous couvrir pour vos activités sportives',
-      message: 'Vos activités sportives vous exposent à un risque d\'accident plus élevé. Une couverture accident dédiée vous protège, y compris pour les suites médicales et la rééducation.',
-      advisorNote: 'B-Safe avec options sport. Vérifier que les activités ne tombent pas dans les exclusions IPID (courses, concours).',
+      message: 'Vos activités sportives vous exposent à un risque accru d\'accident. En complément de la sécurité sociale, B-Safe vous protège contre les conséquences financières d\'une invalidité — y compris les suites médicales et la rééducation.',
+      advisorNote: 'B-Safe avec options sport. Vérifier que les activités ne tombent pas dans les exclusions IPID. Mentionner la couverture chirurgie esthétique réparatrice en cas de blessure.',
     },
   },
   {
@@ -178,13 +221,14 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_frais_divers',
       type: 'deferred', priority: 4,
       title: 'Protéger vos enfants en cas d\'accident',
-      message: 'En cas d\'hospitalisation, qui s\'occupe de vos enfants ? Les options garde d\'enfants, rattrapage scolaire et rooming-in sécurisent votre famille au quotidien pendant votre rétablissement.',
+      message: 'En cas d\'hospitalisation suite à un accident, qui s\'occupe de vos enfants ? En complément de la sécurité sociale, les options garde d\'enfants, rattrapage scolaire et rooming-in sécurisent votre famille pendant votre rétablissement.',
       advisorNote: 'B-Safe Frais divers (garde enfants, rattrapage scolaire, rooming-in). Argument émotionnel fort.',
     },
   },
   {
     id: 'bsafe_06_aging_parents',
-    condition: (_, a) => arr(a.health_concerns).includes('aging_parents'),
+    condition: (_, a) =>
+      arr(a.health_concerns).includes('aging_parents'),
     recommendation: {
       product: 'bsafe', optionId: 'bsafe_aide_menagere',
       type: 'deferred', priority: 3,
@@ -203,7 +247,7 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_deces',
       type: 'immediate', priority: 5,
       title: 'Protéger votre famille et votre logement',
-      message: 'En cas de décès, votre famille devrait assumer le remboursement du crédit immobilier. Un capital décès adapté au solde de votre emprunt garantit le maintien dans le logement.',
+      message: 'En cas de décès suite à un accident, votre famille devrait assumer le remboursement du crédit immobilier. En complément de la sécurité sociale, un capital décès B-Safe garantit le maintien de votre famille dans le logement.',
       advisorNote: 'B-Safe Décès. Capital = solde restant du crédit. Cross-sell naturel avec Home.',
     },
   },
@@ -217,7 +261,7 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_rente',
       type: 'deferred', priority: 4,
       title: 'Anticiper votre protection long terme',
-      message: 'Sans pension complémentaire ni assurance-vie, une invalidité permanente pourrait réduire drastiquement vos revenus futurs. La rente viagère d\'invalidité sécurise votre avenir.',
+      message: 'Sans pension complémentaire ni assurance-vie, une invalidité permanente suite à un accident réduirait vos revenus futurs bien au-delà de ce que la sécurité sociale compense. La rente viagère B-Safe sécurise votre avenir en complément.',
       advisorNote: 'B-Safe Rente Viagère. Au Luxembourg, le taux de remplacement retraite diminue. Argumenter sur l\'écart pension légale vs niveau de vie actuel.',
     },
   },
@@ -232,35 +276,38 @@ const bsafeRules: RuleDefinition[] = [
       product: 'bsafe', optionId: 'bsafe_hospitalisation',
       type: 'immediate', priority: 3,
       title: 'Adapter votre protection à votre quotidien',
-      message: 'Votre activité et vos déplacements vous exposent davantage aux risques d\'accident. Une couverture étendue incluant l\'hospitalisation et les frais médicaux est recommandée.',
-      advisorNote: 'B-Safe étendu (Hospitalisation + Frais divers). Pour les frontaliers : argumenter sur le temps de trajet.',
+      message: 'Votre activité et vos déplacements vous exposent davantage aux risques d\'accident. En complément de la sécurité sociale, B-Safe vous protège contre les conséquences financières d\'une hospitalisation et des frais médicaux liés.',
+      advisorNote: 'B-Safe étendu (Hospitalisation + Frais divers). Mentionner chirurgie esthétique réparatrice si pertinent.',
     },
   },
   {
     id: 'bsafe_10_birth_event',
-    condition: (_, a) => arr(a.life_event).includes('birth'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('birth'),
     recommendation: {
       product: 'bsafe', optionId: 'bsafe_deces',
       type: 'event', priority: 5,
       title: 'Préparer la protection de votre famille',
-      message: 'L\'arrivée d\'un enfant change tout. C\'est le moment idéal pour sécuriser l\'avenir de votre famille avec une couverture décès et invalidité adaptée à votre nouvelle situation.',
+      message: 'L\'arrivée d\'un enfant change tout. En complément de la sécurité sociale, B-Safe protège l\'assuré ainsi que sa famille avec une couverture décès et invalidité adaptée à votre nouvelle situation.',
       advisorNote: 'B-Safe Décès + Invalidité. Moment émotionnel fort. Inclure les options garde/rooming-in/rattrapage scolaire.',
     },
   },
   {
     id: 'bsafe_11_retirement_event',
-    condition: (_, a) => arr(a.life_event).includes('retirement'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('retirement'),
     recommendation: {
       product: 'bsafe',
       type: 'event', priority: 4,
       title: 'Adapter votre protection à la retraite',
-      message: 'Le passage à la retraite modifie profondément votre protection. La couverture employeur disparaît, les risques de santé augmentent. Un bilan complet vous permettra d\'anticiper sereinement.',
+      message: 'À la retraite, la couverture prévoyance de votre employeur prend fin. Les prestations de la sécurité sociale seules peuvent ne pas suffire. B-Safe protège l\'assuré et sa famille contre les conséquences financières d\'un accident, en complément.',
       advisorNote: 'Revoir l\'intégralité de la couverture. La prévoyance employeur s\'arrête. B-Safe personnel devient indispensable.',
     },
   },
   {
     id: 'bsafe_12_divorce_event',
-    condition: (_, a) => arr(a.life_event).includes('divorce'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('divorce'),
     recommendation: {
       product: 'bsafe',
       type: 'event', priority: 4,
@@ -272,7 +319,7 @@ const bsafeRules: RuleDefinition[] = [
 ]
 
 // ═══════════════════════════════════════════
-// HOME rules (15)
+// HOME rules (19)
 // ═══════════════════════════════════════════
 
 const homeRules: RuleDefinition[] = [
@@ -284,7 +331,7 @@ const homeRules: RuleDefinition[] = [
       product: 'home',
       type: 'immediate', priority: 5,
       title: 'Sécuriser votre logement',
-      message: 'En tant que locataire, vous êtes responsable des dommages causés au logement (dégât des eaux, incendie). Une assurance habitation protège votre responsabilité et vos biens.',
+      message: 'En tant que locataire, vous êtes responsable des dommages causés au logement. L\'assurance habitation protège vos biens mobiliers, couvre votre responsabilité civile et garantit vos droits.',
       advisorNote: 'Au Luxembourg, l\'assurance habitation n\'est pas légalement obligatoire pour les locataires mais quasi systématiquement exigée par les bailleurs. Vérifier le bail.',
     },
   },
@@ -297,8 +344,8 @@ const homeRules: RuleDefinition[] = [
       product: 'home',
       type: 'immediate', priority: 5,
       title: 'Protéger votre investissement immobilier',
-      message: 'Avec un crédit immobilier en cours, une couverture habitation complète protège votre bien et votre famille. En cas de sinistre grave, c\'est votre patrimoine qui est en jeu.',
-      advisorNote: 'Vérifier si la banque exige une assurance. Proposer Home complet + prévoyance emprunteur (B-Safe).',
+      message: 'Avec un crédit immobilier en cours, il est essentiel de protéger vos biens mobiliers et immobiliers. En cas de sinistre grave, c\'est votre patrimoine et celui de votre famille qui sont en jeu.',
+      advisorNote: 'Vérifier si la banque exige une assurance. Proposer Home complet + prévoyance emprunteur (B-Safe). Franchises : à adapter selon le profil financier du client.',
     },
   },
   {
@@ -325,19 +372,20 @@ const homeRules: RuleDefinition[] = [
       product: 'home', optionId: 'home_pack_energie_renouvelable',
       type: 'deferred', priority: 3,
       title: 'Protéger vos installations d\'énergie renouvelable',
-      message: 'Vos panneaux solaires ou votre pompe à chaleur représentent un investissement de plusieurs milliers d\'euros. Le Pack Énergie Renouvelable couvre les dommages spécifiques à ces installations.',
-      advisorNote: 'Pack Énergie Renouvelable. Au Luxembourg, investissement moyen 10-20k EUR. Argument : subventions ne couvrent que l\'installation, pas le remplacement en cas de sinistre.',
+      message: 'Vos panneaux solaires ou votre pompe à chaleur représentent un investissement de plusieurs milliers d\'euros. Le Pack Énergie renouvelable couvre les dommages spécifiques à ces installations.',
+      advisorNote: 'Pack Énergie renouvelable. Au Luxembourg, investissement moyen 10-20k EUR. Argument : subventions ne couvrent que l\'installation, pas le remplacement en cas de sinistre.',
     },
   },
   {
     id: 'home_05_wine_cellar',
-    condition: (_, a) => arr(a.home_specifics).includes('wine_cellar'),
+    condition: (_, a) =>
+      arr(a.home_specifics).includes('wine_cellar'),
     recommendation: {
       product: 'home', optionId: 'home_pack_cave_vin',
       type: 'deferred', priority: 2,
       title: 'Assurer votre cave à vin',
-      message: 'Votre cave à vin est un patrimoine sensible aux variations de température, au bris accidentel et au vol. Le Pack Cave à Vin couvre sa valeur réelle.',
-      advisorNote: 'Pack Cave à Vin/Denrées. Question sur la valeur estimée de la cave pour dimensionner.',
+      message: 'Votre cave à vin est un patrimoine sensible aux variations de température, au bris accidentel et au vol. Le Pack Cave à vin, alcool et denrées alimentaires couvre la valeur réelle de vos réserves.',
+      advisorNote: 'Pack Cave à vin, alcool et denrées alimentaires. Question sur la valeur estimée de la cave pour dimensionner.',
     },
   },
   {
@@ -355,13 +403,14 @@ const homeRules: RuleDefinition[] = [
   },
   {
     id: 'home_07_sustainable_mobility',
-    condition: (_, a) => arr(a.valuable_possessions).includes('sustainable_mobility'),
+    condition: (_, a) =>
+      arr(a.valuable_possessions).includes('sustainable_mobility'),
     recommendation: {
       product: 'home', optionId: 'home_pack_mobilite_durable',
       type: 'deferred', priority: 3,
-      title: 'Protéger votre équipement de mobilité durable',
-      message: 'Votre vélo électrique ou trottinette représente un investissement de plusieurs milliers d\'euros, souvent insuffisamment couvert. Le Pack Mobilité Durable protège contre le vol, la casse et les dommages.',
-      advisorNote: 'Pack Mobilité Durable. Vélo électrique moyen 3-8k EUR au Luxembourg. Vol en forte hausse.',
+      title: 'Protéger vos équipements de mobilité durable',
+      message: 'Votre vélo électrique ou trottinette représente un investissement significatif, souvent insuffisamment couvert. Le Pack Équipements de mobilité durable protège contre le vol, la casse et les dommages.',
+      advisorNote: 'Pack Équipements de mobilité durable. Vélo électrique moyen 3-8k EUR au Luxembourg. Vol en forte hausse.',
     },
   },
   {
@@ -377,18 +426,19 @@ const homeRules: RuleDefinition[] = [
       type: 'immediate', priority: 4,
       title: 'Assurer vos objets de valeur',
       message: 'Vos objets de valeur dépassent les plafonds de la couverture habitation standard. Sans assurance spécifique, vous ne seriez remboursé qu\'à hauteur d\'un plafond forfaitaire, très inférieur à leur valeur réelle.',
-      advisorNote: 'Pack OV/Art ou Pack OP/Bijoux selon le type. Proposer une expertise pour les valeurs > 50k.',
+      advisorNote: 'Pack Objets de valeur/d\'art ou Pack Objets précieux/Bijoux selon la nature des biens. Proposer une expertise pour les valeurs > 50 000 EUR.',
     },
   },
   {
     id: 'home_09_sports_equipment',
-    condition: (_, a) => arr(a.valuable_possessions).includes('sports_leisure'),
+    condition: (_, a) =>
+      arr(a.valuable_possessions).includes('sports_leisure'),
     recommendation: {
       product: 'home', optionId: 'home_pack_objets_loisirs',
       type: 'deferred', priority: 2,
       title: 'Couvrir votre équipement sportif',
-      message: 'Votre équipement de loisirs coûteux (ski, golf, vélo...) n\'est généralement pas couvert par l\'assurance habitation standard, ni en dehors du domicile. Le Pack Objets de Loisirs étend la protection.',
-      advisorNote: 'Pack Objets de Loisirs. Couvre aussi hors domicile (important pour équipement sportif).',
+      message: 'Votre équipement de loisirs coûteux (ski, golf, vélo...) n\'est généralement pas couvert par l\'assurance habitation standard, ni en dehors du domicile. Le Pack Objets de loisirs étend la protection.',
+      advisorNote: 'Pack Objets de loisirs. Couvre aussi hors domicile (important pour équipement sportif).',
     },
   },
   {
@@ -399,9 +449,9 @@ const homeRules: RuleDefinition[] = [
     recommendation: {
       product: 'home', optionId: 'home_rc_vie_privee',
       type: 'immediate', priority: 4,
-      title: 'Vous protéger en responsabilité civile',
-      message: 'Avec des enfants ou une activité sportive, les risques de causer involontairement des dommages à des tiers sont réels. La RC Vie Privée vous protège contre les conséquences financières, partout dans le monde.',
-      advisorNote: 'RC Vie Privée HOME. Couverture monde entier. Exemples concrets : enfant qui casse une vitre, collision à vélo, chute en ski blessant un tiers.',
+      title: 'Vous protéger en responsabilité civile vie privée',
+      message: 'La responsabilité civile vie privée vous protège contre les conséquences financières des dommages involontairement causés à des tiers, partout dans le monde. Avec des enfants ou une activité sportive, les risques sont réels.',
+      advisorNote: 'Responsabilité civile vie privée HOME. Couverture monde entier. Exemples concrets : enfant qui casse une vitre, collision à vélo, chute en ski blessant un tiers.',
     },
   },
   {
@@ -432,7 +482,8 @@ const homeRules: RuleDefinition[] = [
   },
   {
     id: 'home_13_property_purchase',
-    condition: (_, a) => arr(a.life_event).includes('property_purchase'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('property_purchase'),
     recommendation: {
       product: 'home',
       type: 'event', priority: 5,
@@ -443,24 +494,75 @@ const homeRules: RuleDefinition[] = [
   },
   {
     id: 'home_14_renovation',
-    condition: (_, a) => arr(a.life_event).includes('renovation'),
+    condition: (_, a) =>
+      arr(a.life_event).includes('renovation'),
     recommendation: {
       product: 'home',
       type: 'event', priority: 3,
       title: 'Adapter votre couverture à vos travaux',
       message: 'Des travaux de rénovation modifient la valeur de votre bien et potentiellement vos installations (énergie renouvelable, cuisine, salle de bain). Pensez à mettre à jour votre contrat habitation.',
-      advisorNote: 'Réévaluation des capitaux + Pack Énergie Renouvelable si installation solaire/PAC.',
+      advisorNote: 'Réévaluation des capitaux + Pack Énergie renouvelable si installation solaire/PAC.',
     },
   },
   {
     id: 'home_15_other_properties',
-    condition: (_, a) => s(a.other_properties) !== 'none' && s(a.other_properties) !== '',
+    condition: (_, a) =>
+      s(a.other_properties) !== 'none' && s(a.other_properties) !== '',
     recommendation: {
       product: 'home',
       type: 'deferred', priority: 3,
       title: 'Assurer vos autres biens immobiliers',
-      message: 'Votre résidence secondaire ou vos biens locatifs nécessitent chacun une couverture adaptée. En tant que propriétaire bailleur, votre responsabilité est engagée.',
-      advisorNote: 'Multi-contrat Home. Le bien locatif doit être couvert même si le locataire a sa propre assurance (responsabilité du propriétaire).',
+      message: 'Votre résidence secondaire ou vos biens locatifs nécessitent chacun une couverture adaptée. En tant que propriétaire bailleur, pensez aux garanties Loyers impayés, Détériorations immobilières et Vacance locative pour sécuriser vos revenus locatifs.',
+      advisorNote: 'Multi-contrat Home. Le bien locatif doit être couvert même si le locataire a sa propre assurance (responsabilité du propriétaire). Distinguer Home Habitation (bailleur individuel) vs contrat adapté selon le type de bien.',
+    },
+  },
+  {
+    id: 'home_16_loyers_impayes',
+    condition: (_, a) =>
+      ['rental', 'both'].includes(s(a.other_properties)),
+    recommendation: {
+      product: 'home', optionId: 'home_loyers_impayes',
+      type: 'immediate', priority: 4,
+      title: 'Protéger vos revenus locatifs',
+      message: 'En tant que propriétaire bailleur, un impayé de loyer peut représenter plusieurs mois de manque à gagner. La garantie Loyers impayés sécurise vos revenus locatifs en cas de défaillance du locataire.',
+      advisorNote: 'Garantie Loyers impayés. Procédures d\'expulsion longues au Luxembourg (6-18 mois). Chiffrer : loyer mensuel x durée moyenne de procédure. Vérifier les délais de carence et plafonds.',
+    },
+  },
+  {
+    id: 'home_17_deteriorations_immobilieres',
+    condition: (_, a) =>
+      ['rental', 'both'].includes(s(a.other_properties)),
+    recommendation: {
+      product: 'home', optionId: 'home_deteriorations_immobilieres',
+      type: 'deferred', priority: 3,
+      title: 'Couvrir les dégradations locatives',
+      message: 'En fin de bail, les dégradations causées par un locataire peuvent entraîner des frais de remise en état importants. La garantie Détériorations immobilières couvre ces frais.',
+      advisorNote: 'Garantie Détériorations immobilières. Souvent déclenchée en sortie de bail conflictuelle. Le point clé est l\'état des lieux d\'entrée/sortie. Se couple avec Loyers impayés.',
+    },
+  },
+  {
+    id: 'home_18_vacance_locative',
+    condition: (_, a) =>
+      ['rental', 'both'].includes(s(a.other_properties)),
+    recommendation: {
+      product: 'home', optionId: 'home_vacance_locative',
+      type: 'deferred', priority: 3,
+      title: 'Compenser la vacance locative après sinistre',
+      message: 'En cas de sinistre rendant votre bien locatif inhabitable, la garantie Vacance locative compense la perte de loyers pendant la durée des travaux de remise en état.',
+      advisorNote: 'Garantie Vacance locative. Au Luxembourg, pénurie BTP = durée de travaux longue. Se couple avec Loyers impayés et Détériorations.',
+    },
+  },
+  {
+    id: 'home_19_perte_liquide_cuves',
+    condition: (_, a) =>
+      ['house', 'townhouse'].includes(s(a.housing_type)) &&
+      ['owner_no_mortgage', 'owner_with_mortgage'].includes(s(a.housing_status)),
+    recommendation: {
+      product: 'home', optionId: 'home_pack_perte_liquide_cuves',
+      type: 'deferred', priority: 3,
+      title: 'Protéger contre les fuites de cuves',
+      message: 'Les maisons individuelles avec citerne à mazout ou cuves sont exposées aux risques de fuite et de pollution des sols. Le Pack Perte de liquide/Dommages aux cuves couvre ces sinistres dont les coûts de dépollution peuvent être très élevés.',
+      advisorNote: 'Pack Perte de liquide/Dommages aux cuves. Vérifier si le client a une citerne mazout/fioul. Sinistre rare mais coût très élevé (15-100k+ EUR dépollution). Réglementation GDL stricte.',
     },
   },
 ]
@@ -479,8 +581,8 @@ const travelRules: RuleDefinition[] = [
       product: 'travel',
       type: 'immediate', priority: 4,
       title: 'Opter pour une couverture voyage annuelle',
-      message: 'Avec plusieurs voyages par an, un contrat annuel est plus économique et vous couvre en permanence, sans avoir à y penser à chaque départ.',
-      advisorNote: 'Travel annuel. Chiffrer : coût de 2-3 contrats temporaires vs annuel. Argument de tranquillité.',
+      message: 'Avec plusieurs voyages par an, l\'assurance vacances à la carte en formule annuelle est plus économique et vous couvre en permanence, sans avoir à y penser à chaque départ.',
+      advisorNote: 'Travel annuel. Chiffrer : coût de 2-3 contrats temporaires vs annuel. Clarifier périmètre assistance véhicule TRAVEL vs assistance DRIVE si le client a les deux.',
     },
   },
   {
@@ -492,7 +594,7 @@ const travelRules: RuleDefinition[] = [
       product: 'travel',
       type: 'immediate', priority: 5,
       title: 'Renforcer votre couverture voyage hors Europe',
-      message: 'Les couvertures des cartes bancaires ont des plafonds limités et des exclusions nombreuses. Hors Europe, une hospitalisation peut coûter des dizaines de milliers d\'euros. Une assurance voyage dédiée vous couvre sans surprise.',
+      message: 'Les couvertures des cartes bancaires ont des plafonds limités et de nombreuses exclusions. Hors Europe, les conséquences financières d\'une hospitalisation peuvent être considérables. L\'assurance vacances à la carte vous protège, vous et votre famille, sans surprise.',
       advisorNote: 'Travel complet. Exemples concrets : hospitalisation aux USA 5-20k EUR/jour. Rapatriement médical 15-50k EUR. La carte bancaire plafonne généralement à 10-15k EUR.',
     },
   },
@@ -505,7 +607,7 @@ const travelRules: RuleDefinition[] = [
       product: 'travel',
       type: 'immediate', priority: 4,
       title: 'Protéger votre investissement voyage',
-      message: 'Un voyage à plus de 3 000 EUR représente un investissement important. En cas d\'annulation pour maladie, accident ou imprévu familial, l\'assurance annulation vous rembourse les frais engagés.',
+      message: 'Un voyage à plus de 3 000 EUR représente un investissement important. En cas d\'annulation pour maladie, accident ou imprévu familial, l\'assurance vacances à la carte vous protège contre les conséquences financières et vous rembourse les frais engagés.',
       advisorNote: 'Travel Annulation. Les causes d\'annulation couvertes sont larges : maladie, accident, décès d\'un proche, licenciement, convocation tribunal.',
     },
   },
@@ -518,8 +620,8 @@ const travelRules: RuleDefinition[] = [
       product: 'travel',
       type: 'immediate', priority: 3,
       title: 'Vous couvrir pour vos voyages aventure',
-      message: 'Les destinations nature et aventure présentent des risques spécifiques (éloignement des structures médicales, activités de plein air). L\'assurance accident de voyage complète votre protection sur place.',
-      advisorNote: 'Travel Accident + Assistance Personnes. Vérifier la compatibilité des activités prévues avec les exclusions (sports exclus dans l\'IPID).',
+      message: 'Les destinations aventure présentent des risques spécifiques. L\'assurance vacances à la carte vous protège contre les conséquences financières d\'un aléa en voyage — y compris l\'assistance et le rapatriement.',
+      advisorNote: 'Travel Accident + Assistance Personnes. Vérifier compatibilité activités prévues avec exclusions IPID. Clarifier coordination avec assistance DRIVE si véhicule loué à l\'étranger.',
     },
   },
   {
@@ -532,7 +634,7 @@ const travelRules: RuleDefinition[] = [
       product: 'travel',
       type: 'deferred', priority: 3,
       title: 'Couvrir toute la famille en voyage',
-      message: 'Avec des enfants, les imprévus de voyage sont plus fréquents et plus complexes à gérer. La formule famille couvre tout le foyer sous un seul contrat, y compris l\'annulation et l\'assistance.',
+      message: 'Avec des enfants, les imprévus de voyage sont plus fréquents. L\'assurance vacances à la carte en formule famille protège l\'assuré ainsi que sa famille sous un seul contrat, y compris l\'annulation et l\'assistance.',
       advisorNote: 'Travel formule famille. Argument : un enfant malade à l\'étranger = rapatriement de toute la famille.',
     },
   },
@@ -542,7 +644,12 @@ const travelRules: RuleDefinition[] = [
 // Engine
 // ═══════════════════════════════════════════
 
-const ALL_RULES: RuleDefinition[] = [...driveRules, ...bsafeRules, ...homeRules, ...travelRules]
+const ALL_RULES: RuleDefinition[] = [
+  ...withGuard(isResidentGDL, driveRules),
+  ...withGuard(isResidentGDL, bsafeRules),
+  ...withGuard(isResidentGDL, homeRules),
+  ...withGuard(isTravelEligible, travelRules),
+]
 
 export function generateRecommendations(
   scores: Record<Quadrant, QuadrantScore>,
@@ -560,4 +667,3 @@ export function generateRecommendations(
   recommendations.sort((a, b) => b.priority - a.priority)
   return recommendations
 }
-

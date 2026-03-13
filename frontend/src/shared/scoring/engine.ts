@@ -1,7 +1,7 @@
 import type { Quadrant, QuadrantScore, ProductScore, DiagnosticResult, OptionScore } from './types.ts'
 import { computeNeedFromMatrix, getNeedLevel } from './thresholds.ts'
 import { generateRecommendations } from './rules.ts'
-import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS } from './answer-helpers.ts'
+import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL } from './answer-helpers.ts'
 
 type Answers = Record<string, unknown>
 
@@ -137,7 +137,7 @@ function computePersonnesExposure(a: Answers): number {
   // Age factor (weight 5)
   const ageRisk: Record<string, number> = {
     '18_25': 30, '26_35': 50, '36_45': 90,
-    '46_55': 100, '56_65': 70, '65_plus': 40,
+    '46_55': 100, '56_65': 70, '65_plus': 40, '80_plus': 20,
   }
   score += (ageRisk[asString(a.age_range)] ?? 50) * 0.05
   weights += 0.05
@@ -301,14 +301,16 @@ function computeProductScores(answers: Answers): ProductScore[] {
     })
   }
 
-  // B-SAFE
-  const bsafeRelevance = accidentCov === 'individual_complete' ? 15 : accidentCov === 'none' ? 90 : 60
-  scores.push({
-    product: 'bsafe',
-    relevance: bsafeRelevance,
-    isExistingClient: ['individual_basic', 'individual_complete'].includes(accidentCov),
-    options: computeBsafeOptions(answers),
-  })
+  // B-SAFE — résident GDL uniquement (POG)
+  if (isResidentGDL(answers)) {
+    const bsafeRelevance = accidentCov === 'individual_complete' ? 15 : accidentCov === 'none' ? 90 : 60
+    scores.push({
+      product: 'bsafe',
+      relevance: bsafeRelevance,
+      isExistingClient: ['individual_basic', 'individual_complete'].includes(accidentCov),
+      options: computeBsafeOptions(answers),
+    })
+  }
 
   return scores.sort((a, b) => b.relevance - a.relevance)
 }

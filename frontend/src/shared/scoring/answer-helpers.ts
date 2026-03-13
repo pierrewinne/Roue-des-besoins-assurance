@@ -24,3 +24,28 @@ export function includesAny(arr: string[], values: string[]): boolean {
 }
 
 export const HIGH_RISK_SPORTS: string[] = ['winter_sports', 'water_sports', 'mountain_outdoor', 'equestrian', 'motor_sports', 'combat_contact']
+
+// ═══════════════════════════════════════════
+// POG eligibility helpers
+// ═══════════════════════════════════════════
+
+export const POG_FRONTALIER = ['frontalier_fr', 'frontalier_be', 'frontalier_de']
+
+type Answers = Record<string, unknown>
+
+/** B-SAFE, HOME, DRIVE: résident GDL uniquement. Vide = pas encore répondu (éligible). */
+export function isResidentGDL(a: Answers): boolean {
+  const r = asString(a.residence_status)
+  return r === '' || r === 'resident_gdl'
+}
+
+/** TRAVEL: résidents GDL + frontaliers éligibles. */
+export function isResidentOrFrontalier(a: Answers): boolean {
+  const r = asString(a.residence_status)
+  return r === '' || r === 'resident_gdl' || POG_FRONTALIER.includes(r)
+}
+
+/** TRAVEL: résidence éligible + âge < 80 ans. */
+export function isTravelEligible(a: Answers): boolean {
+  return isResidentOrFrontalier(a) && asString(a.age_range) !== '80_plus'
+}

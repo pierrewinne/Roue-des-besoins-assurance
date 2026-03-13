@@ -35,8 +35,23 @@ export const ALL_QUADRANT_SECTIONS: QuestionQuadrant[] = ['profil_express', 'bie
 
 export const QUESTIONS: Question[] = [
   // ══════════════════════════════════════════
-  // BLOC 0 : PROFIL EXPRESS (6 questions)
+  // BLOC 0 : PROFIL EXPRESS (8 questions)
   // ══════════════════════════════════════════
+  {
+    id: 'residence_status',
+    quadrant: 'profil_express',
+    label: 'Où résidez-vous ?',
+    helpText: 'Cette information est nécessaire pour vous proposer les produits adaptés à votre situation.',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'resident_gdl', label: 'Résident au Luxembourg' },
+      { value: 'frontalier_fr', label: 'Frontalier (résidence en France)' },
+      { value: 'frontalier_be', label: 'Frontalier (résidence en Belgique)' },
+      { value: 'frontalier_de', label: 'Frontalier (résidence en Allemagne)' },
+      { value: 'other', label: 'Autre' },
+    ],
+  },
   {
     id: 'age_range',
     quadrant: 'profil_express',
@@ -49,7 +64,8 @@ export const QUESTIONS: Question[] = [
       { value: '36_45', label: '36-45 ans' },
       { value: '46_55', label: '46-55 ans' },
       { value: '56_65', label: '56-65 ans' },
-      { value: '65_plus', label: 'Plus de 65 ans' },
+      { value: '65_plus', label: '65-80 ans' },
+      { value: '80_plus', label: 'Plus de 80 ans' },
     ],
   },
   {
