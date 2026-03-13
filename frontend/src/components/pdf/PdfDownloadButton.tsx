@@ -24,9 +24,11 @@ interface PdfDownloadButtonProps {
 
 export default function PdfDownloadButton({ diagnostic, type, clientName, clientEmail, answers, wheelRef, advisor }: PdfDownloadButtonProps) {
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState(false)
 
   const handleDownload = useCallback(async () => {
     setGenerating(true)
+    setError(false)
     try {
       let wheelImageUri: string | undefined
 
@@ -56,19 +58,22 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch {
-      console.error('PDF generation failed')
+      setError(true)
     } finally {
       setGenerating(false)
     }
   }, [diagnostic, type, clientName, clientEmail, answers, wheelRef, advisor])
 
   return (
-    <Button
-      onClick={handleDownload}
-      disabled={generating}
-      variant={type === 'advisor' ? 'secondary' : 'primary'}
-    >
-      {generating ? 'Génération...' : 'Télécharger le PDF'}
-    </Button>
+    <div className="inline-flex flex-col items-end gap-1">
+      <Button
+        onClick={handleDownload}
+        disabled={generating}
+        variant={type === 'advisor' ? 'secondary' : 'primary'}
+      >
+        {generating ? 'Génération...' : 'Télécharger le PDF'}
+      </Button>
+      {error && <p className="text-xs text-danger">Erreur lors de la génération du PDF.</p>}
+    </div>
   )
 }
