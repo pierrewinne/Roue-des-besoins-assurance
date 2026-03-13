@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
 import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   immediate: 'Immédiate',
@@ -63,7 +64,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <Text style={styles.sectionTitle}>Synthèse globale</Text>
           <View style={{ flexDirection: 'row', gap: 20, marginBottom: 10 }}>
             <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: diagnostic.globalScore <= 25 ? NEED_COLORS.low : diagnostic.globalScore <= 50 ? NEED_COLORS.moderate : NEED_COLORS.high }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: NEED_COLORS[getNeedLevel(diagnostic.globalScore)] }}>
                 {diagnostic.globalScore}
               </Text>
               <Text style={{ fontSize: 8, color: '#64748b' }}>Score global /100</Text>
