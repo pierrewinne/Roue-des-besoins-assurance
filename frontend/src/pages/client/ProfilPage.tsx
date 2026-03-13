@@ -17,6 +17,8 @@ export default function ProfilPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const answersRef = useRef(answers)
+  answersRef.current = answers
 
   useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
 
@@ -48,32 +50,49 @@ export default function ProfilPage() {
     load()
   }, [user, navigate])
 
-  // Auto-save debounced with error handling (ANO-06)
+  // Auto-save debounced with visible error feedback (P2-02)
   const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
     if (!user) return
     const rid = responseIdRef.current
     if (rid) {
-      const { error } = await supabase
+      const { error: err } = await supabase
         .from('questionnaire_responses')
         .update({ responses: newAnswers })
         .eq('id', rid)
         .eq('profile_id', user.id)
-      if (error) console.error('Auto-save failed:', error)
+      if (err) {
+        setError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
+        return
+      }
     } else {
-      const { data, error } = await supabase
+      const { data, error: err } = await supabase
         .from('questionnaire_responses')
         .insert({ profile_id: user.id, responses: newAnswers })
         .select('id')
         .single()
-      if (error) {
-        console.error('Auto-save failed:', error)
+      if (err) {
+        setError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
         return
       }
       if (data) {
         responseIdRef.current = data.id
       }
     }
+    setError(null)
   }, [user])
+
+  // Flush pending save on tab close (P2-07)
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current)
+        saveTimeout.current = undefined
+        saveAnswers(answersRef.current)
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [saveAnswers])
 
   function handleAnswer(questionId: string, value: unknown) {
     const newAnswers = { ...answers, [questionId]: value }
@@ -113,8 +132,7 @@ export default function ProfilPage() {
       }
 
       navigate('/dashboard')
-    } catch (err) {
-      console.error('Save failed:', err)
+    } catch {
       setError('Impossible de sauvegarder votre profil. Veuillez réessayer.')
     } finally {
       setSaving(false)
@@ -132,6 +150,16 @@ export default function ProfilPage() {
       />
 
       <div className="max-w-2xl mx-auto">
+        {/* RGPD notice (CRIT-3) */}
+        <div className="mb-6 p-4 bg-info-light rounded-xl ring-1 ring-info/10 text-xs text-grey-500 leading-relaxed">
+          <p className="font-bold text-grey-600 mb-1">Protection de vos données</p>
+          <p>
+            Les informations recueillies dans ce questionnaire sont traitées par Baloise Assurances Luxembourg S.A. pour l'analyse de vos besoins en assurance.
+            Conformément au RGPD, vous pouvez exercer vos droits d'accès, de rectification et de suppression depuis votre tableau de bord.
+            Vos données ne sont partagées qu'avec votre conseiller attitré.
+          </p>
+        </div>
+
         <div className="bg-white rounded-xl shadow-card p-8">
           <div className="space-y-7">
             {visibleQuestions.map(q => (

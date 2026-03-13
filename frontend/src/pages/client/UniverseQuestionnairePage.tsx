@@ -27,6 +27,8 @@ export default function UniverseQuestionnairePage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const answersRef = useRef(answers)
+  answersRef.current = answers
 
   const validUniverse = isValidQuadrant(universeParam)
   const universe: Quadrant = validUniverse ? universeParam : 'biens'
@@ -63,7 +65,7 @@ export default function UniverseQuestionnairePage() {
     load()
   }, [user, navigate, validUniverse])
 
-  // Auto-save with error handling (ANO-06)
+  // Auto-save with visible error feedback (P2-02)
   const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
     if (!user || !validUniverse) return
     const rid = responseIdRef.current
@@ -73,8 +75,25 @@ export default function UniverseQuestionnairePage() {
       .update({ responses: newAnswers })
       .eq('id', rid)
       .eq('profile_id', user.id)
-    if (error) console.error('Auto-save failed:', error)
+    if (error) {
+      setSaveError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
+    } else {
+      setSaveError(null)
+    }
   }, [user, validUniverse])
+
+  // Flush pending save on tab close (P2-07)
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (saveTimeout.current) {
+        clearTimeout(saveTimeout.current)
+        saveTimeout.current = undefined
+        saveAnswers(answersRef.current)
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [saveAnswers])
 
   function handleAnswer(questionId: string, value: unknown) {
     const newAnswers = { ...answers, [questionId]: value }

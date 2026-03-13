@@ -211,6 +211,14 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             </Text>
           </View>
 
+          {/* IDD Disclaimer (CRIT-3) */}
+          <View style={{ marginTop: 15, padding: 10, backgroundColor: '#f1f5f9', borderRadius: 4 }}>
+            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#64748b', marginBottom: 3 }}>Mention réglementaire IDD</Text>
+            <Text style={{ fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4 }}>
+              {'Ce rapport est un outil d\'aide à l\'entretien de découverte et ne constitue pas un conseil en assurance au sens de la Directive (UE) 2016/97. Le devoir de conseil reste de la responsabilité du conseiller. Les scores et recommandations doivent être validés lors de l\'entretien personnalisé avant toute proposition commerciale.'}
+            </Text>
+          </View>
+
           <View style={styles.footer}>
             <Text>Roue des Besoins — Rapport conseiller confidentiel</Text>
             <Text>Page 3/{pageCount}</Text>

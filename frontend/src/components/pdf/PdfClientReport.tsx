@@ -145,6 +145,14 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
             </Text>
           </View>
 
+          {/* IDD Disclaimer (CRIT-3) */}
+          <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f1f5f9', borderRadius: 4 }}>
+            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#64748b', marginBottom: 3 }}>Information importante</Text>
+            <Text style={{ fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4 }}>
+              {'Ce diagnostic est un outil d\'aide à la réflexion et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d\'Assurance (IDD — Directive (UE) 2016/97). Les résultats présentés sont basés uniquement sur les informations que vous avez fournies et ne remplacent pas l\'analyse personnalisée d\'un conseiller en assurance qualifié. Veuillez consulter votre conseiller Baloise pour obtenir des recommandations adaptées à votre situation personnelle.'}
+            </Text>
+          </View>
+
           <View style={styles.footer}>
             <Text>{'Roue des Besoins Assurance — Document confidentiel'}</Text>
             <Text>Page 2/2</Text>
