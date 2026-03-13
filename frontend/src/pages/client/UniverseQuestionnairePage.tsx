@@ -18,6 +18,12 @@ function isValidQuadrant(s: string | undefined): s is Quadrant {
   return s !== undefined && ALL_QUADRANTS.includes(s as Quadrant)
 }
 
+function isAnsweredValue(val: AnswerValue | undefined): boolean {
+  if (val === undefined || val === null || val === '') return false
+  if (Array.isArray(val) && val.length === 0) return false
+  return true
+}
+
 export default function UniverseQuestionnairePage() {
   const { universe: universeParam } = useParams<{ universe: string }>()
   const { user } = useAuth()
@@ -124,7 +130,9 @@ export default function UniverseQuestionnairePage() {
     return <Navigate to="/dashboard" replace />
   }
 
+  // Cross-quadrant questions already answered (e.g. personnes → futur) are skipped
   const visibleQuestions = getVisibleQuadrantQuestions(universe, answers)
+    .filter(q => q.quadrant === universe || !isAnsweredValue(answers[q.id]))
   const labels = QUADRANT_WHEEL_LABELS[universe]
   const isValid = isQuadrantComplete(universe, answers)
 
