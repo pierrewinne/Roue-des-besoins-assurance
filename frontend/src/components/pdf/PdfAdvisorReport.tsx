@@ -3,8 +3,9 @@ import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '
 import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant, type QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
+import { BALOISE, ACTION_STYLES, PRIORITY_DOTS } from './pdf-tokens.ts'
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<Recommendation['type'], string> = {
   immediate: 'Immédiate',
   deferred: 'Différée',
   event: 'Événementielle',
@@ -12,26 +13,28 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const styles = StyleSheet.create({
-  page: { padding: 35, fontFamily: 'Helvetica', fontSize: 9, color: '#1e293b' },
-  header: { marginBottom: 20, borderBottom: '2 solid #1e293b', paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  title: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: '#1e293b' },
-  subtitle: { fontSize: 10, color: '#64748b' },
-  badge: { backgroundColor: '#000d6e', color: '#ffffff', padding: '3 8', borderRadius: 4, fontSize: 8 },
+  page: { padding: 35, fontFamily: 'Helvetica', fontSize: 9, color: BALOISE.navy },
+  header: { marginBottom: 20, borderBottom: `2 solid ${BALOISE.navy}`, paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  title: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: BALOISE.navy },
+  subtitle: { fontSize: 10, color: BALOISE.grey400 },
+  badge: { backgroundColor: BALOISE.navy, color: BALOISE.white, padding: '3 8', borderRadius: 4, fontSize: 8 },
   section: { marginBottom: 15 },
-  sectionTitle: { fontSize: 12, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 8, borderBottom: '1 solid #e2e8f0', paddingBottom: 4 },
+  sectionTitle: { fontSize: 12, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginBottom: 8, borderBottom: `1 solid ${BALOISE.grey200}`, paddingBottom: 4 },
   row: { flexDirection: 'row', marginBottom: 4 },
-  label: { width: 160, fontSize: 9, color: '#64748b' },
+  label: { width: 160, fontSize: 9, color: BALOISE.grey400 },
   value: { fontSize: 9, fontFamily: 'Helvetica-Bold' },
   table: { marginTop: 6 },
-  tableHeader: { flexDirection: 'row', backgroundColor: '#f1f5f9', padding: '4 8', borderRadius: 3, marginBottom: 3 },
-  tableRow: { flexDirection: 'row', padding: '4 8', borderBottom: '0.5 solid #e2e8f0' },
+  tableHeader: { flexDirection: 'row', backgroundColor: BALOISE.grey100, padding: '4 8', borderRadius: 3, marginBottom: 3 },
+  tableRow: { flexDirection: 'row', padding: '4 8', borderBottom: `0.5 solid ${BALOISE.grey200}` },
   tableCell: { fontSize: 8 },
   wheelImage: { width: 240, height: 240, alignSelf: 'center', marginVertical: 10 },
   scoreBar: { height: 6, borderRadius: 3, marginTop: 2 },
-  scoreBarBg: { height: 6, borderRadius: 3, backgroundColor: '#e2e8f0', width: '100%' },
-  universeCard: { padding: 10, marginBottom: 8, backgroundColor: '#f8fafc', borderRadius: 6, borderLeft: '3 solid #000d6e' },
-  actionItem: { padding: 8, marginBottom: 5, borderRadius: 4, borderLeft: `3 solid ${NEED_COLORS.high}`, backgroundColor: '#fff' },
-  footer: { position: 'absolute', bottom: 20, left: 35, right: 35, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#94a3b8', borderTop: '0.5 solid #e2e8f0', paddingTop: 6 },
+  scoreBarBg: { height: 6, borderRadius: 3, backgroundColor: BALOISE.grey200, width: '100%' },
+  universeCard: { padding: 10, marginBottom: 8, backgroundColor: BALOISE.grey50, borderRadius: 6, borderLeft: `3 solid ${BALOISE.navy}` },
+  actionItem: { padding: 8, marginBottom: 5, borderRadius: 6, borderLeft: '3 solid', backgroundColor: BALOISE.white },
+  priorityBar: { width: 3, height: 12, borderRadius: 1.5 },
+  priorityRow: { flexDirection: 'row', gap: 2, marginTop: 4 },
+  footer: { position: 'absolute', bottom: 20, left: 35, right: 35, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: BALOISE.grey300, borderTop: `0.5 solid ${BALOISE.grey200}`, paddingTop: 6 },
 })
 
 interface PdfAdvisorReportProps {
@@ -54,7 +57,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <View>
             <Text style={styles.title}>Rapport Diagnostic Assurance</Text>
             <Text style={styles.subtitle}>{clientName}{clientEmail ? ` — ${clientEmail}` : ''}</Text>
-            <Text style={{ fontSize: 8, color: '#94a3b8', marginTop: 3 }}>
+            <Text style={{ fontSize: 8, color: BALOISE.grey300, marginTop: 3 }}>
               {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
             </Text>
           </View>
@@ -64,21 +67,21 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Synthèse globale</Text>
           <View style={{ flexDirection: 'row', gap: 20, marginBottom: 10 }}>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
+            <View style={{ flex: 1, padding: 12, backgroundColor: BALOISE.grey50, borderRadius: 6, alignItems: 'center' }}>
               <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: NEED_COLORS[getNeedLevel(diagnostic.globalScore)] }}>
                 {diagnostic.globalScore}
               </Text>
-              <Text style={{ fontSize: 8, color: '#64748b' }}>Score global /100</Text>
+              <Text style={{ fontSize: 8, color: BALOISE.grey400 }}>Score global /100</Text>
             </View>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
-              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: '#000d6e' }}>{activeUniverses.length}</Text>
-              <Text style={{ fontSize: 8, color: '#64748b' }}>Univers actifs /4</Text>
+            <View style={{ flex: 1, padding: 12, backgroundColor: BALOISE.grey50, borderRadius: 6, alignItems: 'center' }}>
+              <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: BALOISE.navy }}>{activeUniverses.length}</Text>
+              <Text style={{ fontSize: 8, color: BALOISE.grey400 }}>Univers actifs /4</Text>
             </View>
-            <View style={{ flex: 1, padding: 12, backgroundColor: '#f8fafc', borderRadius: 6, alignItems: 'center' }}>
+            <View style={{ flex: 1, padding: 12, backgroundColor: BALOISE.grey50, borderRadius: 6, alignItems: 'center' }}>
               <Text style={{ fontSize: 32, fontFamily: 'Helvetica-Bold', color: NEED_COLORS.high }}>
                 {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}
               </Text>
-              <Text style={{ fontSize: 8, color: '#64748b' }}>Actions immédiates</Text>
+              <Text style={{ fontSize: 8, color: BALOISE.grey400 }}>Actions immédiates</Text>
             </View>
           </View>
         </View>
@@ -139,7 +142,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
                 <Text style={styles.value}>{Math.round(score.coverage)}%</Text>
               </View>
               <View style={styles.scoreBarBg}>
-                <View style={{ ...styles.scoreBar, width: `${score.coverage}%`, backgroundColor: '#000d6e' }} />
+                <View style={{ ...styles.scoreBar, width: `${score.coverage}%`, backgroundColor: BALOISE.navy }} />
               </View>
 
               <View style={{ ...styles.row, marginTop: 6 }}>
@@ -153,7 +156,6 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
         </View>
 
         {answers && (() => {
-          // Group answered questions by section with human-readable labels (P3-08)
           const sections: { section: QuestionQuadrant; label: string; items: { label: string; value: string }[] }[] = []
           const sectionOrder: QuestionQuadrant[] = ['profil_express', 'biens', 'personnes', 'projets', 'futur']
 
@@ -182,7 +184,7 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
               <View style={styles.table}>
                 {sec.items.map((item, idx) => (
                   <View key={idx} style={styles.tableRow}>
-                    <Text style={{ ...styles.tableCell, width: '45%', color: '#64748b' }}>{item.label}</Text>
+                    <Text style={{ ...styles.tableCell, width: '45%', color: BALOISE.grey400 }}>{item.label}</Text>
                     <Text style={{ ...styles.tableCell, width: '55%' }}>{item.value}</Text>
                   </View>
                 ))}
@@ -203,24 +205,27 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Plan d'actions</Text>
 
-            {['immediate', 'deferred', 'event', 'optimization'].map(type => {
+            {(['immediate', 'deferred', 'event', 'optimization'] as const).map(type => {
               const typeActions = diagnostic.recommendations.filter((a: Recommendation) => a.type === type)
               if (typeActions.length === 0) return null
+              const aStyle = ACTION_STYLES[type] ?? ACTION_STYLES.immediate
               return (
                 <View key={type} style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#475569', marginBottom: 6 }}>
+                  <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: BALOISE.grey400, marginBottom: 6 }}>
                     {TYPE_LABELS[type]} ({typeActions.length})
                   </Text>
                   {typeActions.map((action: Recommendation, i: number) => (
-                    <View key={i} style={styles.actionItem}>
+                    <View key={i} style={{ ...styles.actionItem, backgroundColor: aStyle.bg, borderLeftColor: aStyle.border }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{action.title}</Text>
-                        <Text style={{ fontSize: 8, color: '#64748b' }}>{PRODUCT_LABELS[action.product] ?? action.product}</Text>
+                        <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: BALOISE.navy }}>{action.title}</Text>
+                        <Text style={{ fontSize: 8, color: BALOISE.grey400 }}>{PRODUCT_LABELS[action.product] ?? action.product}</Text>
                       </View>
-                      <Text style={{ fontSize: 8, color: '#475569', marginTop: 2 }}>{action.message}</Text>
-                      <Text style={{ fontSize: 7, color: NEED_COLORS.high, marginTop: 2 }}>
-                        {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
-                      </Text>
+                      <Text style={{ fontSize: 8, color: BALOISE.grey400, marginTop: 2 }}>{action.message}</Text>
+                      <View style={styles.priorityRow}>
+                        {PRIORITY_DOTS.map(j => (
+                          <View key={j} style={{ ...styles.priorityBar, backgroundColor: j < action.priority ? aStyle.border : BALOISE.grey200 }} />
+                        ))}
+                      </View>
                     </View>
                   ))}
                 </View>
@@ -228,9 +233,9 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
             })}
           </View>
 
-          <View style={{ marginTop: 15, padding: 12, backgroundColor: '#ecfdf5', borderRadius: 6 }}>
-            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#065f46', marginBottom: 4 }}>Opportunités commerciales</Text>
-            <Text style={{ fontSize: 8, color: '#047857' }}>
+          <View style={{ marginTop: 15, padding: 12, backgroundColor: '#e9fbf7', borderRadius: 6 }}>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1b5951', marginBottom: 4 }}>Opportunités commerciales</Text>
+            <Text style={{ fontSize: 8, color: '#00b28f' }}>
               {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length}{' univers avec besoin élevé/critique identifié.\n'}
               {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}{' actions immédiates à proposer au client.\n'}
               {'Potentiel de cross-selling : '}{activeUniverses.length > 2 ? 'Élevé' : 'Modéré'}.
@@ -238,9 +243,9 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           </View>
 
           {/* IDD Disclaimer (CRIT-3) */}
-          <View style={{ marginTop: 15, padding: 10, backgroundColor: '#f1f5f9', borderRadius: 4 }}>
-            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#64748b', marginBottom: 3 }}>Mention réglementaire IDD</Text>
-            <Text style={{ fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4 }}>
+          <View style={{ marginTop: 15, padding: 10, backgroundColor: BALOISE.grey100, borderRadius: 6 }}>
+            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: BALOISE.grey400, marginBottom: 3 }}>Mention réglementaire IDD</Text>
+            <Text style={{ fontSize: 7, color: BALOISE.grey300, lineHeight: 1.4 }}>
               {'Ce rapport est un outil d\'aide à l\'entretien de découverte et ne constitue pas un conseil en assurance au sens de la Directive (UE) 2016/97. Le devoir de conseil reste de la responsabilité du conseiller. Les scores et recommandations doivent être validés lors de l\'entretien personnalisé avant toute proposition commerciale.'}
             </Text>
           </View>

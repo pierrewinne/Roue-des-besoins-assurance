@@ -1,41 +1,49 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
-import { QUADRANT_LABELS, NEED_COLORS, NEED_MESSAGES, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_LABELS, NEED_COLORS, NEED_MESSAGES, NEED_LEGEND_MESSAGES, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import { BALOISE, ACTION_STYLES, PRIORITY_DOTS, type AdvisorInfo } from './pdf-tokens.ts'
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Helvetica', fontSize: 10, color: '#1e293b' },
-  header: { marginBottom: 30, borderBottom: '2 solid #000d6e', paddingBottom: 15 },
-  title: { fontSize: 22, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 4 },
-  subtitle: { fontSize: 12, color: '#64748b' },
-  date: { fontSize: 9, color: '#94a3b8', marginTop: 6 },
-  section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginBottom: 10, borderBottom: '1 solid #e2e8f0', paddingBottom: 6 },
-  globalScoreContainer: { alignItems: 'center', justifyContent: 'center', marginVertical: 20, padding: 20, backgroundColor: '#f8fafc', borderRadius: 8 },
+  page: { paddingTop: 0, paddingHorizontal: 40, paddingBottom: 50, fontFamily: 'Helvetica', fontSize: 10, color: BALOISE.navy },
+  pageContinued: { paddingTop: 40, paddingHorizontal: 40, paddingBottom: 50, fontFamily: 'Helvetica', fontSize: 10, color: BALOISE.navy },
+  header: { backgroundColor: BALOISE.navy, marginHorizontal: -40, paddingHorizontal: 40, paddingTop: 30, paddingBottom: 20, marginBottom: 30 },
+  headerTitle: { fontSize: 24, fontFamily: 'Helvetica-Bold', color: BALOISE.white, marginBottom: 4 },
+  headerSubtitle: { fontSize: 11, color: '#b3b6d4' },
+  headerDate: { fontSize: 8, color: '#656ea8', marginTop: 6 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginBottom: 10, borderBottom: `1 solid ${BALOISE.grey200}`, paddingBottom: 6 },
+  globalScoreContainer: { alignItems: 'center', justifyContent: 'center', marginVertical: 15, padding: 20, backgroundColor: BALOISE.grey50, borderRadius: 12 },
   globalScoreMessage: { fontSize: 14, fontFamily: 'Helvetica-Bold', textAlign: 'center', marginBottom: 8 },
   globalScoreNumber: { fontSize: 28, fontFamily: 'Helvetica-Bold', textAlign: 'center' },
-  globalScoreLabel: { fontSize: 10, color: '#64748b', textAlign: 'center', marginTop: 4 },
-  wheelImage: { width: 280, height: 280, alignSelf: 'center', marginVertical: 15 },
-  universeRow: { flexDirection: 'row', marginBottom: 10, padding: 10, backgroundColor: '#f8fafc', borderRadius: 6 },
-  universeIndicator: { width: 10, height: 10, borderRadius: 5, marginRight: 10, marginTop: 2 },
-  universeName: { fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
-  universeMessage: { fontSize: 9, color: '#64748b' },
-  actionItem: { flexDirection: 'row', marginBottom: 8, padding: 8, backgroundColor: '#ffeef1', borderRadius: 4, borderLeft: `3 solid ${NEED_COLORS.high}` },
-  actionTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', marginBottom: 2 },
-  actionDesc: { fontSize: 9, color: '#475569' },
-  actionPriority: { fontSize: 8, color: NEED_COLORS.high, marginTop: 2 },
-  actionProduct: { fontSize: 8, color: '#000d6e', marginTop: 2, fontFamily: 'Helvetica-Bold' },
-  advisorBox: { marginTop: 20, padding: 15, backgroundColor: '#e8eaf6', borderRadius: 6, borderLeft: '4 solid #000d6e' },
-  advisorTitle: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#000d6e', marginBottom: 6 },
-  advisorInfo: { fontSize: 9, color: '#1e293b', marginBottom: 2 },
-  advisorCta: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#000d6e', marginTop: 8 },
-  footer: { position: 'absolute', bottom: 25, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 8, color: '#94a3b8', borderTop: '1 solid #e2e8f0', paddingTop: 8 },
+  globalScoreLabel: { fontSize: 10, color: BALOISE.grey400, textAlign: 'center', marginTop: 4 },
+  wheelImage: { width: 300, height: 300, alignSelf: 'center', marginVertical: 10 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 6, padding: 8, backgroundColor: BALOISE.grey50, borderRadius: 8 },
+  legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
+  legendName: { fontSize: 9, fontFamily: 'Helvetica-Bold', color: BALOISE.navy },
+  legendMessage: { fontSize: 7.5, color: BALOISE.grey400, marginTop: 1 },
+  universeCard: { marginBottom: 12, padding: 14, backgroundColor: BALOISE.white, borderRadius: 12, border: `0.5 solid ${BALOISE.grey200}`, borderLeft: '3 solid' },
+  universeName: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginBottom: 4 },
+  universeMessage: { fontSize: 9, color: BALOISE.grey400, lineHeight: 1.4 },
+  actionItem: { marginBottom: 10, padding: 12, borderRadius: 8, borderLeft: '3 solid' },
+  actionTitle: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginBottom: 2 },
+  actionDesc: { fontSize: 9, color: BALOISE.grey400 },
+  actionProduct: { fontSize: 9, color: BALOISE.navy, marginTop: 4, fontFamily: 'Helvetica-Bold' },
+  priorityBar: { width: 3, height: 12, borderRadius: 1.5 },
+  priorityRow: { flexDirection: 'row', gap: 2, marginTop: 4 },
+  advisorBox: { marginTop: 25, padding: 16, backgroundColor: BALOISE.navyLight, borderRadius: 12, borderLeft: `3 solid ${BALOISE.navy}` },
+  advisorTitle: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginBottom: 6 },
+  advisorInfo: { fontSize: 9, color: BALOISE.navy, marginBottom: 3 },
+  advisorCta: { fontSize: 10, fontFamily: 'Helvetica-Bold', color: BALOISE.navy, marginTop: 10 },
+  footer: { position: 'absolute', bottom: 25, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7.5, color: BALOISE.grey300, borderTop: `0.5 solid ${BALOISE.grey200}`, paddingTop: 8 },
+  introText: { fontSize: 9, color: BALOISE.grey400, marginBottom: 12 },
+  nextStepsBox: { marginTop: 20, padding: 15, backgroundColor: BALOISE.navyLight, borderRadius: 8 },
+  nextStepsTitle: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: BALOISE.navyDark, marginBottom: 6 },
+  nextStepsBody: { fontSize: 9, color: BALOISE.navy, lineHeight: 1.5 },
+  disclaimerBox: { marginTop: 20, padding: 10, backgroundColor: BALOISE.grey100, borderRadius: 6 },
+  disclaimerTitle: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: BALOISE.grey400, marginBottom: 3 },
+  disclaimerBody: { fontSize: 7, color: BALOISE.grey300, lineHeight: 1.4 },
 })
-
-interface AdvisorInfo {
-  name: string
-  email?: string
-  phone?: string
-}
 
 interface PdfClientReportProps {
   diagnostic: DiagnosticResult
@@ -52,22 +60,20 @@ const SCORE_MESSAGES = [
 ]
 
 export default function PdfClientReport({ diagnostic, clientName, wheelImageUri, advisor }: PdfClientReportProps) {
-  const globalColor = diagnostic.globalScore <= 25 ? NEED_COLORS.low :
-                       diagnostic.globalScore <= 50 ? NEED_COLORS.moderate :
-                       diagnostic.globalScore <= 75 ? NEED_COLORS.high : NEED_COLORS.critical
-
+  const globalColor = NEED_COLORS[getNeedLevel(diagnostic.globalScore)]
   const qualitativeMessage = SCORE_MESSAGES.find(m => diagnostic.globalScore <= m.max)?.message ?? SCORE_MESSAGES[3].message
 
   const activeUniverses = Object.entries(diagnostic.quadrantScores).filter(([, s]) => s.active) as [string, QuadrantScore][]
   const priorityActions = diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate' || a.type === 'event')
+  const pageCount = priorityActions.length > 0 ? 2 : 1
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Roue des Besoins Assurance</Text>
-          <Text style={styles.subtitle}>{'Votre diagnostic personnalisé'}{clientName ? ` — ${clientName}` : ''}</Text>
-          <Text style={styles.date}>{'Généré le '}{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+          <Text style={styles.headerTitle}>Roue des Besoins Assurance</Text>
+          <Text style={styles.headerSubtitle}>{'Votre diagnostic personnalisé'}{clientName ? ` — ${clientName}` : ''}</Text>
+          <Text style={styles.headerDate}>{'Généré le '}{new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
         </View>
 
         <View style={styles.section}>
@@ -81,19 +87,26 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
 
         {wheelImageUri && (
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Votre Roue des Besoins</Text>
             <Image src={wheelImageUri} style={styles.wheelImage} />
+            {activeUniverses.map(([key, score]) => (
+              <View key={key} style={styles.legendItem}>
+                <View style={{ ...styles.legendDot, backgroundColor: NEED_COLORS[score.needLevel] }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.legendName}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
+                  <Text style={styles.legendMessage}>{NEED_LEGEND_MESSAGES[score.needLevel]}</Text>
+                </View>
+              </View>
+            ))}
           </View>
         )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Analyse par univers</Text>
           {activeUniverses.map(([key, score]) => (
-            <View key={key} style={styles.universeRow}>
-              <View style={{ ...styles.universeIndicator, backgroundColor: NEED_COLORS[score.needLevel] }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.universeName}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
-                <Text style={styles.universeMessage}>{NEED_MESSAGES[score.needLevel]}</Text>
-              </View>
+            <View key={key} style={{ ...styles.universeCard, borderLeftColor: NEED_COLORS[score.needLevel] }}>
+              <Text style={styles.universeName}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
+              <Text style={styles.universeMessage}>{NEED_MESSAGES[score.needLevel]}</Text>
             </View>
           ))}
         </View>
@@ -110,34 +123,37 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
 
         <View style={styles.footer}>
           <Text>{'Roue des Besoins Assurance — Document confidentiel'}</Text>
-          <Text>Page 1/2</Text>
+          <Text>Page 1/{pageCount}</Text>
         </View>
       </Page>
 
       {priorityActions.length > 0 && (
-        <Page size="A4" style={styles.page}>
+        <Page size="A4" style={styles.pageContinued}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Actions recommandées</Text>
-            <Text style={{ fontSize: 9, color: '#64748b', marginBottom: 12 }}>
+            <Text style={styles.introText}>
               Voici les actions prioritaires identifiées lors de votre diagnostic.
             </Text>
-            {priorityActions.map((action: Recommendation, i: number) => (
-              <View key={i} style={styles.actionItem}>
-                <View style={{ flex: 1 }}>
+            {priorityActions.map((action: Recommendation, i: number) => {
+              const aStyle = ACTION_STYLES[action.type]
+              return (
+                <View key={i} style={{ ...styles.actionItem, backgroundColor: aStyle.bg, borderLeftColor: aStyle.border }}>
                   <Text style={styles.actionTitle}>{action.title}</Text>
                   <Text style={styles.actionDesc}>{action.message}</Text>
                   <Text style={styles.actionProduct}>{'Solution : '}{PRODUCT_LABELS[action.product] ?? action.product}</Text>
-                  <Text style={styles.actionPriority}>
-                    {'Priorité : '}{'★'.repeat(action.priority)}{'☆'.repeat(5 - action.priority)}
-                  </Text>
+                  <View style={styles.priorityRow}>
+                    {PRIORITY_DOTS.map(j => (
+                      <View key={j} style={{ ...styles.priorityBar, backgroundColor: j < action.priority ? aStyle.border : BALOISE.grey200 }} />
+                    ))}
+                  </View>
                 </View>
-              </View>
-            ))}
+              )
+            })}
           </View>
 
-          <View style={{ marginTop: 20, padding: 15, backgroundColor: '#e5e7f0', borderRadius: 6 }}>
-            <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#000739', marginBottom: 6 }}>Prochaines étapes</Text>
-            <Text style={{ fontSize: 9, color: '#000d6e' }}>
+          <View style={styles.nextStepsBox}>
+            <Text style={styles.nextStepsTitle}>Prochaines étapes</Text>
+            <Text style={styles.nextStepsBody}>
               {advisor
                 ? `1. Contactez votre conseiller ${advisor.name}${advisor.phone ? ` au ${advisor.phone}` : ''}\n2. Échangez sur les recommandations et demandez des devis personnalisés\n3. Planifiez un bilan de suivi dans 6 mois`
                 : `1. Prenez contact avec votre conseiller pour discuter des recommandations\n2. Demandez des devis pour les couvertures identifiées comme prioritaires\n3. Planifiez un bilan de suivi dans 6 mois`
@@ -146,16 +162,16 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
           </View>
 
           {/* IDD Disclaimer (CRIT-3) */}
-          <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f1f5f9', borderRadius: 4 }}>
-            <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#64748b', marginBottom: 3 }}>Information importante</Text>
-            <Text style={{ fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4 }}>
+          <View style={styles.disclaimerBox}>
+            <Text style={styles.disclaimerTitle}>Information importante</Text>
+            <Text style={styles.disclaimerBody}>
               {'Ce diagnostic est un outil d\'aide à la réflexion et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d\'Assurance (IDD — Directive (UE) 2016/97). Les résultats présentés sont basés uniquement sur les informations que vous avez fournies et ne remplacent pas l\'analyse personnalisée d\'un conseiller en assurance qualifié. Veuillez consulter votre conseiller Baloise pour obtenir des recommandations adaptées à votre situation personnelle.'}
             </Text>
           </View>
 
           <View style={styles.footer}>
             <Text>{'Roue des Besoins Assurance — Document confidentiel'}</Text>
-            <Text>Page 2/2</Text>
+            <Text>Page 2/{pageCount}</Text>
           </View>
         </Page>
       )}

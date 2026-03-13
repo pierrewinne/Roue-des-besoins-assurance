@@ -6,12 +6,7 @@ import PdfClientReport from './PdfClientReport.tsx'
 import PdfAdvisorReport from './PdfAdvisorReport.tsx'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
-
-interface AdvisorInfo {
-  name: string
-  email?: string
-  phone?: string
-}
+import type { AdvisorInfo } from './pdf-tokens.ts'
 
 interface PdfDownloadButtonProps {
   diagnostic: DiagnosticResult
@@ -59,7 +54,11 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `diagnostic-${type}-${new Date().toISOString().split('T')[0]}.pdf`
+      const safeName = clientName?.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 -]/g, '').replace(/\s+/g, '-').toLowerCase()
+      const datePart = new Date().toISOString().split('T')[0]
+      link.download = safeName
+        ? `diagnostic-baloise-${safeName}-${datePart}.pdf`
+        : `diagnostic-baloise-${type}-${datePart}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
