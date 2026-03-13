@@ -1,5 +1,5 @@
 import type { Quadrant, QuadrantScore, Recommendation } from './types.ts'
-import { asString as s, asNumber as n, asStringArray as arr, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isTravelEligible } from './answer-helpers.ts'
+import { asString as s, asNumber as n, asStringArray as arr, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isTravelEligible, isFuturEligible } from './answer-helpers.ts'
 
 import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
@@ -641,6 +641,170 @@ const travelRules: RuleDefinition[] = [
 ]
 
 // ═══════════════════════════════════════════
+// FUTUR rules (10) — Pension Plan / Life Plan / Switch Plan
+// ═══════════════════════════════════════════
+
+const futurRules: RuleDefinition[] = [
+  // --- Pension Plan (4-7 rules) ---
+  {
+    id: 'futur_01_pp_no_pension_young',
+    condition: (_, a) =>
+      ['26_35', '36_45'].includes(s(a.age_range)) &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'immediate', priority: 5,
+      title: 'Construire votre pension complémentaire dès maintenant',
+      message: 'Plus vous commencez tôt, plus l\'effet de capitalisation est puissant. Le Pension Plan vous permet de vous constituer une épargne retraite avec un avantage fiscal de 4 500 EUR/an déductible de votre revenu imposable (art. 111bis).',
+      advisorNote: 'PP art. 111bis — déduction fiscale 4 500 EUR/an. Argument clé : effet de levier fiscal + capitalisation longue durée. Simulation épargne sur 20-30 ans. Client jeune = prime faible = conversion facile.',
+    },
+  },
+  {
+    id: 'futur_02_pp_no_pension_prime',
+    condition: (_, a) =>
+      ['46_55'].includes(s(a.age_range)) &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'immediate', priority: 5,
+      title: 'Rattraper votre épargne retraite',
+      message: 'À mi-carrière, il est encore temps d\'optimiser votre pension. Le Pension Plan vous offre un avantage fiscal immédiat de 4 500 EUR/an déductible (art. 111bis) et constitue un complément essentiel à la pension légale.',
+      advisorNote: 'PP art. 111bis — urgence relative : 10-15 ans de capitalisation restants. Chiffrer l\'écart pension légale vs niveau de vie actuel. Argument fiscal + gap retraite = double levier.',
+    },
+  },
+  {
+    id: 'futur_03_pp_no_pension_senior',
+    condition: (_, a) =>
+      s(a.age_range) === '56_65' &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'immediate', priority: 4,
+      title: 'Optimiser votre fiscalité avant la retraite',
+      message: 'Même à l\'approche de la retraite, le Pension Plan reste avantageux grâce à la déduction fiscale de 4 500 EUR/an (art. 111bis). Les dernières années de cotisation bénéficient pleinement de l\'avantage fiscal.',
+      advisorNote: 'PP art. 111bis — 5-10 ans de cotisation restants. L\'argument est essentiellement fiscal à ce stade. Chiffrer l\'économie d\'impôt annuelle selon la tranche marginale du client.',
+    },
+  },
+  {
+    id: 'futur_04_pp_high_income',
+    condition: (_, a) =>
+      ['8k_12k', '12k_plus'].includes(s(a.income_range)) &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'immediate', priority: 5,
+      title: 'Maximiser votre avantage fiscal',
+      message: 'Avec vos revenus, la déduction de 4 500 EUR/an du Pension Plan (art. 111bis) a un impact fiscal maximal. C\'est l\'un des rares dispositifs de réduction d\'impôt disponibles au Luxembourg.',
+      advisorNote: 'PP art. 111bis — tranche marginale élevée = économie d\'impôt maximale. Chiffrer : 4 500 EUR x taux marginal (42% pour > 100k) = ~1 890 EUR d\'économie/an. Argument imbattable pour profils hauts revenus.',
+    },
+  },
+  {
+    id: 'futur_05_pp_independent',
+    condition: (_, a) =>
+      ['independent', 'business_owner'].includes(s(a.professional_status)) &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'immediate', priority: 5,
+      title: 'Sécuriser votre retraite d\'indépendant',
+      message: 'En tant qu\'indépendant, votre pension légale sera probablement insuffisante. Le Pension Plan (art. 111bis) est le pilier essentiel de votre stratégie retraite, avec 4 500 EUR/an déductibles.',
+      advisorNote: 'PP art. 111bis — indépendant/chef d\'entreprise = pension légale faible + pas de 2ème pilier employeur. Double argumentaire : fiscal + gap retraite. Priorité absolue.',
+    },
+  },
+  {
+    id: 'futur_06_pp_retirement_event',
+    condition: (_, a) =>
+      arr(a.life_event).includes('retirement') &&
+      arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'event', priority: 4,
+      title: 'Préparer le dénouement de votre Pension Plan',
+      message: 'Votre départ à la retraite approche. C\'est le moment de planifier les modalités de sortie de votre Pension Plan (capital ou rente) pour optimiser la fiscalité.',
+      advisorNote: 'PP dénouement — choix capital vs rente. Fiscalité de sortie : rente viagère = 50% imposable. Capital = imposition réduite de moitié. Proposer un RDV de simulation.',
+    },
+  },
+  {
+    id: 'futur_07_pp_employer_only',
+    condition: (_, a) =>
+      arr(a.savings_protection).includes('pension_employer') &&
+      !arr(a.savings_protection).includes('pension_plan'),
+    recommendation: {
+      product: 'pension_plan',
+      type: 'deferred', priority: 4,
+      title: 'Compléter votre pension employeur',
+      message: 'Votre pension employeur (2ème pilier) est un bon début, mais le Pension Plan individuel (art. 111bis) offre un avantage fiscal supplémentaire de 4 500 EUR/an, indépendant de votre employeur.',
+      advisorNote: 'PP art. 111bis en complément du 2ème pilier. Le plafond 111bis est individuel et cumulable avec le 2ème pilier. Argument : portabilité (le PP suit le client, pas l\'employeur).',
+    },
+  },
+  // --- Life Plan (3-5 rules) ---
+  {
+    id: 'futur_08_lp_family_no_av',
+    condition: (_, a) =>
+      s(a.financial_dependents) !== 'none' &&
+      !arr(a.savings_protection).includes('life_insurance'),
+    recommendation: {
+      product: 'life_plan',
+      type: 'immediate', priority: 4,
+      title: 'Protéger votre famille avec une assurance-vie',
+      message: 'Des personnes dépendent financièrement de vous. Le Life Plan combine épargne et capital décès pour protéger vos proches tout en vous constituant un patrimoine.',
+      advisorNote: 'LP art. 111 — mixte épargne + capital décès. Argumenter sur la double fonction : protection immédiate + capitalisation. Attention : plafond fiscal 111 partagé avec Switch Plan (672 EUR/an) — ne pas en faire un argument commercial.',
+    },
+  },
+  {
+    id: 'futur_09_lp_mortgage',
+    condition: (_, a) =>
+      s(a.housing_status) === 'owner_with_mortgage' &&
+      !arr(a.savings_protection).includes('life_insurance'),
+    recommendation: {
+      product: 'life_plan',
+      type: 'immediate', priority: 4,
+      title: 'Sécuriser votre crédit immobilier',
+      message: 'En cas de décès, votre famille devrait assumer seule le remboursement du crédit. Le Life Plan sécurise votre prêt avec un capital décès adapté au solde restant dû.',
+      advisorNote: 'LP art. 111 — solde restant dû. Cross-sell naturel avec Home. Dimensionner le capital décès sur le solde du prêt. Vérifier si la banque a déjà imposé une assurance solde restant dû.',
+    },
+  },
+  {
+    id: 'futur_10_lp_single_parent',
+    condition: (_, a) =>
+      s(a.family_status) === 'single_parent' &&
+      !arr(a.savings_protection).includes('life_insurance'),
+    recommendation: {
+      product: 'life_plan',
+      type: 'immediate', priority: 5,
+      title: 'Protéger vos enfants en tant que parent seul',
+      message: 'En tant que parent seul, vous êtes le pilier financier unique de vos enfants. Le Life Plan garantit un capital à vos proches et constitue une épargne pour l\'avenir.',
+      advisorNote: 'LP art. 111 — parent seul = priorité absolue capital décès. Dimensionner sur les besoins des enfants jusqu\'à leur autonomie financière. Cross-sell B-Safe pour l\'incapacité.',
+    },
+  },
+  // --- Switch Plan (2 rules) ---
+  {
+    id: 'futur_11_sp_esg_motivated',
+    condition: (_, a) =>
+      s(a.esg_interest) === 'yes',
+    recommendation: {
+      product: 'switch_plan',
+      type: 'immediate', priority: 4,
+      title: 'Investir selon vos convictions',
+      message: 'Le Switch Plan investit 100 % dans des fonds durables certifiés ESG/ISR. Votre épargne contribue à un impact environnemental et social positif, avec des performances comparables aux fonds traditionnels.',
+      advisorNote: 'SP art. 111 — 100% fonds durables ESG/ISR. Argument : alignement valeurs/épargne. Si LP aussi déclenché, orienter vers SP si pas de besoin capital décès. Plafond 111 partagé avec LP.',
+    },
+  },
+  {
+    id: 'futur_12_sp_esg_curious',
+    condition: (_, a) =>
+      s(a.esg_interest) === 'neutral',
+    recommendation: {
+      product: 'switch_plan',
+      type: 'deferred', priority: 3,
+      title: 'Découvrir l\'épargne durable',
+      message: 'Le Switch Plan permet d\'investir dans des fonds durables certifiés avec des performances comparables aux fonds traditionnels. Une façon simple de donner du sens à votre épargne.',
+      advisorNote: 'SP art. 111 — client ouvert mais pas convaincu. Présenter les performances historiques ESG vs classique. Ne pas forcer — laisser mûrir. Si LP déclenché en parallèle, prioriser LP.',
+    },
+  },
+]
+
+// ═══════════════════════════════════════════
 // Engine
 // ═══════════════════════════════════════════
 
@@ -649,6 +813,7 @@ const ALL_RULES: RuleDefinition[] = [
   ...withGuard(isResidentGDL, bsafeRules),
   ...withGuard(isResidentGDL, homeRules),
   ...withGuard(isTravelEligible, travelRules),
+  ...withGuard(isFuturEligible, futurRules),
 ]
 
 export function generateRecommendations(

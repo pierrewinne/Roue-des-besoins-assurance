@@ -1,7 +1,7 @@
 import type { Quadrant, QuadrantScore, ProductScore, DiagnosticResult, OptionScore } from './types.ts'
 import { computeNeedFromMatrix, getNeedLevel } from './thresholds.ts'
 import { generateRecommendations } from './rules.ts'
-import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL } from './answer-helpers.ts'
+import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isFuturEligible } from './answer-helpers.ts'
 
 import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
@@ -184,10 +184,92 @@ function computePersonnesCoverage(a: Answers): number {
   return weights > 0 ? Math.round(score / weights) : 0
 }
 
-// === Projets & Futur — Inactive (empty quadrants) ===
+// === Projets — Inactive (empty quadrant) ===
 
 function computeInactiveExposure(): number { return 0 }
 function computeInactiveCoverage(): number { return 100 }
+
+// === Futur (PP/LP/SP) — Exposure ===
+
+function computeFuturExposure(a: Answers): number {
+  if (!isFuturEligible(a)) return 0
+
+  let score = 0
+
+  // Financial dependents (weight 25%)
+  const dependentsRisk: Record<string, number> = {
+    none: 10, partner: 40, children: 60, partner_children: 90, extended: 80,
+  }
+  score += (dependentsRisk[asString(a.financial_dependents)] ?? 30) * 0.25
+
+  // Savings gap (weight 25%) — less existing coverage = more exposure
+  const savingsItems = asStringArray(a.savings_protection)
+  const hasSavings = !savingsItems.includes('none') && savingsItems.length > 0
+  const savingsScore = hasSavings ? Math.max(100 - savingsItems.length * 25, 10) : 100
+  score += savingsScore * 0.25
+
+  // Financial autonomy (weight 20%)
+  const autonomyRisk: Record<string, number> = {
+    less_1_month: 100, '1_3_months': 80, '3_6_months': 55,
+    '6_12_months': 30, more_12_months: 10,
+  }
+  const wic = asString(a.work_incapacity_concern)
+  score += (wic ? (autonomyRisk[wic] ?? 50) : 50) * 0.20
+
+  // Income level (weight 15%) — higher income = more to protect
+  const incomeRisk: Record<string, number> = {
+    less_3k: 20, '3k_5k': 40, '5k_8k': 60,
+    '8k_12k': 80, '12k_plus': 100, no_answer: 50,
+  }
+  score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.15
+
+  // Age factor (weight 15%) — mid-career = highest need
+  const ageRisk: Record<string, number> = {
+    '18_25': 30, '26_35': 60, '36_45': 90,
+    '46_55': 100, '56_65': 70,
+  }
+  score += (ageRisk[asString(a.age_range)] ?? 50) * 0.15
+
+  return Math.round(score)
+}
+
+// === Futur (PP/LP/SP) — Coverage ===
+
+function computeFuturCoverage(a: Answers): number {
+  if (!isFuturEligible(a)) return 100
+
+  let score = 0
+
+  // Existing savings/protection devices (weight 50%)
+  const savingsItems = asStringArray(a.savings_protection)
+  let devicesCov = 0
+  if (savingsItems.includes('pension_plan')) devicesCov += 35
+  if (savingsItems.includes('pension_employer')) devicesCov += 25
+  if (savingsItems.includes('life_insurance')) devicesCov += 25
+  if (savingsItems.includes('savings_regular')) devicesCov += 10
+  if (savingsItems.includes('real_estate')) devicesCov += 15
+  score += Math.min(devicesCov, 100) * 0.50
+
+  // Professional status protection (weight 25%)
+  const statusCov: Record<string, number> = {
+    civil_servant: 70, employee: 50, independent: 15, business_owner: 20, retired: 30,
+  }
+  score += (statusCov[asString(a.professional_status)] ?? 20) * 0.25
+
+  // Income contributors (weight 15%) — more contributors = more resilience
+  const contributorsCov: Record<string, number> = {
+    one: 20, two: 60, more: 80,
+  }
+  score += (contributorsCov[asString(a.income_contributors)] ?? 30) * 0.15
+
+  // Real estate patrimony (weight 10%)
+  const patrimoineCov: Record<string, number> = {
+    none: 0, secondary: 30, rental: 50, both: 70,
+  }
+  score += (patrimoineCov[asString(a.other_properties)] ?? 0) * 0.10
+
+  return Math.round(score)
+}
 
 // === Quadrant score computation ===
 
@@ -211,9 +293,12 @@ export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): Quad
       coverage = computePersonnesCoverage(answers)
       break
     case 'projets':
-    case 'futur':
       exposure = computeInactiveExposure()
       coverage = computeInactiveCoverage()
+      break
+    case 'futur':
+      exposure = computeFuturExposure(answers)
+      coverage = computeFuturCoverage(answers)
       break
   }
 
@@ -226,24 +311,26 @@ export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): Quad
     coverage,
     needScore,
     needLevel: getNeedLevel(needScore),
-    active: quadrant === 'biens' || quadrant === 'personnes',
+    active: quadrant !== 'projets',
   }
 }
 
 // === Weightings ===
 
 function computeWeightings(answers: Answers): Record<Quadrant, number> {
-  // Only biens and personnes are active — projets/futur get 0
-  let biensWeight = 50
-  let personnesWeight = 50
+  // 3 active quadrants: biens, personnes, futur — projets gets 0
+  let biensWeight = 35
+  let personnesWeight = 35
+  let futurWeight = isFuturEligible(answers) ? 30 : 0
 
   const familyStatus = asString(answers.family_status)
   const proStatus = asString(answers.professional_status)
 
-  // Family with children → personnes (B-SAFE) increases
+  // Family with children → personnes + futur increase
   if (['couple_with_children', 'single_parent', 'recomposed'].includes(familyStatus)) {
-    personnesWeight += 10
-    biensWeight -= 10
+    personnesWeight += 5
+    futurWeight += isFuturEligible(answers) ? 5 : 0
+    biensWeight -= isFuturEligible(answers) ? 10 : 5
   }
 
   // Single parent → personnes is critical
@@ -252,34 +339,50 @@ function computeWeightings(answers: Answers): Record<Quadrant, number> {
     biensWeight -= 5
   }
 
-  // Independent/business owner → personnes (B-SAFE) increases
+  // Independent/business owner → personnes + futur increase
   if (['independent', 'business_owner'].includes(proStatus)) {
-    personnesWeight += 10
-    biensWeight -= 10
+    personnesWeight += 5
+    futurWeight += isFuturEligible(answers) ? 5 : 0
+    biensWeight -= isFuturEligible(answers) ? 10 : 5
   }
 
-  // Multiple vehicles → biens (DRIVE) increases
+  // Multiple vehicles → biens increases
   if (asNumber(answers.vehicle_count) >= 2) {
     biensWeight += 5
     personnesWeight -= 5
   }
 
-  // Retired → personnes increases (no employer protection)
+  // Retired → personnes increases
   if (proStatus === 'retired') {
     personnesWeight += 5
     biensWeight -= 5
   }
 
+  // Mid-career (36-55) → futur increases
+  if (isFuturEligible(answers) && ['36_45', '46_55'].includes(asString(answers.age_range))) {
+    futurWeight += 5
+    biensWeight -= 5
+  }
+
+  // If futur not eligible, redistribute to biens/personnes
+  if (!isFuturEligible(answers)) {
+    const extra = futurWeight
+    biensWeight += Math.round(extra / 2)
+    personnesWeight += extra - Math.round(extra / 2)
+    futurWeight = 0
+  }
+
   // Normalize to 100
-  const total = biensWeight + personnesWeight
+  const total = biensWeight + personnesWeight + futurWeight
   biensWeight = Math.round((biensWeight / total) * 100)
-  personnesWeight = 100 - biensWeight
+  personnesWeight = Math.round((personnesWeight / total) * 100)
+  futurWeight = 100 - biensWeight - personnesWeight
 
   return {
     biens: biensWeight,
     personnes: personnesWeight,
     projets: 0,
-    futur: 0,
+    futur: futurWeight,
   }
 }
 
@@ -309,6 +412,42 @@ function computeProductScores(answers: Answers): ProductScore[] {
       relevance: bsafeRelevance,
       isExistingClient: ['individual_basic', 'individual_complete'].includes(accidentCov),
       options: computeBsafeOptions(answers),
+    })
+  }
+
+  // FUTUR products — résident GDL, < 65, actif (POG)
+  if (isFuturEligible(answers)) {
+    const savingsItems = asStringArray(answers.savings_protection)
+    const hasPension = savingsItems.includes('pension_plan')
+    const hasLifeInsurance = savingsItems.includes('life_insurance')
+    const esg = asString(answers.esg_interest)
+
+    // Pension Plan (art. 111bis)
+    const ppRelevance = hasPension ? 25 : 90
+    scores.push({
+      product: 'pension_plan',
+      relevance: ppRelevance,
+      isExistingClient: hasPension,
+      options: [],
+    })
+
+    // Life Plan (art. 111) — protection-oriented
+    const lpRelevance = hasLifeInsurance ? 20 :
+      asString(answers.financial_dependents) !== 'none' ? 75 : 45
+    scores.push({
+      product: 'life_plan',
+      relevance: lpRelevance,
+      isExistingClient: hasLifeInsurance,
+      options: [],
+    })
+
+    // Switch Plan (art. 111 ESG) — conviction-oriented
+    const spRelevance = esg === 'yes' ? 85 : esg === 'neutral' ? 50 : 15
+    scores.push({
+      product: 'switch_plan',
+      relevance: spRelevance,
+      isExistingClient: false,
+      options: [],
     })
   }
 

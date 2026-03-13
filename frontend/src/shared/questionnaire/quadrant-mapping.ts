@@ -26,7 +26,10 @@ export const QUADRANT_QUESTION_IDS: Record<Quadrant, string[]> = {
     'health_concerns', 'savings_protection', 'other_properties',
   ],
   projets: [],
-  futur: [],
+  futur: [
+    'income_range', 'financial_dependents', 'work_incapacity_concern',
+    'savings_protection', 'esg_interest',
+  ],
 }
 
 export const ALL_QUADRANTS: Quadrant[] = ['biens', 'personnes', 'projets', 'futur']

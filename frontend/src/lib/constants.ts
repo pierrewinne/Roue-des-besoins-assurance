@@ -82,6 +82,9 @@ export const PRODUCT_BADGE_COLORS: Record<Product, 'green' | 'orange' | 'red' | 
   home: 'red',
   travel: 'green',
   bsafe: 'blue',
+  pension_plan: 'blue',
+  life_plan: 'blue',
+  switch_plan: 'green',
 }
 
 /* ─── Wheel Config (4 quadrants) ─── */
@@ -90,7 +93,7 @@ export const QUADRANT_WHEEL_LABELS: Record<Quadrant, { lines: [string, string]; 
   biens: { lines: ['Vos', 'biens'], subtitle: '~1m30' },
   personnes: { lines: ['Vos', 'personnes'], subtitle: '~2 min' },
   projets: { lines: ['Vos', 'projets'], subtitle: 'Bientôt' },
-  futur: { lines: ['Votre', 'futur'], subtitle: 'Bientôt' },
+  futur: { lines: ['Votre', 'futur'], subtitle: '~1 min' },
 }
 
 export const QUADRANT_WHEEL_COLORS: Record<Quadrant, { base: string; light: string; dark: string; glow: string }> = {
@@ -105,6 +108,9 @@ export const PRODUCT_LABELS: Record<Product, string> = {
   home: 'Baloise Home',
   travel: 'Baloise Travel',
   bsafe: 'Baloise B-Safe',
+  pension_plan: 'Baloise Pension Plan',
+  life_plan: 'Baloise Life Plan',
+  switch_plan: 'Baloise Switch Plan',
 }
 
 export const QUADRANT_ICONS: Record<Quadrant, IconName> = {
@@ -131,6 +137,9 @@ export const PRODUCT_COLORS: Record<Product, { primary: string; accent: string; 
   home: { primary: '#d9304c', accent: '#ff596f', light: '#ffd7d7', dark: '#99172d', bg: '#ffeef1' },
   travel: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
   bsafe: { primary: '#0014aa', accent: '#56a7f5', light: '#e5f1fe', dark: '#000a55', bg: '#e5f1fe' },
+  pension_plan: { primary: '#7b3da3', accent: '#b87ee6', light: '#f0e4fa', dark: '#5a2d78', bg: '#f7f0fc' },
+  life_plan: { primary: '#9f52cc', accent: '#c48ae6', light: '#f0e4fa', dark: '#7b3da3', bg: '#f7f0fc' },
+  switch_plan: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
 }
 
 export const PRODUCT_ICONS: Record<Product, IconName> = {
@@ -138,6 +147,9 @@ export const PRODUCT_ICONS: Record<Product, IconName> = {
   home: 'home',
   travel: 'plane',
   bsafe: 'shield-check',
+  pension_plan: 'gift',
+  life_plan: 'shield-check',
+  switch_plan: 'leaf',
 }
 
 export const TRANSITION = {

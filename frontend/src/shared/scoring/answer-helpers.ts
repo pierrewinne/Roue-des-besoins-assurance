@@ -49,3 +49,11 @@ export function isResidentOrFrontalier(a: Answers): boolean {
 export function isTravelEligible(a: Answers): boolean {
   return isResidentOrFrontalier(a) && asString(a.age_range) !== '80_plus'
 }
+
+/** FUTUR (PP/LP/SP): résident GDL + âge < 65 + actif (pas étudiant ni inactif). */
+export function isFuturEligible(a: Answers): boolean {
+  if (!isResidentGDL(a)) return false
+  if (['65_plus', '80_plus'].includes(asString(a.age_range))) return false
+  if (['student', 'inactive'].includes(asString(a.professional_status))) return false
+  return true
+}

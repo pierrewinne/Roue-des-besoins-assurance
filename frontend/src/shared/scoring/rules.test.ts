@@ -71,7 +71,7 @@ describe('generateRecommendations', () => {
     })
     const products = [...new Set(result.recommendations.map(r => r.product))]
     for (const p of products) {
-      expect(['drive', 'bsafe', 'home', 'travel']).toContain(p)
+      expect(['drive', 'bsafe', 'home', 'travel', 'pension_plan', 'life_plan', 'switch_plan']).toContain(p)
     }
   })
 })
@@ -231,14 +231,14 @@ describe('incomeSource correction', () => {
     expect(recommendations.some(r => r.title.includes('Protéger votre famille'))).toBe(true)
   })
 
-  it('income_contributors=two + family does NOT generate "Protéger votre famille"', () => {
+  it('income_contributors=two + family does NOT generate B-Safe "Protéger votre famille"', () => {
     const scores = makeScores()
     const recommendations = generateRecommendations(scores, {
       family_status: 'couple_with_children',
       income_contributors: 'two',
       accident_coverage_existing: 'none',
     })
-    expect(recommendations.some(r => r.title.includes('Protéger votre famille'))).toBe(false)
+    expect(recommendations.some(r => r.product === 'bsafe' && r.title.includes('Protéger votre famille'))).toBe(false)
   })
 })
 
@@ -1640,5 +1640,332 @@ describe('rules - non-regression: all four products', () => {
     expect(ids.length).toBe(new Set(ids).size)
     // Should have at least 30 recommendations with this rich profile
     expect(ids.length).toBeGreaterThanOrEqual(30)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════
+// FUTUR RULES — Pension Plan / Life Plan / Switch Plan
+// ═══════════════════════════════════════════════════════════════════
+
+describe('futur rules — POG guard', () => {
+  it('futur rules do NOT fire for frontaliers', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      residence_status: 'frontalier_fr',
+      age_range: '36_45',
+      professional_status: 'employee',
+      savings_protection: ['none'],
+      financial_dependents: 'partner_children',
+      esg_interest: 'yes',
+    })
+    const futurRecs = recommendations.filter(r => ['pension_plan', 'life_plan', 'switch_plan'].includes(r.product))
+    expect(futurRecs).toHaveLength(0)
+  })
+
+  it('futur rules do NOT fire for students', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      professional_status: 'student',
+      age_range: '18_25',
+      savings_protection: ['none'],
+    })
+    const futurRecs = recommendations.filter(r => ['pension_plan', 'life_plan', 'switch_plan'].includes(r.product))
+    expect(futurRecs).toHaveLength(0)
+  })
+
+  it('futur rules do NOT fire for 65+', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '65_plus',
+      professional_status: 'retired',
+      savings_protection: ['none'],
+    })
+    const futurRecs = recommendations.filter(r => ['pension_plan', 'life_plan', 'switch_plan'].includes(r.product))
+    expect(futurRecs).toHaveLength(0)
+  })
+})
+
+describe('futur_01: PP no pension young (26-45)', () => {
+  it('fires for young employee without pension plan', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_01_pp_no_pension_young')).toBe(true)
+  })
+
+  it('does NOT fire if pension_plan already exists', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      savings_protection: ['pension_plan'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_01_pp_no_pension_young')).toBe(false)
+  })
+
+  it('does NOT fire for 46-55 age range', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '46_55',
+      professional_status: 'employee',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_01_pp_no_pension_young')).toBe(false)
+    // futur_02 should fire instead
+    expect(recommendations.some(r => r.id === 'futur_02_pp_no_pension_prime')).toBe(true)
+  })
+})
+
+describe('futur_02: PP no pension prime (46-55)', () => {
+  it('fires for mid-career without pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '46_55',
+      professional_status: 'employee',
+      savings_protection: ['savings_regular'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_02_pp_no_pension_prime')).toBe(true)
+  })
+})
+
+describe('futur_03: PP no pension senior (56-65)', () => {
+  it('fires for pre-retirement without pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '56_65',
+      professional_status: 'employee',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_03_pp_no_pension_senior')).toBe(true)
+  })
+})
+
+describe('futur_04: PP high income', () => {
+  it('fires for high income without pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      income_range: '12k_plus',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_04_pp_high_income')).toBe(true)
+  })
+
+  it('does NOT fire if pension already exists', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      income_range: '12k_plus',
+      savings_protection: ['pension_plan'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_04_pp_high_income')).toBe(false)
+  })
+})
+
+describe('futur_05: PP independent', () => {
+  it('fires for independent without pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'independent',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_05_pp_independent')).toBe(true)
+  })
+})
+
+describe('futur_06: PP retirement event', () => {
+  it('fires for retirement event with existing pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '56_65',
+      professional_status: 'employee',
+      life_event: ['retirement'],
+      savings_protection: ['pension_plan'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_06_pp_retirement_event')).toBe(true)
+  })
+
+  it('does NOT fire without existing pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '56_65',
+      professional_status: 'employee',
+      life_event: ['retirement'],
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_06_pp_retirement_event')).toBe(false)
+  })
+})
+
+describe('futur_07: PP employer-only complement', () => {
+  it('fires when pension_employer exists but no personal pension', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      savings_protection: ['pension_employer'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_07_pp_employer_only')).toBe(true)
+  })
+
+  it('does NOT fire when personal pension exists', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      savings_protection: ['pension_employer', 'pension_plan'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_07_pp_employer_only')).toBe(false)
+  })
+})
+
+describe('futur_08: LP family no AV', () => {
+  it('fires when dependents exist and no life insurance', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      financial_dependents: 'partner_children',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_08_lp_family_no_av')).toBe(true)
+  })
+
+  it('does NOT fire when no dependents', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      financial_dependents: 'none',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_08_lp_family_no_av')).toBe(false)
+  })
+
+  it('does NOT fire when life insurance exists', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      financial_dependents: 'partner_children',
+      savings_protection: ['life_insurance'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_08_lp_family_no_av')).toBe(false)
+  })
+})
+
+describe('futur_09: LP mortgage', () => {
+  it('fires for owner with mortgage and no life insurance', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      housing_status: 'owner_with_mortgage',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_09_lp_mortgage')).toBe(true)
+  })
+})
+
+describe('futur_10: LP single parent', () => {
+  it('fires for single parent without life insurance', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      family_status: 'single_parent',
+      savings_protection: ['none'],
+    })
+    expect(recommendations.some(r => r.id === 'futur_10_lp_single_parent')).toBe(true)
+  })
+})
+
+describe('futur_11: SP ESG motivated', () => {
+  it('fires when esg_interest=yes', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      esg_interest: 'yes',
+    })
+    expect(recommendations.some(r => r.id === 'futur_11_sp_esg_motivated')).toBe(true)
+    const rec = recommendations.find(r => r.id === 'futur_11_sp_esg_motivated')!
+    expect(rec.type).toBe('immediate')
+    expect(rec.product).toBe('switch_plan')
+  })
+
+  it('does NOT fire when esg_interest=no', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      esg_interest: 'no',
+    })
+    expect(recommendations.some(r => r.id === 'futur_11_sp_esg_motivated')).toBe(false)
+  })
+})
+
+describe('futur_12: SP ESG curious', () => {
+  it('fires when esg_interest=neutral', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      esg_interest: 'neutral',
+    })
+    expect(recommendations.some(r => r.id === 'futur_12_sp_esg_curious')).toBe(true)
+    const rec = recommendations.find(r => r.id === 'futur_12_sp_esg_curious')!
+    expect(rec.type).toBe('deferred')
+    expect(rec.product).toBe('switch_plan')
+  })
+
+  it('does NOT fire when esg_interest=yes (futur_11 fires instead)', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'employee',
+      esg_interest: 'yes',
+    })
+    expect(recommendations.some(r => r.id === 'futur_12_sp_esg_curious')).toBe(false)
+  })
+})
+
+describe('futur cross-product interactions', () => {
+  it('can generate PP + LP + SP simultaneously for the right profile', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'independent',
+      income_range: '12k_plus',
+      financial_dependents: 'partner_children',
+      savings_protection: ['none'],
+      esg_interest: 'yes',
+    })
+    const futurProducts = [...new Set(recommendations.filter(r =>
+      ['pension_plan', 'life_plan', 'switch_plan'].includes(r.product)
+    ).map(r => r.product))]
+    expect(futurProducts).toContain('pension_plan')
+    expect(futurProducts).toContain('life_plan')
+    expect(futurProducts).toContain('switch_plan')
+  })
+
+  it('PP rules all include 4 500 EUR in advisorNote', () => {
+    const scores = makeScores()
+    const recommendations = generateRecommendations(scores, {
+      age_range: '36_45',
+      professional_status: 'independent',
+      income_range: '12k_plus',
+      savings_protection: ['pension_employer'],
+    })
+    const ppRecs = recommendations.filter(r => r.product === 'pension_plan' && r.advisorNote)
+    for (const rec of ppRecs) {
+      expect(rec.advisorNote).toContain('4 500')
+    }
   })
 })

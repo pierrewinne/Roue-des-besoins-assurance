@@ -522,6 +522,7 @@ export const QUESTIONS: Question[] = [
       { value: 'none', label: 'Non, rien de spécifique' },
       { value: 'life_insurance', label: 'Assurance-vie' },
       { value: 'pension_plan', label: 'Plan de pension complémentaire' },
+      { value: 'pension_employer', label: 'Pension complémentaire employeur (2ème pilier)' },
       { value: 'savings_regular', label: 'Épargne régulière' },
       { value: 'real_estate', label: 'Investissement immobilier' },
     ],
@@ -537,6 +538,20 @@ export const QUESTIONS: Question[] = [
       { value: 'secondary', label: 'Une résidence secondaire' },
       { value: 'rental', label: 'Un ou plusieurs biens locatifs' },
       { value: 'both', label: 'Résidence secondaire et biens locatifs' },
+    ],
+  },
+  {
+    id: 'esg_interest',
+    quadrant: 'futur',
+    label: 'L\'investissement durable (environnement, social, gouvernance) est-il important pour vous ?',
+    helpText: 'Certaines solutions d\'épargne permettent d\'investir exclusivement dans des fonds durables certifiés.',
+    type: 'select',
+    required: true,
+    dependsOn: { questionId: 'residence_status', operator: 'eq', value: 'resident_gdl' },
+    options: [
+      { value: 'yes', label: 'Oui, c\'est un critère important' },
+      { value: 'neutral', label: 'Pourquoi pas, si les performances sont comparables' },
+      { value: 'no', label: 'Non, ce n\'est pas un critère' },
     ],
   },
 ]

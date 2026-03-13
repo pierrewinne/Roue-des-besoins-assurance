@@ -81,27 +81,121 @@ describe('computePersonnesScore (B-SAFE)', () => {
   })
 })
 
-describe('inactive quadrants (projets, futur)', () => {
+describe('inactive quadrant (projets)', () => {
   it('projets has zero exposure', () => {
     const result = computeDiagnostic({ vehicle_count: 2, family_status: 'couple_with_children' })
     expect(result.quadrantScores.projets.exposure).toBe(0)
   })
 
-  it('futur has zero exposure', () => {
-    const result = computeDiagnostic({ financial_dependents: 'partner_children' })
-    expect(result.quadrantScores.futur.exposure).toBe(0)
-  })
-
-  it('projets and futur are not active', () => {
+  it('projets is not active', () => {
     const result = computeDiagnostic({})
     expect(result.quadrantScores.projets.active).toBe(false)
-    expect(result.quadrantScores.futur.active).toBe(false)
   })
 
-  it('projets and futur have zero weighting', () => {
+  it('projets has zero weighting', () => {
     const result = computeDiagnostic({})
     expect(result.weightings.projets).toBe(0)
-    expect(result.weightings.futur).toBe(0)
+  })
+})
+
+describe('futur quadrant (PP/LP/SP)', () => {
+  it('futur is active for eligible residents', () => {
+    const result = computeDiagnostic({ age_range: '36_45', professional_status: 'employee' })
+    expect(result.quadrantScores.futur.active).toBe(true)
+  })
+
+  it('futur has non-zero weighting for eligible residents', () => {
+    const result = computeDiagnostic({ age_range: '36_45', professional_status: 'employee' })
+    expect(result.weightings.futur).toBeGreaterThan(0)
+  })
+
+  it('futur has higher exposure when no savings', () => {
+    const noSavings = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['none'] })
+    const hasSavings = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['pension_plan', 'life_insurance'] })
+    expect(noSavings.quadrantScores.futur.exposure).toBeGreaterThan(hasSavings.quadrantScores.futur.exposure)
+  })
+
+  it('futur has higher exposure with dependents', () => {
+    const noDeps = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'none' })
+    const withDeps = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'partner_children' })
+    expect(withDeps.quadrantScores.futur.exposure).toBeGreaterThan(noDeps.quadrantScores.futur.exposure)
+  })
+
+  it('futur has higher coverage with pension + life insurance', () => {
+    const noDevices = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['none'] })
+    const withDevices = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['pension_plan', 'life_insurance', 'pension_employer'] })
+    expect(withDevices.quadrantScores.futur.coverage).toBeGreaterThan(noDevices.quadrantScores.futur.coverage)
+  })
+
+  it('futur coverage is higher for civil servants than independents', () => {
+    const civil = computeDiagnostic({ age_range: '36_45', professional_status: 'civil_servant' })
+    const indie = computeDiagnostic({ age_range: '36_45', professional_status: 'independent' })
+    expect(civil.quadrantScores.futur.coverage).toBeGreaterThan(indie.quadrantScores.futur.coverage)
+  })
+
+  it('futur is inactive for non-eligible profiles', () => {
+    const student = computeDiagnostic({ residence_status: 'resident_gdl', professional_status: 'student' })
+    expect(student.quadrantScores.futur.exposure).toBe(0)
+
+    const senior = computeDiagnostic({ residence_status: 'resident_gdl', age_range: '65_plus' })
+    expect(senior.quadrantScores.futur.exposure).toBe(0)
+
+    const frontalier = computeDiagnostic({ residence_status: 'frontalier_fr', age_range: '36_45' })
+    expect(frontalier.quadrantScores.futur.exposure).toBe(0)
+  })
+
+  it('futur weighting is 0 for ineligible profiles', () => {
+    const student = computeDiagnostic({ residence_status: 'resident_gdl', professional_status: 'student' })
+    expect(student.weightings.futur).toBe(0)
+  })
+
+  it('futur weighting increases for mid-career profiles', () => {
+    const young = computeDiagnostic({ age_range: '26_35', professional_status: 'employee' })
+    const midCareer = computeDiagnostic({ age_range: '46_55', professional_status: 'employee' })
+    expect(midCareer.weightings.futur).toBeGreaterThanOrEqual(young.weightings.futur)
+  })
+
+  it('produces pension_plan product scores for eligible residents', () => {
+    const result = computeDiagnostic({ age_range: '36_45', professional_status: 'employee' })
+    const pp = result.productScores.find(p => p.product === 'pension_plan')
+    expect(pp).toBeDefined()
+    expect(pp!.relevance).toBeGreaterThan(0)
+  })
+
+  it('pension_plan has lower relevance when already subscribed', () => {
+    const noPP = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['none'] })
+    const hasPP = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['pension_plan'] })
+    const ppNo = noPP.productScores.find(p => p.product === 'pension_plan')!
+    const ppYes = hasPP.productScores.find(p => p.product === 'pension_plan')!
+    expect(ppNo.relevance).toBeGreaterThan(ppYes.relevance)
+  })
+
+  it('switch_plan has high relevance when esg_interest=yes', () => {
+    const result = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', esg_interest: 'yes' })
+    const sp = result.productScores.find(p => p.product === 'switch_plan')
+    expect(sp).toBeDefined()
+    expect(sp!.relevance).toBeGreaterThanOrEqual(80)
+  })
+
+  it('switch_plan has low relevance when esg_interest=no', () => {
+    const result = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', esg_interest: 'no' })
+    const sp = result.productScores.find(p => p.product === 'switch_plan')
+    expect(sp).toBeDefined()
+    expect(sp!.relevance).toBeLessThanOrEqual(20)
+  })
+
+  it('life_plan has higher relevance with dependents', () => {
+    const noDeps = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'none' })
+    const withDeps = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'partner_children' })
+    const lpNo = noDeps.productScores.find(p => p.product === 'life_plan')!
+    const lpYes = withDeps.productScores.find(p => p.product === 'life_plan')!
+    expect(lpYes.relevance).toBeGreaterThan(lpNo.relevance)
+  })
+
+  it('no futur products for frontaliers', () => {
+    const result = computeDiagnostic({ residence_status: 'frontalier_fr', age_range: '36_45', professional_status: 'employee' })
+    const futurProducts = result.productScores.filter(p => ['pension_plan', 'life_plan', 'switch_plan'].includes(p.product))
+    expect(futurProducts).toHaveLength(0)
   })
 })
 
@@ -878,17 +972,13 @@ describe('non-regression: invariants du moteur de scoring', () => {
     }
   })
 
-  it('projets and futur are ALWAYS inactive regardless of input', () => {
+  it('projets is ALWAYS inactive regardless of input', () => {
     for (const answers of testProfiles) {
       const result = computeDiagnostic(answers)
       expect(result.quadrantScores.projets.active).toBe(false)
-      expect(result.quadrantScores.futur.active).toBe(false)
       expect(result.quadrantScores.projets.exposure).toBe(0)
-      expect(result.quadrantScores.futur.exposure).toBe(0)
       expect(result.quadrantScores.projets.coverage).toBe(100)
-      expect(result.quadrantScores.futur.coverage).toBe(100)
       expect(result.weightings.projets).toBe(0)
-      expect(result.weightings.futur).toBe(0)
     }
   })
 
@@ -900,11 +990,11 @@ describe('non-regression: invariants du moteur de scoring', () => {
     }
   })
 
-  it('recommendations only contain drive or bsafe products', () => {
+  it('recommendations only contain known products', () => {
     for (const answers of testProfiles) {
       const result = computeDiagnostic(answers)
       for (const rec of result.recommendations) {
-        expect(['drive', 'bsafe']).toContain(rec.product)
+        expect(['drive', 'bsafe', 'home', 'travel', 'pension_plan', 'life_plan', 'switch_plan']).toContain(rec.product)
       }
     }
   })
@@ -924,11 +1014,11 @@ describe('non-regression: invariants du moteur de scoring', () => {
     }
   })
 
-  it('productScores only contain drive or bsafe', () => {
+  it('productScores only contain known products', () => {
     for (const answers of testProfiles) {
       const result = computeDiagnostic(answers)
       for (const ps of result.productScores) {
-        expect(['drive', 'bsafe']).toContain(ps.product)
+        expect(['drive', 'bsafe', 'home', 'travel', 'pension_plan', 'life_plan', 'switch_plan']).toContain(ps.product)
       }
     }
   })
