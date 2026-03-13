@@ -1,6 +1,12 @@
 export type QuestionType = 'select' | 'boolean' | 'number' | 'multi_select'
 export type QuestionQuadrant = 'profil_express' | 'biens' | 'personnes' | 'projets' | 'futur'
 
+/** Typed questionnaire answer value (P3-02) */
+export type AnswerValue = string | number | boolean | string[]
+
+/** Typed questionnaire answers map — replaces Record<string, unknown> */
+export type QuestionnaireAnswers = Record<string, AnswerValue | undefined>
+
 export interface QuestionOption {
   value: string
   label: string
@@ -542,7 +548,7 @@ export function getQuadrantQuestions(quadrant: QuestionQuadrant): Question[] {
 }
 
 /** Check if a question is visible given current answers */
-export function isQuestionVisible(question: Question, answers: Record<string, unknown>): boolean {
+export function isQuestionVisible(question: Question, answers: QuestionnaireAnswers): boolean {
   if (!question.dependsOn) return true
 
   const dep = question.dependsOn

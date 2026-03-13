@@ -31,7 +31,7 @@ export const HIGH_RISK_SPORTS: string[] = ['winter_sports', 'water_sports', 'mou
 
 export const POG_FRONTALIER = ['frontalier_fr', 'frontalier_be', 'frontalier_de']
 
-type Answers = Record<string, unknown>
+import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
 /** B-SAFE, HOME, DRIVE: résident GDL uniquement. Vide = non éligible (restrictif par défaut). */
 export function isResidentGDL(a: Answers): boolean {

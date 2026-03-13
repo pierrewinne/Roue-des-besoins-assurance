@@ -3,6 +3,7 @@ import { createElement } from 'react'
 import { renderToBuffer } from '@react-pdf/renderer'
 import PdfAdvisorReport from './PdfAdvisorReport'
 import type { DiagnosticResult, QuadrantScore, Recommendation, NeedLevel, Quadrant } from '../../shared/scoring/types'
+import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema'
 
 function makeScore(quadrant: Quadrant, overrides: Partial<QuadrantScore> = {}): QuadrantScore {
   return {
@@ -46,7 +47,7 @@ function makeRecommendation(overrides: Partial<Recommendation> = {}): Recommenda
 
 async function render(
   diagnostic: DiagnosticResult,
-  opts: { clientName?: string; clientEmail?: string; answers?: Record<string, unknown>; wheelImageUri?: string } = {}
+  opts: { clientName?: string; clientEmail?: string; answers?: QuestionnaireAnswers; wheelImageUri?: string } = {}
 ): Promise<Buffer> {
   const doc = createElement(PdfAdvisorReport, {
     diagnostic,

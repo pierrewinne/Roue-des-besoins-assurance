@@ -3,7 +3,7 @@ import { computeNeedFromMatrix, getNeedLevel } from './thresholds.ts'
 import { generateRecommendations } from './rules.ts'
 import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL } from './answer-helpers.ts'
 
-type Answers = Record<string, unknown>
+import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
 // === Biens (DRIVE) — Exposure ===
 

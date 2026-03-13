@@ -1,9 +1,9 @@
-import type { Question } from '../../shared/questionnaire/schema.ts'
+import type { Question, AnswerValue } from '../../shared/questionnaire/schema.ts'
 
 interface QuestionFieldProps {
   question: Question
-  value: unknown
-  onChange: (value: unknown) => void
+  value: AnswerValue | undefined
+  onChange: (value: AnswerValue | undefined) => void
 }
 
 export default function QuestionField({ question, value, onChange }: QuestionFieldProps) {

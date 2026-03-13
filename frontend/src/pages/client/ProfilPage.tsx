@@ -2,20 +2,21 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { supabase } from '../../lib/supabase.ts'
+import { fetchActiveQuestionnaire, saveAnswers as apiSaveAnswers, createQuestionnaire, markProfilCompleted } from '../../lib/api/questionnaire.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import { getProfilQuestions, isProfilComplete } from '../../shared/questionnaire/quadrant-mapping.ts'
-import { isQuestionVisible } from '../../shared/questionnaire/schema.ts'
+import { isQuestionVisible, type QuestionnaireAnswers, type AnswerValue } from '../../shared/questionnaire/schema.ts'
 
 export default function ProfilPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const responseIdRef = useRef<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [consent, setConsent] = useState(false)
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
   const answersRef = useRef(answers)
   answersRef.current = answers
@@ -29,19 +30,11 @@ export default function ProfilPage() {
   useEffect(() => {
     async function load() {
       if (!user) return
-      const { data } = await supabase
-        .from('questionnaire_responses')
-        .select('id, responses, profil_completed')
-        .eq('profile_id', user.id)
-        .eq('completed', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (data) {
-        setAnswers((data.responses as Record<string, unknown>) || {})
-        responseIdRef.current = data.id
-        if (data.profil_completed) {
+      const q = await fetchActiveQuestionnaire(user.id)
+      if (q) {
+        setAnswers(q.responses)
+        responseIdRef.current = q.id
+        if (q.profil_completed) {
           navigate('/dashboard', { replace: true })
           return
         }
@@ -51,25 +44,17 @@ export default function ProfilPage() {
   }, [user, navigate])
 
   // Auto-save debounced with visible error feedback (P2-02)
-  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
+  const saveAnswers = useCallback(async (newAnswers: QuestionnaireAnswers) => {
     if (!user) return
     const rid = responseIdRef.current
     if (rid) {
-      const { error: err } = await supabase
-        .from('questionnaire_responses')
-        .update({ responses: newAnswers })
-        .eq('id', rid)
-        .eq('profile_id', user.id)
+      const { error: err } = await apiSaveAnswers(rid, user.id, newAnswers)
       if (err) {
         setError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
         return
       }
     } else {
-      const { data, error: err } = await supabase
-        .from('questionnaire_responses')
-        .insert({ profile_id: user.id, responses: newAnswers })
-        .select('id')
-        .single()
+      const { data, error: err } = await createQuestionnaire(user.id, newAnswers)
       if (err) {
         setError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
         return
@@ -94,8 +79,8 @@ export default function ProfilPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [saveAnswers])
 
-  function handleAnswer(questionId: string, value: unknown) {
-    const newAnswers = { ...answers, [questionId]: value }
+  function handleAnswer(questionId: string, value: AnswerValue | undefined) {
+    const newAnswers: QuestionnaireAnswers = { ...answers, [questionId]: value }
     setAnswers(newAnswers)
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
@@ -115,18 +100,10 @@ export default function ProfilPage() {
     try {
       const rid = responseIdRef.current
       if (rid) {
-        const { error: err } = await supabase
-          .from('questionnaire_responses')
-          .update({ responses: answers, profil_completed: true })
-          .eq('id', rid)
-          .eq('profile_id', user.id)
+        const { error: err } = await markProfilCompleted(rid, user.id, answers)
         if (err) throw err
       } else {
-        const { data, error: err } = await supabase
-          .from('questionnaire_responses')
-          .insert({ profile_id: user.id, responses: answers, profil_completed: true })
-          .select('id')
-          .single()
+        const { data, error: err } = await createQuestionnaire(user.id, answers, true)
         if (err) throw err
         if (data) responseIdRef.current = data.id
       }
@@ -139,7 +116,7 @@ export default function ProfilPage() {
     }
   }
 
-  const isValid = isProfilComplete(answers)
+  const isValid = isProfilComplete(answers) && consent
 
 
   return (
@@ -171,6 +148,20 @@ export default function ProfilPage() {
               />
             ))}
           </div>
+
+          {/* RGPD consent checkbox (CRIT-3) */}
+          <label className="flex items-start gap-3 mt-8 p-4 bg-grey-50 rounded-xl ring-1 ring-grey-100 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={e => setConsent(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border-grey-300 text-primary-700 focus:ring-primary-200 flex-shrink-0"
+            />
+            <span className="text-xs text-grey-500 leading-relaxed">
+              J'accepte que mes données soient traitées par Baloise Assurances Luxembourg S.A. dans le cadre de l'analyse de mes besoins en assurance,
+              conformément au RGPD et à la politique de confidentialité. Je peux exercer mes droits d'accès, de rectification et de suppression à tout moment depuis mon tableau de bord.
+            </span>
+          </label>
 
           {error && (
             <div className="mt-6 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabase.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { fetchDiagnosticById, fetchActions, hydrateDiagnostic } from '../../lib/api/diagnostics.ts'
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
@@ -14,8 +14,7 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
 import { getScoreColorClass } from '../../lib/constants.ts'
-import type { DiagnosticResult, QuadrantScore, Recommendation, Quadrant } from '../../shared/scoring/types.ts'
-import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 
 export default function ResultsPage() {
   const { diagnosticId } = useParams<{ diagnosticId: string }>()
@@ -28,51 +27,11 @@ export default function ResultsPage() {
     async function load() {
       if (!diagnosticId || !user) return
 
-      // Only fetch diagnostic belonging to current user
-      const { data: diag } = await supabase
-        .from('diagnostics')
-        .select('*')
-        .eq('id', diagnosticId)
-        .eq('profile_id', user.id)
-        .single()
+      const { data: diag } = await fetchDiagnosticById(diagnosticId, user.id)
+      if (!diag) { setLoading(false); return }
 
-      // Only fetch actions if diagnostic belongs to current user
-      if (!diag) {
-        setLoading(false)
-        return
-      }
-
-      const { data: actionsData } = await supabase
-        .from('actions')
-        .select('*')
-        .eq('diagnostic_id', diagnosticId)
-        .eq('profile_id', user.id)
-        .order('priority', { ascending: false })
-
-      if (diag) {
-        const scores = diag.scores as Record<Quadrant, QuadrantScore>
-        // Restore needLevel from needScore
-        for (const key of Object.keys(scores) as Quadrant[]) {
-          scores[key].needLevel = getNeedLevel(scores[key].needScore)
-        }
-
-        const recommendations: Recommendation[] = (actionsData || []).map(a => ({
-          id: a.id as string,
-          product: (a.universe ?? 'drive') as Recommendation['product'],
-          type: a.type as 'immediate' | 'deferred' | 'event' | 'optimization',
-          priority: a.priority,
-          title: a.title,
-          message: a.description || '',
-        }))
-
-        setDiagnostic({
-          quadrantScores: scores,
-          globalScore: Number(diag.global_score),
-          weightings: diag.weightings as Record<Quadrant, number>,
-          productScores: [],
-          recommendations,
-        })
-      }
+      const { data: actionsData } = await fetchActions(diagnosticId, user.id)
+      setDiagnostic(hydrateDiagnostic(diag, actionsData || []))
       setLoading(false)
     }
     load()

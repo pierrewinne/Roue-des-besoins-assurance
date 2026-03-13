@@ -1,7 +1,7 @@
 import type { Quadrant, QuadrantScore, Recommendation } from './types.ts'
 import { asString as s, asNumber as n, asStringArray as arr, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isTravelEligible } from './answer-helpers.ts'
 
-type Answers = Record<string, unknown>
+import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
 interface RuleDefinition {
   id: string

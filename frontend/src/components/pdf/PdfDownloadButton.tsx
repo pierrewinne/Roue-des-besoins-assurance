@@ -5,6 +5,7 @@ import Button from '../ui/Button.tsx'
 import PdfClientReport from './PdfClientReport.tsx'
 import PdfAdvisorReport from './PdfAdvisorReport.tsx'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
+import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 
 interface AdvisorInfo {
   name: string
@@ -17,7 +18,7 @@ interface PdfDownloadButtonProps {
   type: 'client' | 'advisor'
   clientName?: string
   clientEmail?: string
-  answers?: Record<string, unknown>
+  answers?: QuestionnaireAnswers
   wheelRef?: React.RefObject<HTMLDivElement | null>
   advisor?: AdvisorInfo
 }
@@ -47,6 +48,12 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
       const doc = type === 'client'
         ? <PdfClientReport diagnostic={diagnostic} clientName={clientName} wheelImageUri={wheelImageUri} advisor={advisor} />
         : <PdfAdvisorReport diagnostic={diagnostic} clientName={clientName} clientEmail={clientEmail} answers={answers} wheelImageUri={wheelImageUri} />
+
+      // Audit PDF generation (P3-07)
+      if (type === 'advisor') {
+        const { logAuditEvent } = await import('../../lib/api/diagnostics.ts')
+        await logAuditEvent('generate_pdf_advisor', 'diagnostics', '', {}).catch(() => {})
+      }
 
       const blob = await pdf(doc).toBlob()
       const url = URL.createObjectURL(blob)

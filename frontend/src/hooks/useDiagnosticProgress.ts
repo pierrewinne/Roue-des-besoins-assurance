@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { supabase } from '../lib/supabase.ts'
+import { fetchActiveQuestionnaire } from '../lib/api/questionnaire.ts'
 import { computeQuadrantScore, computeDiagnostic } from '../shared/scoring/engine.ts'
 import { getNeedLevel } from '../shared/scoring/thresholds.ts'
 import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS } from '../shared/questionnaire/quadrant-mapping.ts'
+import type { QuestionnaireAnswers } from '../shared/questionnaire/schema.ts'
 import type { Quadrant, NeedLevel } from '../shared/scoring/types.ts'
 import type { QuadrantState } from '../components/landing/NeedsWheel.tsx'
 import { QUADRANT_ORDER } from '../lib/constants.ts'
@@ -11,7 +12,7 @@ import { QUADRANT_ORDER } from '../lib/constants.ts'
 interface DiagnosticProgress {
   loading: boolean
   responseId: string | null
-  answers: Record<string, unknown>
+  answers: QuestionnaireAnswers
   profilCompleted: boolean
   completedUniverses: Record<string, boolean>
   quadrantStates: Record<Quadrant, QuadrantState>
@@ -26,7 +27,7 @@ export function useDiagnosticProgress(): DiagnosticProgress {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [responseId, setResponseId] = useState<string | null>(null)
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const [profilCompleted, setProfilCompleted] = useState(false)
   const [completedUniverses, setCompletedUniverses] = useState<Record<string, boolean>>({})
 
@@ -34,20 +35,12 @@ export function useDiagnosticProgress(): DiagnosticProgress {
     async function load() {
       if (!user) { setLoading(false); return }
 
-      const { data } = await supabase
-        .from('questionnaire_responses')
-        .select('id, responses, profil_completed, completed_universes')
-        .eq('profile_id', user.id)
-        .eq('completed', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (data) {
-        setResponseId(data.id)
-        setAnswers((data.responses as Record<string, unknown>) || {})
-        setProfilCompleted(data.profil_completed ?? false)
-        setCompletedUniverses((data.completed_universes as Record<string, boolean>) || {})
+      const q = await fetchActiveQuestionnaire(user.id)
+      if (q) {
+        setResponseId(q.id)
+        setAnswers(q.responses)
+        setProfilCompleted(q.profil_completed)
+        setCompletedUniverses(q.completed_universes)
       }
       setLoading(false)
     }

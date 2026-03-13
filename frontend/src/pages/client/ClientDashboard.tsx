@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { supabase } from '../../lib/supabase.ts'
+import { fetchDiagnosticHistory, computeDiagnosticRPC } from '../../lib/api/diagnostics.ts'
+import { exportMyData, deleteMyData } from '../../lib/api/gdpr.ts'
 import Button from '../../components/ui/Button.tsx'
-import Card from '../../components/ui/Card.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
+import GdprSection from '../../components/client/GdprSection.tsx'
+import DiagnosticHistory from '../../components/client/DiagnosticHistory.tsx'
+import ProfilCTA from '../../components/client/ProfilCTA.tsx'
 import { useDiagnosticProgress } from '../../hooks/useDiagnosticProgress.ts'
-import { QUADRANT_ORDER, getScoreColorClass, QUADRANT_WHEEL_LABELS, QUADRANT_WHEEL_COLORS, QUADRANT_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_ORDER, QUADRANT_WHEEL_LABELS, QUADRANT_WHEEL_COLORS, QUADRANT_ICONS, NEED_BADGE_LABELS } from '../../lib/constants.ts'
 import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS } from '../../shared/questionnaire/quadrant-mapping.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
 import type { Quadrant, NeedLevel } from '../../shared/scoring/types.ts'
@@ -33,12 +36,7 @@ export default function ClientDashboard() {
   useEffect(() => {
     async function loadPast() {
       if (!user) return
-      const { data } = await supabase
-        .from('diagnostics')
-        .select('id, global_score, created_at')
-        .eq('profile_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      const { data } = await fetchDiagnosticHistory(user.id)
       if (data) setDiagnostics(data)
     }
     loadPast()
@@ -67,11 +65,7 @@ export default function ClientDashboard() {
     setFinishError(null)
 
     try {
-      // Server-side scoring (SEC-01): the DB computes scores, generates actions,
-      // and marks the questionnaire as completed in a single transaction.
-      const { data: diagId, error } = await supabase.rpc('compute_and_save_diagnostic', {
-        p_questionnaire_id: progress.responseId,
-      })
+      const { data: diagId, error } = await computeDiagnosticRPC(progress.responseId)
 
       if (error || !diagId) {
         throw new Error(error?.message || 'Échec de la création du diagnostic')
@@ -89,8 +83,7 @@ export default function ClientDashboard() {
 
   async function handleExportData() {
     setRgpdError(null)
-    // Audit log is now handled server-side in export_my_data() (SEC-12)
-    const { data, error } = await supabase.rpc('export_my_data')
+    const { data, error } = await exportMyData()
     if (error) {
       setRgpdError('Impossible d\'exporter vos données. Veuillez réessayer.')
       return
@@ -107,7 +100,7 @@ export default function ClientDashboard() {
   async function handleDeleteAccount() {
     setIsDeleting(true)
     setRgpdError(null)
-    const { error } = await supabase.rpc('delete_my_data')
+    const { error } = await deleteMyData()
     if (error) {
       setRgpdError('Impossible de supprimer votre compte. Veuillez réessayer.')
       setIsDeleting(false)
@@ -141,20 +134,7 @@ export default function ClientDashboard() {
 
       {/* Profil CTA */}
       {!progress.profilCompleted && (
-        <div className="max-w-md mx-auto mb-8">
-          <Card className="text-center">
-            <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mx-auto mb-4 ring-1 ring-primary-700/10">
-              <Icon name="badge-check" size={28} className="text-primary-700" />
-            </div>
-            <h2 className="text-lg font-bold text-primary-700 mb-2">Commencez par votre profil</h2>
-            <p className="text-sm text-grey-400 mb-6 leading-relaxed max-w-xs mx-auto">
-              Quelques questions rapides pour personnaliser votre diagnostic et débloquer la roue.
-            </p>
-            <Button onClick={() => navigate('/questionnaire/profil')} size="lg">
-              Compléter mon profil
-            </Button>
-          </Card>
-        </div>
+        <ProfilCTA onNavigate={() => navigate('/questionnaire/profil')} />
       )}
 
       {/* Universe cards */}
@@ -233,75 +213,18 @@ export default function ClientDashboard() {
       )}
 
       {/* Past diagnostics */}
-      {diagnostics.length > 0 && (
-        <Card>
-          <h2 className="text-lg font-bold text-primary-700 mb-5">Mes diagnostics précédents</h2>
-          <div className="space-y-2">
-            {diagnostics.map(d => (
-              <Link
-                key={d.id}
-                to={`/results/${d.id}`}
-                className="flex items-center justify-between p-3.5 rounded-lg border border-grey-100 hover:border-primary-200 hover:bg-primary-50/50 transition-all duration-300 group"
-              >
-                <span className="text-sm text-grey-400 group-hover:text-primary-700 transition-colors">
-                  {new Date(d.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
-                <div className="flex items-center gap-3">
-                  <span className={`text-sm font-bold ${getScoreColorClass(d.global_score)}`}>
-                    {d.global_score}/100
-                  </span>
-                  <Icon name="chevron-right" size={16} strokeWidth={2} className="text-grey-300 group-hover:text-primary-400 transition-colors" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Card>
-      )}
+      <DiagnosticHistory diagnostics={diagnostics} />
 
       {/* GDPR section */}
-      <div className="mt-10 pt-6 border-t border-grey-100">
-        {rgpdError && (
-          <div className="mb-4 p-3 bg-danger-light text-danger text-sm rounded-lg ring-1 ring-danger/10">
-            {rgpdError}
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-grey-400">Vos données personnelles</h3>
-            <p className="text-xs text-grey-300 mt-0.5">Export ou suppression de vos données (RGPD).</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportData}>
-              Exporter mes données
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-danger border-danger/20 hover:bg-danger-light"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              Supprimer mon compte
-            </Button>
-          </div>
-        </div>
-
-        {showDeleteConfirm && (
-          <div className="mt-4 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
-            <p className="text-sm text-danger font-bold mb-2">Cette action est irréversible</p>
-            <p className="text-xs text-grey-400 mb-4">
-              Toutes vos données seront définitivement supprimées : profil, questionnaires, diagnostics et actions recommandées.
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" className="bg-danger hover:bg-red-400" disabled={isDeleting} onClick={handleDeleteAccount}>
-                {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
-                Annuler
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      <GdprSection
+        rgpdError={rgpdError}
+        showDeleteConfirm={showDeleteConfirm}
+        isDeleting={isDeleting}
+        onExportData={handleExportData}
+        onDeleteClick={() => setShowDeleteConfirm(true)}
+        onDeleteConfirm={handleDeleteAccount}
+        onDeleteCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   )
 }

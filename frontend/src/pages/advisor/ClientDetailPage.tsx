@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { verifyAdvisorRelation, fetchClientProfile } from '../../lib/api/advisor.ts'
+import { fetchLatestDiagnostic, fetchActions, hydrateDiagnostic, logAuditEvent } from '../../lib/api/diagnostics.ts'
+import { fetchCompletedAnswers } from '../../lib/api/questionnaire.ts'
 import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
@@ -12,8 +14,8 @@ import ScoreGauge from '../../components/ui/ScoreGauge.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
-import type { DiagnosticResult, QuadrantScore, Recommendation, Quadrant } from '../../shared/scoring/types.ts'
-import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import type { DiagnosticResult } from '../../shared/scoring/types.ts'
+import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 
 interface ClientProfile {
   first_name: string | null
@@ -28,7 +30,7 @@ export default function ClientDetailPage() {
   const navigate = useNavigate()
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null)
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null)
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const [loading, setLoading] = useState(true)
   const wheelRef = useRef<HTMLDivElement>(null)
 
@@ -36,85 +38,28 @@ export default function ClientDetailPage() {
     async function load() {
       if (!clientId || !user) return
 
-      // Verify advisor owns this client before loading any data
-      const { data: relation } = await supabase
-        .from('advisor_clients')
-        .select('id')
-        .eq('advisor_id', user.id)
-        .eq('client_id', clientId)
-        .single()
-
+      const { data: relation } = await verifyAdvisorRelation(user.id, clientId)
       if (!relation) {
         navigate('/conseiller/dashboard', { replace: true })
         return
       }
 
       // Parallelize independent queries (P3-05)
-      const [profResult, qrResult, diagResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('first_name, last_name, email, phone')
-          .eq('id', clientId)
-          .single(),
-        supabase
-          .from('questionnaire_responses')
-          .select('responses')
-          .eq('profile_id', clientId)
-          .eq('completed', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single(),
-        supabase
-          .from('diagnostics')
-          .select('id, questionnaire_id, profile_id, scores, global_score, weightings, created_at')
-          .eq('profile_id', clientId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single(),
+      const [profResult, qrAnswers, diagResult] = await Promise.all([
+        fetchClientProfile(clientId),
+        fetchCompletedAnswers(clientId),
+        fetchLatestDiagnostic(clientId),
       ])
 
       setClientProfile(profResult.data)
-      if (qrResult.data) setAnswers(qrResult.data.responses as Record<string, unknown>)
+      if (qrAnswers) setAnswers(qrAnswers)
 
       const diag = diagResult.data
-
       if (diag) {
-        // Audit advisor access to client data (SEC-03/P12)
-        await supabase.rpc('log_audit_event', {
-          p_action: 'view_client_diagnostic',
-          p_resource_type: 'diagnostics',
-          p_resource_id: diag.id,
-          p_details: { client_id: clientId },
-        })
+        await logAuditEvent('view_client_diagnostic', 'diagnostics', diag.id, { client_id: clientId })
 
-        const { data: actionsData } = await supabase
-          .from('actions')
-          .select('id, diagnostic_id, type, universe, priority, title, description, created_at')
-          .eq('diagnostic_id', diag.id)
-          .eq('profile_id', clientId)
-          .order('priority', { ascending: false })
-
-        const scores = diag.scores as Record<Quadrant, QuadrantScore>
-        for (const key of Object.keys(scores) as Quadrant[]) {
-          scores[key].needLevel = getNeedLevel(scores[key].needScore)
-        }
-
-        const recommendations: Recommendation[] = (actionsData || []).map(a => ({
-          id: a.id as string,
-          product: (a.universe ?? 'drive') as Recommendation['product'],
-          type: a.type as 'immediate' | 'deferred' | 'event' | 'optimization',
-          priority: a.priority,
-          title: a.title,
-          message: a.description || '',
-        }))
-
-        setDiagnostic({
-          quadrantScores: scores,
-          globalScore: Number(diag.global_score),
-          weightings: diag.weightings as Record<Quadrant, number>,
-          productScores: [],
-          recommendations,
-        })
+        const { data: actionsData } = await fetchActions(diag.id, clientId)
+        setDiagnostic(hydrateDiagnostic(diag, actionsData || []))
       }
       setLoading(false)
     }

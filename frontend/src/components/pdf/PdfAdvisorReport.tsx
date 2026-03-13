@@ -2,7 +2,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
 import { QUADRANT_LABELS, NEED_COLORS, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
-import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant } from '../../shared/questionnaire/schema.ts'
+import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant, type QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 
 const TYPE_LABELS: Record<string, string> = {
   immediate: 'Immédiate',
@@ -38,7 +38,7 @@ interface PdfAdvisorReportProps {
   diagnostic: DiagnosticResult
   clientName?: string
   clientEmail?: string
-  answers?: Record<string, unknown>
+  answers?: QuestionnaireAnswers
   wheelImageUri?: string
 }
 

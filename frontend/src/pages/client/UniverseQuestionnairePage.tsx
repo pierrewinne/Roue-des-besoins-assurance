@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { supabase } from '../../lib/supabase.ts'
+import { fetchActiveQuestionnaire, saveAnswers as apiSaveAnswers, markQuadrantCompleted } from '../../lib/api/questionnaire.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
@@ -12,6 +12,7 @@ import Card from '../../components/ui/Card.tsx'
 import { getVisibleQuadrantQuestions, isQuadrantComplete, getQuadrantProgress, ALL_QUADRANTS } from '../../shared/questionnaire/quadrant-mapping.ts'
 import { computeQuadrantScore } from '../../shared/scoring/engine.ts'
 import type { Quadrant } from '../../shared/scoring/types.ts'
+import type { QuestionnaireAnswers, AnswerValue } from '../../shared/questionnaire/schema.ts'
 
 function isValidQuadrant(s: string | undefined): s is Quadrant {
   return s !== undefined && ALL_QUADRANTS.includes(s as Quadrant)
@@ -21,7 +22,7 @@ export default function UniverseQuestionnairePage() {
   const { universe: universeParam } = useParams<{ universe: string }>()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [answers, setAnswers] = useState<QuestionnaireAnswers>({})
   const responseIdRef = useRef<string | null>(null)
   const [completedUniverses, setCompletedUniverses] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
@@ -41,20 +42,12 @@ export default function UniverseQuestionnairePage() {
     if (!validUniverse) return
     async function load() {
       if (!user) return
-      const { data } = await supabase
-        .from('questionnaire_responses')
-        .select('id, responses, completed_universes, profil_completed')
-        .eq('profile_id', user.id)
-        .eq('completed', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (data) {
-        setAnswers((data.responses as Record<string, unknown>) || {})
-        responseIdRef.current = data.id
-        setCompletedUniverses((data.completed_universes as Record<string, boolean>) || {})
-        if (!data.profil_completed) {
+      const q = await fetchActiveQuestionnaire(user.id)
+      if (q) {
+        setAnswers(q.responses)
+        responseIdRef.current = q.id
+        setCompletedUniverses(q.completed_universes)
+        if (!q.profil_completed) {
           navigate('/questionnaire/profil', { replace: true })
           return
         }
@@ -66,15 +59,11 @@ export default function UniverseQuestionnairePage() {
   }, [user, navigate, validUniverse])
 
   // Auto-save with visible error feedback (P2-02)
-  const saveAnswers = useCallback(async (newAnswers: Record<string, unknown>) => {
+  const saveAnswers = useCallback(async (newAnswers: QuestionnaireAnswers) => {
     if (!user || !validUniverse) return
     const rid = responseIdRef.current
     if (!rid) return
-    const { error } = await supabase
-      .from('questionnaire_responses')
-      .update({ responses: newAnswers })
-      .eq('id', rid)
-      .eq('profile_id', user.id)
+    const { error } = await apiSaveAnswers(rid, user.id, newAnswers)
     if (error) {
       setSaveError('La sauvegarde automatique a échoué. Vos réponses seront sauvegardées au prochain changement.')
     } else {
@@ -95,8 +84,8 @@ export default function UniverseQuestionnairePage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [saveAnswers])
 
-  function handleAnswer(questionId: string, value: unknown) {
-    const newAnswers = { ...answers, [questionId]: value }
+  function handleAnswer(questionId: string, value: AnswerValue | undefined) {
+    const newAnswers: QuestionnaireAnswers = { ...answers, [questionId]: value }
     setAnswers(newAnswers)
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
@@ -117,14 +106,7 @@ export default function UniverseQuestionnairePage() {
     setSaveError(null)
 
     const newCompleted = { ...completedUniverses, [universe]: true }
-    const { error } = await supabase
-      .from('questionnaire_responses')
-      .update({
-        responses: answers,
-        completed_universes: newCompleted,
-      })
-      .eq('id', responseIdRef.current)
-      .eq('profile_id', user.id)
+    const { error } = await markQuadrantCompleted(responseIdRef.current, user.id, answers, newCompleted)
 
     if (error) {
       setSaveError('Impossible de valider ce domaine. Veuillez réessayer.')

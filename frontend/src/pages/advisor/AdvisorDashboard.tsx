@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { fetchAdvisorClients } from '../../lib/api/advisor.ts'
 import { supabase } from '../../lib/supabase.ts'
 import Card from '../../components/ui/Card.tsx'
 import Badge from '../../components/ui/Badge.tsx'
@@ -31,13 +32,7 @@ export default function AdvisorDashboard() {
   useEffect(() => {
     async function load() {
       if (!profile) return
-      const { data } = await supabase
-        .from('advisor_clients')
-        .select(`
-          client_id,
-          profiles!advisor_clients_client_id_fkey (first_name, last_name, email)
-        `)
-        .eq('advisor_id', profile.id)
+      const { data } = await fetchAdvisorClients(profile.id)
 
       if (data) {
         const rows = data as unknown as ClientRow[]

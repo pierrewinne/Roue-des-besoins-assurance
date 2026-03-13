@@ -1,5 +1,5 @@
 import type { Quadrant } from '../scoring/types.ts'
-import { QUESTIONS, isQuestionVisible, type Question } from './schema.ts'
+import { QUESTIONS, isQuestionVisible, type Question, type QuestionnaireAnswers } from './schema.ts'
 
 // O(1) question lookup by ID
 const QUESTION_BY_ID = new Map(QUESTIONS.map(q => [q.id, q]))
@@ -49,24 +49,24 @@ export function getQuadrantQuestions(quadrant: Quadrant): Question[] {
     .filter(Boolean)
 }
 
-export function getVisibleQuadrantQuestions(quadrant: Quadrant, answers: Record<string, unknown>): Question[] {
+export function getVisibleQuadrantQuestions(quadrant: Quadrant, answers: QuestionnaireAnswers): Question[] {
   return getQuadrantQuestions(quadrant).filter(q => isQuestionVisible(q, answers))
 }
 
-export function isProfilComplete(answers: Record<string, unknown>): boolean {
+export function isProfilComplete(answers: QuestionnaireAnswers): boolean {
   return getProfilQuestions()
     .filter(q => isQuestionVisible(q, answers))
     .filter(q => q.required)
     .every(q => isAnswered(answers[q.id]))
 }
 
-export function isQuadrantComplete(quadrant: Quadrant, answers: Record<string, unknown>): boolean {
+export function isQuadrantComplete(quadrant: Quadrant, answers: QuestionnaireAnswers): boolean {
   return getVisibleQuadrantQuestions(quadrant, answers)
     .filter(q => q.required)
     .every(q => isAnswered(answers[q.id]))
 }
 
-export function getQuadrantProgress(quadrant: Quadrant, answers: Record<string, unknown>): { answered: number; total: number } {
+export function getQuadrantProgress(quadrant: Quadrant, answers: QuestionnaireAnswers): { answered: number; total: number } {
   const questions = getVisibleQuadrantQuestions(quadrant, answers)
   const required = questions.filter(q => q.required)
   const answered = required.filter(q => isAnswered(answers[q.id])).length
