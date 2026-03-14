@@ -82,11 +82,12 @@ export function Results() {
         />
       </div>
 
-      {/* Product cards */}
+      {/* Product cards — offset right to avoid wheel overlap */}
       <div style={{
         display: 'flex',
         gap: 24,
         marginTop: 40,
+        marginLeft: 160,
       }}>
         {cards.map((card, i) => (
           <div key={i} style={{
