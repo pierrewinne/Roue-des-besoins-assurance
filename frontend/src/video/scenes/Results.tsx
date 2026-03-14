@@ -62,15 +62,14 @@ export function Results() {
     <div style={{
       width: '100%', height: '100%',
       backgroundColor: NAVY,
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
+      display: 'flex', alignItems: 'center',
       position: 'relative',
     }}>
-      {/* Mini wheel top-left */}
+      {/* Mini wheel — left side */}
       <div style={{
         position: 'absolute',
-        left: 80, top: 40,
-        transform: `scale(${wheelScale})`,
+        left: 60, top: '50%',
+        transform: `translateY(-50%) scale(${wheelScale})`,
         transformOrigin: 'center',
         opacity: frame > 5 ? 1 : 0,
       }}>
@@ -78,16 +77,18 @@ export function Results() {
           fillProgress={DEMO_FILL_TARGETS as unknown as number[]}
           fillColors={DEMO_FILL_COLORS as unknown as string[]}
           centerText="VOUS"
-          scale={0.5}
+          scale={0.45}
         />
       </div>
 
-      {/* Product cards — offset right to avoid wheel overlap */}
+      {/* Product cards — right side, clear of wheel */}
       <div style={{
+        position: 'absolute',
+        right: 80,
+        top: '50%',
+        transform: 'translateY(-50%)',
         display: 'flex',
-        gap: 24,
-        marginTop: 40,
-        marginLeft: 160,
+        gap: 20,
       }}>
         {cards.map((card, i) => (
           <div key={i} style={{

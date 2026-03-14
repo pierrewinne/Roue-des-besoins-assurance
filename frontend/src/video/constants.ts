@@ -110,10 +110,10 @@ export const S = {
   // Scene 3: Diagnostic (10-20s)
   DIAG_START: 10 * FPS,
   DIAG_END: 20 * FPS,
-  // Scene 4: Results (20-28s)
+  // Scene 4: Results (20-32s)
   RESULTS_START: 20 * FPS,
-  RESULTS_END: 28 * FPS,
-  // Scene 5: Close (28-36s)
-  CLOSE_START: 28 * FPS,
+  RESULTS_END: 32 * FPS,
+  // Scene 5: Close (32-36s)
+  CLOSE_START: 32 * FPS,
   CLOSE_END: 36 * FPS,
 } as const

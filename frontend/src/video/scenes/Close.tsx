@@ -1,24 +1,24 @@
 /**
- * Scene 5: Close (28-36s / frames 840-1080)
+ * Scene 5: Close (32-36s / 4 seconds)
  * Baloise logo animates in centered, alone on navy background.
  */
 import { useCurrentFrame } from 'remotion'
-import { NAVY, WHITE } from '../constants'
+import { NAVY } from '../constants'
 import { fadeIn, scaleIn, pulse } from '../helpers'
 import { BaloiseLogo } from './BaloiseLogo'
 
 export function Close() {
   const frame = useCurrentFrame()
 
-  // Logo fades in and scales up
-  const logoOpacity = fadeIn(frame, 15, 30)
-  const logoScale = scaleIn(frame, 15, 30)
+  // Logo fades in quickly (4s scene = 120 frames)
+  const logoOpacity = fadeIn(frame, 5, 18)
+  const logoScale = scaleIn(frame, 5, 18)
 
   // Subtle breathing pulse after settled
-  const logoPulse = frame > 60 ? pulse(frame, 0.02, 0.008) : 1
+  const logoPulse = frame > 35 ? pulse(frame, 0.02, 0.008) : 1
 
-  // Subtle radial glow behind logo
-  const glowOpacity = fadeIn(frame, 30, 40) * 0.15
+  // Subtle radial glow
+  const glowOpacity = fadeIn(frame, 10, 25) * 0.15
 
   return (
     <div style={{
