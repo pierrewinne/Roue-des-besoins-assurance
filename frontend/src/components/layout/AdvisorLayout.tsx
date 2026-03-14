@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../ui/Button.tsx'
@@ -10,6 +10,8 @@ export default function AdvisorLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const [signOutError, setSignOutError] = useState(false)
+
+  useEffect(() => { window.scrollTo(0, 0) }, [location.pathname])
 
   async function handleSignOut() {
     setSignOutError(false)

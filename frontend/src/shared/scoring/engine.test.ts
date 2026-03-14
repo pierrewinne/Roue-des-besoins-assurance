@@ -75,8 +75,8 @@ describe('computePersonnesScore (B-SAFE)', () => {
   })
 
   it('has low coverage without accident or savings protection', () => {
-    const uncovered = computeDiagnostic({ accident_coverage_existing: 'none', has_rc_vie_privee: 'no', savings_protection: ['none'] })
-    const covered = computeDiagnostic({ accident_coverage_existing: 'individual_complete', has_rc_vie_privee: 'yes', savings_protection: ['life_insurance', 'pension_plan'] })
+    const uncovered = computeDiagnostic({ accident_coverage_existing: 'none', savings_protection: ['none'] })
+    const covered = computeDiagnostic({ accident_coverage_existing: 'individual_complete', savings_protection: ['life_insurance', 'pension_plan'] })
     expect(uncovered.quadrantScores.personnes.coverage).toBeLessThan(covered.quadrantScores.personnes.coverage)
   })
 })
@@ -545,19 +545,7 @@ describe('computePersonnesCoverage - accident_coverage granulaire', () => {
   })
 })
 
-describe('computePersonnesCoverage - RC vie privee', () => {
-  it('yes increases coverage vs no', () => {
-    const no = computeDiagnostic({ has_rc_vie_privee: 'no' }).quadrantScores.personnes.coverage
-    const yes = computeDiagnostic({ has_rc_vie_privee: 'yes' }).quadrantScores.personnes.coverage
-    expect(yes).toBeGreaterThan(no)
-  })
-
-  it('unsure is treated as no coverage', () => {
-    const unsure = computeDiagnostic({ has_rc_vie_privee: 'unsure' }).quadrantScores.personnes.coverage
-    const no = computeDiagnostic({ has_rc_vie_privee: 'no' }).quadrantScores.personnes.coverage
-    expect(unsure).toBe(no)
-  })
-})
+// RC vie privée retirée — intégrée dans HOME
 
 describe('computePersonnesCoverage - savings_protection', () => {
   it('more savings items increase coverage', () => {
@@ -1121,7 +1109,6 @@ describe('edge cases', () => {
       age_range: '46_55',
       professional_status: 'independent',
       accident_coverage_existing: 'none',
-      has_rc_vie_privee: 'no',
       savings_protection: ['none'],
       children_count: 4,
     })
@@ -1145,7 +1132,6 @@ describe('edge cases', () => {
       age_range: '18_25',
       professional_status: 'student',
       accident_coverage_existing: 'individual_complete',
-      has_rc_vie_privee: 'yes',
       savings_protection: ['life_insurance', 'pension_plan', 'savings_regular', 'real_estate'],
       children_count: 0,
       life_event: ['none'],

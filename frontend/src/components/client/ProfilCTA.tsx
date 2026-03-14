@@ -8,7 +8,7 @@ interface ProfilCTAProps {
 
 export default function ProfilCTA({ onNavigate }: ProfilCTAProps) {
   return (
-    <div className="max-w-md mx-auto mb-8">
+    <div className="max-w-md mx-auto lg:mx-0 lg:max-w-none">
       <Card className="text-center">
         <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mx-auto mb-4 ring-1 ring-primary-700/10">
           <Icon name="badge-check" size={28} className="text-primary-700" />

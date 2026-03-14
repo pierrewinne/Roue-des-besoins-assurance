@@ -31,14 +31,14 @@ const driveRules: RuleDefinition[] = [
   {
     id: 'drive_01_recent_no_omnium',
     condition: (_, a) =>
-      ['car_new', 'electric', 'suv_crossover'].includes(s(a.vehicle_details)) &&
+      s(a.vehicle_details) === 'car_new' &&
       ['rc_only', 'none', 'unknown'].includes(s(a.vehicle_coverage_existing)),
     recommendation: {
       product: 'drive', optionId: 'drive_dommages_materiels',
       type: 'immediate', priority: 5,
       title: 'Protéger votre véhicule récent',
-      message: 'Votre véhicule représente un investissement important. Avec une couverture RC seule, un sinistre total, un vol ou un incendie ne serait pas remboursé. La couverture Omnium protège la valeur de votre véhicule au-delà de la seule responsabilité civile.',
-      advisorNote: 'Véhicule < 3 ans ou électrique/SUV avec RC seule. Argumenter sur le coût de remplacement vs le coût de la prime Omnium. Franchises : à adapter selon le profil financier du client.',
+      message: 'Votre véhicule représente un investissement important. Avec une couverture RC seule, un sinistre total, un vol ou un incendie ne serait pas remboursé. La couverture tous dommages protège la valeur de votre véhicule au-delà de la seule responsabilité civile.',
+      advisorNote: 'Véhicule < 3 ans avec RC seule. Argumenter sur le coût de remplacement vs le coût de la prime tous dommages. Franchises : à adapter selon le profil financier du client.',
     },
   },
   {
@@ -49,20 +49,8 @@ const driveRules: RuleDefinition[] = [
       product: 'drive',
       type: 'optimization', priority: 2,
       title: 'Optimiser votre couverture auto',
-      message: 'Votre véhicule a plus de 8 ans. Vérifiez que le coût de votre omnium reste cohérent avec la valeur du véhicule. Une Mini-Omnium pourrait vous offrir une protection adaptée à moindre coût.',
-      advisorNote: 'Vérifier la valeur résiduelle. Si prime omnium > 10% de la valeur véhicule, migration vers mini-omnium ou RC à étudier.',
-    },
-  },
-  {
-    id: 'drive_03_electric_no_protection',
-    condition: (_, a) =>
-      s(a.vehicle_details) === 'electric' && s(a.vehicle_coverage_existing) !== 'full_omnium',
-    recommendation: {
-      product: 'drive', optionId: 'drive_pack_indemnisation',
-      type: 'immediate', priority: 4,
-      title: 'Protéger votre véhicule électrique',
-      message: 'Les réparations d\'un véhicule électrique coûtent en moyenne 30 % de plus, et la batterie représente une part majeure de la valeur. La couverture Omnium avec le Pack Indemnisation protège votre investissement à sa juste valeur.',
-      advisorNote: 'Argumenter sur le coût de la batterie (30-40% de la valeur du véhicule). Le pack indemnisation est un upsell naturel.',
+      message: 'Votre véhicule a plus de 8 ans. Vérifiez que le coût de votre couverture tous dommages reste cohérent avec la valeur du véhicule. Une couverture dommages hors accidents pourrait vous offrir une protection adaptée à moindre coût.',
+      advisorNote: 'Vérifier la valeur résiduelle. Si prime tous dommages > 10% de la valeur véhicule, migration vers dommages hors accidents ou RC à étudier.',
     },
   },
   {
@@ -124,7 +112,7 @@ const driveRules: RuleDefinition[] = [
       type: 'event', priority: 4,
       title: 'Anticiper la couverture de votre futur véhicule',
       message: 'L\'achat d\'un véhicule est le moment idéal pour choisir une couverture adaptée. Votre conseiller peut préparer un devis personnalisé avant même la livraison.',
-      advisorNote: 'Opportunité Omnium + packs. Proposer un RDV avant l\'achat pour optimiser la couverture.',
+      advisorNote: 'Opportunité tous dommages + packs. Proposer un RDV avant l\'achat pour optimiser la couverture.',
     },
   },
   {
@@ -444,14 +432,13 @@ const homeRules: RuleDefinition[] = [
   {
     id: 'home_10_rc_vie_privee',
     condition: (_, a) =>
-      ['no', 'unsure'].includes(s(a.has_rc_vie_privee)) &&
-      (n(a.children_count) > 0 || (arr(a.sports_activities).length > 0 && !arr(a.sports_activities).includes('none'))),
+      n(a.children_count) > 0 || (arr(a.sports_activities).length > 0 && !arr(a.sports_activities).includes('none')),
     recommendation: {
       product: 'home', optionId: 'home_rc_vie_privee',
-      type: 'immediate', priority: 4,
-      title: 'Vous protéger en responsabilité civile vie privée',
-      message: 'La responsabilité civile vie privée vous protège contre les conséquences financières des dommages involontairement causés à des tiers, partout dans le monde. Avec des enfants ou une activité sportive, les risques sont réels.',
-      advisorNote: 'Responsabilité civile vie privée HOME. Couverture monde entier. Exemples concrets : enfant qui casse une vitre, collision à vélo, chute en ski blessant un tiers.',
+      type: 'optimization', priority: 2,
+      title: 'Vérifier votre couverture RC vie privée',
+      message: 'La responsabilité civile vie privée est incluse dans votre contrat habitation Baloise Home. Avec des enfants ou une activité sportive, vérifiez que les plafonds sont adaptés à votre situation.',
+      advisorNote: 'RC vie privée intégrée dans HOME. Vérifier adéquation des plafonds selon profil (enfants, sports pratiqués).',
     },
   },
   {

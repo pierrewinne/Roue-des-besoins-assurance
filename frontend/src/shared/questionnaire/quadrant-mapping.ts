@@ -21,7 +21,7 @@ export const QUADRANT_QUESTION_IDS: Record<Quadrant, string[]> = {
   ],
   personnes: [
     'travel_frequency', 'travel_destinations', 'travel_budget', 'travel_coverage_existing',
-    'sports_activities', 'has_rc_vie_privee', 'accident_coverage_existing',
+    'sports_activities', 'accident_coverage_existing',
     'income_range', 'financial_dependents', 'work_incapacity_concern',
     'health_concerns', 'savings_protection', 'other_properties',
   ],

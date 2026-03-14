@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import type { NeedLevel, Quadrant, DiagnosticResult } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
-import { QUADRANT_PRODUCTS, QUADRANT_ORDER } from '../../lib/constants.ts'
+import { QUADRANT_ORDER } from '../../lib/constants.ts'
 
 /* ─── Geometry (viewBox 500×500) ─── */
 const CX = 250
@@ -141,7 +141,6 @@ interface NeedsWheelProps {
   globalNeedLevel?: NeedLevel
   compact?: boolean
   variant?: 'dark' | 'light'
-  showProducts?: boolean
 }
 
 const ease = 'cubic-bezier(0.25,0.8,0.5,1)'
@@ -156,7 +155,6 @@ export default function NeedsWheel({
   globalNeedLevel,
   compact = false,
   variant = 'dark',
-  showProducts = true,
 }: NeedsWheelProps) {
   const reducedMotion = useRef(false)
   useEffect(() => { reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches }, [])
@@ -272,6 +270,14 @@ export default function NeedsWheel({
           labelOp = 0.95
           stroke = `${seg.color}66`
           strokeW = 1.5
+        } else if (isDiagnostic && state?.status === 'available') {
+          // Available but not started — visually empty / dim
+          outerFill = `url(#nw-outer-dim-${i})`
+          innerFill = `url(#nw-inner-dim-${i})`
+          iconOp = 0.25
+          labelOp = 0.40
+          stroke = lightStrokeFaint
+          strokeW = 0.5
         } else if (isOther) {
           outerFill = `url(#nw-outer-dim-${i})`
           innerFill = `url(#nw-inner-dim-${i})`
@@ -298,8 +304,6 @@ export default function NeedsWheel({
         const isClickable = onSegmentClick && (!isDiagnostic || state?.status === 'available' || state?.status === 'in_progress' || state?.status === 'completed')
         const labelR = (INNER_R1 + INNER_R2) / 2
         const [lx, ly] = xy(labelR, seg.angle)
-        const productR = OUTER_R2 + 26
-        const [px, py] = xy(productR, seg.angle)
 
         return (
           <g
@@ -385,11 +389,12 @@ export default function NeedsWheel({
               )
             })}
 
-            {/* Check badge (completed) */}
+            {/* Check badge (completed) — below text for top quadrants, above for bottom */}
             {isCompleted && (() => {
-              const [cx, cy] = xy(OUTER_R2 - 12, a2 - 8)
+              const isBottom = seg.angle > 90 && seg.angle < 270
+              const by = isBottom ? ly - 38 : ly + 14
               return (
-                <g transform={`translate(${cx - 8},${cy - 8})`} className="pointer-events-none">
+                <g transform={`translate(${lx - 8},${by})`} className="pointer-events-none">
                   <circle cx="8" cy="8" r="8" fill="white" />
                   <path d="M5 8l2.5 2.5L11.5 5" fill="none" stroke={getNeedColor('low')} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </g>
@@ -413,23 +418,6 @@ export default function NeedsWheel({
               </text>
             )}
 
-            {/* Tick + product label — shown when showProducts is true OR when segment is completed */}
-            {!compact && (showProducts || isCompleted) && (() => {
-              const productLabel = QUADRANT_PRODUCTS[seg.key]
-              const [t1x, t1y] = xy(OUTER_R2 + 3, seg.angle)
-              const [t2x, t2y] = xy(OUTER_R2 + 14, seg.angle)
-              const fillColor = isCompleted
-                ? (variant === 'light' ? seg.color : 'rgba(255,255,255,0.85)')
-                : isActive ? seg.color : isOther ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)'
-              return (
-                <>
-                  <line x1={t1x} y1={t1y} x2={t2x} y2={t2y} stroke={isCompleted ? `${seg.color}80` : isActive ? `${seg.color}80` : 'rgba(255,255,255,0.05)'} strokeWidth="1" strokeLinecap="round" className="pointer-events-none" style={{ transition: `stroke 300ms ${ease}` }} />
-                  <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fill={fillColor} fontSize="8.5" fontWeight="700" fontFamily="'BaloiseCreateText','Inter',sans-serif" letterSpacing="0.10em" className="pointer-events-none select-none" style={{ filter: isCompleted ? `drop-shadow(0 0 4px ${seg.glowColor})` : isActive ? `drop-shadow(0 0 6px ${seg.glowColor})` : undefined, transition: `fill 300ms ${ease}` }}>
-                    {productLabel.toUpperCase()}
-                  </text>
-                </>
-              )
-            })()}
           </g>
         )
       })}

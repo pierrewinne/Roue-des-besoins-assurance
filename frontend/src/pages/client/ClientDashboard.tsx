@@ -132,100 +132,98 @@ export default function ClientDashboard() {
         subtitle="Explorez vos besoins en assurance."
       />
 
-      {/* Wheel hero */}
-      <div className="flex justify-center mb-8">
-        <NeedsWheel
-          className="w-full max-w-[480px]"
-          segmentStates={progress.segmentStates}
-          completedCount={progress.completedCount}
-          globalScore={progress.globalScore}
-          globalNeedLevel={progress.globalNeedLevel}
-          onSegmentClick={handleSegmentClick}
-          variant="light"
-          showProducts={false}
-        />
-      </div>
+      {/* Wheel + right panel (profil CTA or universe cards) */}
+      <div className="grid lg:grid-cols-[1fr_1fr] gap-8 items-center mb-8">
+        <div className="flex justify-center">
+          <NeedsWheel
+            className="w-full max-w-[380px]"
+            segmentStates={progress.segmentStates}
+            completedCount={progress.completedCount}
+            globalScore={progress.globalScore}
+            globalNeedLevel={progress.globalNeedLevel}
+            onSegmentClick={handleSegmentClick}
+            variant="light"
+          />
+        </div>
 
-      {/* Profil CTA */}
-      {!progress.profilCompleted && (
-        <ProfilCTA onNavigate={() => navigate('/questionnaire/profil')} />
-      )}
+        {/* Right column */}
+        <div>
+          {!progress.profilCompleted ? (
+            <ProfilCTA onNavigate={() => navigate('/questionnaire/profil')} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+              {ALL_QUADRANTS.map((u, idx) => {
+                const state = progress.quadrantStates[u]
+                const labels = QUADRANT_WHEEL_LABELS[u]
+                const colors = QUADRANT_WHEEL_COLORS[u]
+                const icon = QUADRANT_ICONS[u]
+                const isCompleted = state.status === 'completed'
+                const hasQuestions = QUADRANT_QUESTION_IDS[u].length > 0
+                const isDisabled = isCompleted || !hasQuestions
 
-      {/* Universe cards */}
-      {progress.profilCompleted && (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {ALL_QUADRANTS.map((u, idx) => {
-              const state = progress.quadrantStates[u]
-              const labels = QUADRANT_WHEEL_LABELS[u]
-              const colors = QUADRANT_WHEEL_COLORS[u]
-              const icon = QUADRANT_ICONS[u]
-              const isCompleted = state.status === 'completed'
-              const hasQuestions = QUADRANT_QUESTION_IDS[u].length > 0
-              const isDisabled = isCompleted || !hasQuestions
-
-              return (
-                <button
-                  key={u}
-                  onClick={() => handleQuadrantClick(u)}
-                  disabled={isDisabled}
-                  style={{ animation: `bal-fade-in 500ms cubic-bezier(0.25,0.8,0.5,1) both`, animationDelay: `${idx * 100}ms` }}
-                  className={`p-5 rounded-xl text-left transition-all duration-300 ${
-                    !hasQuestions
-                      ? 'bg-grey-50 shadow-card cursor-default opacity-60'
-                      : isCompleted
-                        ? 'bg-white shadow-card cursor-default'
-                        : 'bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: isCompleted && state.needLevel ? `${getNeedColor(state.needLevel)}15` : `${colors.base}10` }}
-                    >
-                      <Icon name={icon} size={22} className={isCompleted || !hasQuestions ? 'text-grey-400' : ''} style={!isCompleted && hasQuestions ? { color: colors.base } : undefined} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className={`text-sm font-bold ${hasQuestions ? 'text-primary-700' : 'text-grey-300'}`}>
-                          {labels.lines[0]} {labels.lines[1]}
-                        </h3>
-                        {isCompleted && state.needLevel && (
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getBadgeClass(state.needLevel)}`}>
-                            {NEED_BADGE_LABELS[state.needLevel]}
-                          </span>
-                        )}
-                        {!hasQuestions && (
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-grey-100 text-grey-300">
-                            Bientôt
-                          </span>
-                        )}
+                return (
+                  <button
+                    key={u}
+                    onClick={() => handleQuadrantClick(u)}
+                    disabled={isDisabled}
+                    style={{ animation: `bal-fade-in 500ms cubic-bezier(0.25,0.8,0.5,1) both`, animationDelay: `${idx * 80}ms` }}
+                    className={`p-4 rounded-xl text-left transition-all duration-300 ${
+                      !hasQuestions
+                        ? 'bg-grey-50 shadow-card cursor-default opacity-60'
+                        : isCompleted
+                          ? 'bg-white shadow-card cursor-default'
+                          : 'bg-white shadow-card hover:shadow-card-hover hover:-translate-y-0.5 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: isCompleted && state.needLevel ? `${getNeedColor(state.needLevel)}15` : `${colors.base}10` }}
+                      >
+                        <Icon name={icon} size={20} className={isCompleted || !hasQuestions ? 'text-grey-400' : ''} style={!isCompleted && hasQuestions ? { color: colors.base } : undefined} />
                       </div>
-                      <p className="text-xs text-grey-300 mt-0.5">
-                        {!hasQuestions ? 'Ce domaine sera bientôt disponible' : isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} - Cliquez pour commencer`}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className={`text-sm font-bold ${hasQuestions ? 'text-primary-700' : 'text-grey-300'}`}>
+                            {labels.lines[0]} {labels.lines[1]}
+                          </h3>
+                          {isCompleted && state.needLevel && (
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getBadgeClass(state.needLevel)}`}>
+                              {NEED_BADGE_LABELS[state.needLevel]}
+                            </span>
+                          )}
+                          {!hasQuestions && (
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-grey-100 text-grey-300">
+                              Bientôt
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-grey-300 mt-0.5">
+                          {!hasQuestions ? 'Bientôt disponible' : isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} — Cliquez pour commencer`}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+                  </button>
+                )
+              })}
 
-          {/* Finish diagnostic CTA */}
-          {progress.allCompleted && (
-            <div className="text-center mb-8">
-              {finishError && (
-                <div className="mb-4 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
-                  <p className="text-sm text-danger">{finishError}</p>
+              {/* Finish diagnostic CTA */}
+              {progress.allCompleted && (
+                <div className="text-center mt-2">
+                  {finishError && (
+                    <div className="mb-3 p-3 bg-danger-light rounded-xl ring-1 ring-danger/10">
+                      <p className="text-sm text-danger">{finishError}</p>
+                    </div>
+                  )}
+                  <Button onClick={handleFinishDiagnostic} size="lg" className="w-full" disabled={isFinishing}>
+                    {isFinishing ? 'Calcul en cours...' : 'Voir mon diagnostic complet'}
+                  </Button>
                 </div>
               )}
-              <Button onClick={handleFinishDiagnostic} size="lg" disabled={isFinishing}>
-                {isFinishing ? 'Calcul en cours...' : 'Voir mon diagnostic complet'}
-              </Button>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
 
       {/* Past diagnostics */}
       <DiagnosticHistory diagnostics={diagnostics} error={historyError} />

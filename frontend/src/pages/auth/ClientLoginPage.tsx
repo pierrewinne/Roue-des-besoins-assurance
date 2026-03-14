@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { supabase } from '../../lib/supabase.ts'
 import Button from '../../components/ui/Button.tsx'
 import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
@@ -8,6 +9,8 @@ import BaloiseLogo from '../../components/ui/BaloiseLogo.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 
 const isDev = import.meta.env.DEV
+const DEV_EMAIL = import.meta.env.VITE_DEV_EMAIL || ''
+const DEV_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || ''
 
 export default function ClientLoginPage() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
@@ -62,6 +65,25 @@ export default function ClientLoginPage() {
     }
   }
 
+  async function handleDevLogin() {
+    if (!DEV_EMAIL || !DEV_PASSWORD) {
+      setError('Variables VITE_DEV_EMAIL / VITE_DEV_PASSWORD absentes. Redémarrez le serveur Vite après les avoir ajoutées au .env.')
+      return
+    }
+    setError('')
+    setIsSubmitting(true)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: DEV_EMAIL, password: DEV_PASSWORD })
+      if (error) {
+        setError(`Erreur démo : ${error.message}`)
+      }
+    } catch (err) {
+      setError(`Erreur démo : ${err instanceof Error ? err.message : 'Connexion échouée'}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const isConfirmation = signupPending || magicLinkSent
 
   return (
@@ -76,7 +98,7 @@ export default function ClientLoginPage() {
           <div className="flex items-center justify-center mb-14">
             <BaloiseLogo variant="dark" height={28} />
           </div>
-          <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" showProducts={false} />
+          <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" />
           <div className="text-center">
             <h2 className="text-xl font-bold text-white mb-3 leading-snug">
               Évaluez et optimisez votre
@@ -120,7 +142,7 @@ export default function ClientLoginPage() {
             <div className="flex items-center justify-center mb-6">
               <BaloiseLogo variant="dark" height={22} />
             </div>
-            <NeedsWheel className="w-48 mx-auto mb-5" showProducts={false} />
+            <NeedsWheel className="w-48 mx-auto mb-5" />
             <p className="text-primary-200 text-xs">Diagnostic assurance personnalisé</p>
           </div>
         )}
@@ -166,6 +188,17 @@ export default function ClientLoginPage() {
               </div>
             ) : (
               <>
+                {isDev && (
+                  <button
+                    type="button"
+                    onClick={handleDevLogin}
+                    disabled={isSubmitting}
+                    className="w-full mb-6 py-3 rounded-lg bg-amber-50 ring-1 ring-amber-200 text-amber-700 text-sm font-bold hover:bg-amber-100 transition-colors disabled:opacity-50"
+                  >
+                    {DEV_EMAIL ? `Accès démo → ${DEV_EMAIL}` : '[DEV] Vars .env manquantes — redémarrez Vite'}
+                  </button>
+                )}
+
                 <div className="mb-8">
                   <h2 className="text-xl font-bold text-primary-700 mb-1.5">
                     {authMode === 'signup' ? 'Créez votre compte' : 'Accédez à votre espace'}

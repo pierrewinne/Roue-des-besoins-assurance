@@ -316,19 +316,7 @@ export const QUESTIONS: Question[] = [
       { value: 'combat_contact', label: 'Sports de combat / contact' },
     ],
   },
-  {
-    id: 'has_rc_vie_privee',
-    quadrant: 'personnes',
-    label: 'Disposez-vous d\'une assurance responsabilité civile vie privée ?',
-    helpText: 'Elle couvre les dommages que vous pourriez causer involontairement à autrui dans votre vie quotidienne (hors véhicule).',
-    type: 'select',
-    required: true,
-    options: [
-      { value: 'yes', label: 'Oui' },
-      { value: 'no', label: 'Non' },
-      { value: 'unsure', label: 'Je ne sais pas' },
-    ],
-  },
+  // RC vie privée retirée — intégrée dans HOME
   {
     id: 'accident_coverage_existing',
     quadrant: 'personnes',
@@ -372,19 +360,14 @@ export const QUESTIONS: Question[] = [
   {
     id: 'vehicle_details',
     quadrant: 'biens',
-    label: 'Quel est votre véhicule principal ?',
+    label: 'Quel est l\'âge de votre véhicule principal ?',
     type: 'select',
     required: true,
     dependsOn: { questionId: 'vehicle_count', operator: 'gt', value: 0 },
     options: [
-      { value: 'car_new', label: 'Voiture de moins de 3 ans' },
-      { value: 'car_recent', label: 'Voiture de 3 à 8 ans' },
-      { value: 'car_old', label: 'Voiture de plus de 8 ans' },
-      { value: 'suv_crossover', label: 'SUV / Crossover' },
-      { value: 'utility', label: 'Utilitaire' },
-      { value: 'moto', label: 'Moto' },
-      { value: 'scooter', label: 'Scooter' },
-      { value: 'electric', label: 'Véhicule électrique / hybride' },
+      { value: 'car_new', label: 'Moins de 3 ans' },
+      { value: 'car_recent', label: 'De 3 à 8 ans' },
+      { value: 'car_old', label: 'Plus de 8 ans' },
     ],
   },
   {
@@ -397,8 +380,7 @@ export const QUESTIONS: Question[] = [
     options: [
       { value: 'daily_commute', label: 'Trajets quotidiens (domicile-travail)' },
       { value: 'professional', label: 'Usage professionnel (rendez-vous, livraisons...)' },
-      { value: 'occasional', label: 'Loisirs / usage occasionnel' },
-      { value: 'mixed', label: 'Usage mixte (quotidien + loisirs)' },
+      { value: 'leisure', label: 'Loisirs exclusivement' },
     ],
   },
   {
@@ -411,8 +393,8 @@ export const QUESTIONS: Question[] = [
     options: [
       { value: 'none', label: 'Pas de véhicule assuré chez Baloise' },
       { value: 'rc_only', label: 'RC (responsabilité civile) uniquement' },
-      { value: 'mini_omnium', label: 'Mini-Omnium (vol, incendie, bris de glace...)' },
-      { value: 'full_omnium', label: 'Omnium complète' },
+      { value: 'mini_omnium', label: 'Dommages hors accidents (vol, incendie, bris de glace...)' },
+      { value: 'full_omnium', label: 'Tous dommages' },
       { value: 'unknown', label: 'Je ne sais pas exactement' },
     ],
   },
@@ -441,9 +423,8 @@ export const QUESTIONS: Question[] = [
     required: true,
     options: [
       { value: 'none', label: 'Non, aucune' },
-      { value: 'basic_other', label: 'Oui, chez un autre assureur (couverture basique)' },
-      { value: 'basic_baloise', label: 'Oui, chez Baloise (couverture basique)' },
-      { value: 'with_options', label: 'Oui, avec des options complémentaires' },
+      { value: 'basic', label: 'Oui, couverture risques importants' },
+      { value: 'with_options', label: 'Oui, couverture étendue' },
       { value: 'unknown', label: 'Je ne sais pas exactement' },
     ],
   },

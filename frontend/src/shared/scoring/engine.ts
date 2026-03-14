@@ -29,18 +29,16 @@ function computeBiensExposure(a: Answers): number {
   score += countScore * 0.20
   weights += 0.20
 
-  // Vehicle type / value at risk (weight 30)
+  // Vehicle age / value at risk (weight 30)
   const vehicleRisk: Record<string, number> = {
-    car_new: 90, electric: 95, suv_crossover: 85,
-    car_recent: 60, moto: 70, utility: 50,
-    car_old: 25, scooter: 30,
+    car_new: 90, car_recent: 60, car_old: 25,
   }
   score += (vehicleRisk[asString(a.vehicle_details)] ?? 50) * 0.30
   weights += 0.30
 
   // Vehicle usage intensity (weight 25)
   const usageRisk: Record<string, number> = {
-    daily_commute: 70, professional: 90, mixed: 75, occasional: 30,
+    daily_commute: 70, professional: 90, leisure: 30,
   }
   score += (usageRisk[asString(a.vehicle_usage)] ?? 50) * 0.25
   weights += 0.25
@@ -155,26 +153,21 @@ function computePersonnesCoverage(a: Answers): number {
   let score = 0
   let weights = 0
 
-  // Accident coverage (weight 35)
+  // Accident coverage (weight 42) — RC vie privée intégrée dans HOME
   const accidentCovScore: Record<string, number> = {
     none: 0, employer_only: 25, individual_basic: 55, individual_complete: 90,
   }
-  score += (accidentCovScore[asString(a.accident_coverage_existing)] ?? 0) * 0.35
-  weights += 0.35
+  score += (accidentCovScore[asString(a.accident_coverage_existing)] ?? 0) * 0.42
+  weights += 0.42
 
-  // RC Vie Privée (weight 20)
-  const rcScore: Record<string, number> = { yes: 90, no: 0, unsure: 0 }
-  score += (rcScore[asString(a.has_rc_vie_privee)] ?? 0) * 0.20
-  weights += 0.20
-
-  // Savings / financial protection (weight 30)
+  // Savings / financial protection (weight 38)
   const savingsItems = asStringArray(a.savings_protection)
   const hasSavings = !savingsItems.includes('none') && savingsItems.length > 0
   const savingsCov = hasSavings ? Math.min(savingsItems.length * 25, 100) : 0
-  score += savingsCov * 0.30
-  weights += 0.30
+  score += savingsCov * 0.38
+  weights += 0.38
 
-  // Income protection implicit (weight 15)
+  // Income protection implicit (weight 20)
   let incomeCov = 10
   const proStatus = asString(a.professional_status)
   if (proStatus === 'civil_servant') incomeCov = 50
@@ -182,8 +175,8 @@ function computePersonnesCoverage(a: Answers): number {
   const accCov = asString(a.accident_coverage_existing)
   if (accCov === 'individual_complete') incomeCov += 30
   else if (accCov === 'individual_basic') incomeCov += 15
-  score += Math.min(incomeCov, 100) * 0.15
-  weights += 0.15
+  score += Math.min(incomeCov, 100) * 0.20
+  weights += 0.20
 
   return weights > 0 ? Math.round(score / weights) : 0
 }
@@ -451,8 +444,8 @@ function computeDriveOptions(a: Answers): OptionScore[] {
   const details = asString(a.vehicle_details)
   const cov = asString(a.vehicle_coverage_existing)
 
-  if (['car_new', 'electric', 'suv_crossover'].includes(details) && cov !== 'full_omnium') {
-    options.push({ optionId: 'drive_dommages_materiels', optionLabel: 'Omnium', relevance: 90, triggerQuestions: ['vehicle_details', 'vehicle_coverage_existing'] })
+  if (details === 'car_new' && cov !== 'full_omnium') {
+    options.push({ optionId: 'drive_dommages_materiels', optionLabel: 'Tous dommages', relevance: 90, triggerQuestions: ['vehicle_details', 'vehicle_coverage_existing'] })
   }
   if (interests.includes('new_vehicle_value')) {
     options.push({ optionId: 'drive_pack_indemnisation', optionLabel: 'Pack Indemnisation', relevance: 85, triggerQuestions: ['vehicle_options_interest'] })

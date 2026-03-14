@@ -42,6 +42,12 @@ export default function ResultsPage() {
     load()
   }, [diagnosticId, user])
 
+  // All hooks must be called before any early return
+  const { segmentStates, completedCount: wheelCompletedCount } = useMemo(
+    () => diagnostic ? buildSegmentStates(diagnostic) : { segmentStates: [], completedCount: 0 },
+    [diagnostic],
+  )
+
   if (loading) {
     return <Spinner />
   }
@@ -80,9 +86,6 @@ export default function ResultsPage() {
   const scoreBg = diagnostic.globalScore <= 25 ? 'bg-success-light ring-success/10' :
                   diagnostic.globalScore <= 50 ? 'bg-warning-light ring-warning/10' :
                   'bg-danger-light ring-danger/10'
-
-  // Build NeedsWheel segment states from diagnostic scores (QW-02)
-  const { segmentStates, completedCount: wheelCompletedCount } = useMemo(() => buildSegmentStates(diagnostic), [diagnostic])
 
   return (
     <div>

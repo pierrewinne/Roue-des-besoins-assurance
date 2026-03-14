@@ -284,7 +284,6 @@ export default function HomePage() {
                     className="relative z-10 w-full hero-wheel-float"
                     activeSegment={activeSegment}
                     onSegmentClick={handleSegmentClick}
-                    showProducts={false}
                   />
                 </div>
 

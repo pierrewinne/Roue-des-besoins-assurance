@@ -1113,30 +1113,24 @@ describe('home_09: sports equipment', () => {
   })
 })
 
-describe('home_10: RC Vie Privee', () => {
-  it('triggers when no RC + children', () => {
+describe('home_10: RC Vie Privee (intégrée HOME)', () => {
+  it('triggers when children present', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'no', children_count: 2 })
+    const recs = generateRecommendations(scores, { children_count: 2 })
     const rec = recs.find(r => r.id === 'home_10_rc_vie_privee')
     expect(rec).toBeDefined()
-    expect(rec!.priority).toBe(4)
+    expect(rec!.priority).toBe(2)
   })
 
-  it('triggers when unsure RC + sports activities', () => {
+  it('triggers when sports activities', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'unsure', sports_activities: ['running_cycling'], children_count: 0 })
+    const recs = generateRecommendations(scores, { sports_activities: ['running_cycling'], children_count: 0 })
     expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeDefined()
-  })
-
-  it('does NOT trigger when has RC', () => {
-    const scores = makeScores()
-    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'yes', children_count: 3 })
-    expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeUndefined()
   })
 
   it('does NOT trigger with no children and sports=none', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { has_rc_vie_privee: 'no', children_count: 0, sports_activities: ['none'] })
+    const recs = generateRecommendations(scores, { children_count: 0, sports_activities: ['none'] })
     expect(recs.find(r => r.id === 'home_10_rc_vie_privee')).toBeUndefined()
   })
 })
@@ -1598,7 +1592,7 @@ describe('rules - non-regression: all four products', () => {
       housing_status: 'owner_with_mortgage', home_coverage_existing: 'none',
       home_specifics: ['garden', 'solar_panels'], valuable_possessions: ['jewelry'],
       valuable_total_estimate: '50k_plus', security_measures: ['none'],
-      home_contents_value: '100k_plus', has_rc_vie_privee: 'no',
+      home_contents_value: '100k_plus',
       savings_protection: ['none'], children_count: 2, age_range: '46_55',
       travel_frequency: 'frequent', travel_destinations: ['worldwide', 'adventure'],
       travel_budget: '5k_plus', travel_coverage_existing: 'credit_card',
@@ -1630,7 +1624,7 @@ describe('rules - non-regression: all four products', () => {
       home_coverage_existing: 'none', home_specifics: ['garden', 'pool', 'solar_panels', 'wine_cellar'],
       home_contents_value: '100k_plus', valuable_possessions: ['jewelry', 'art', 'multimedia', 'sustainable_mobility', 'sports_leisure', 'collections'],
       valuable_total_estimate: '50k_plus', security_measures: ['none'],
-      has_rc_vie_privee: 'no', savings_protection: ['none'],
+      savings_protection: ['none'],
       other_properties: 'rental',
       travel_frequency: 'frequent', travel_destinations: ['worldwide', 'adventure'],
       travel_budget: '5k_plus', travel_coverage_existing: 'credit_card',
