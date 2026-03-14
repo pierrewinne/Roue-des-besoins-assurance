@@ -1,14 +1,15 @@
 /**
- * Scene 2: Wheel Build (3-10s / frames 90-300)
- * Wheel constructs from center outward — dividers, inner ring CW, outer ring CCW,
- * labels staggered fade-in, icons scale-up staggered.
+ * Act 2: Wheel Build (5-12s / 210 frames)
+ * Wheel constructs from center outward with micro-rotation on arcs,
+ * labels overlapping with arc construction, icons staggered.
  */
-import { useCurrentFrame } from 'remotion'
-import { NAVY, WHEEL } from '../constants'
+import { useCurrentFrame, interpolate, Easing } from 'remotion'
+import { NAVY } from '../constants'
 import { fadeIn, arcDraw, scaleIn } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 
-const STAGGER = 12 // frames between each quadrant
+const BALOISE_EASE = Easing.bezier(0.25, 0.8, 0.5, 1)
+const STAGGER = 15 // frames between each quadrant
 
 export function WheelBuild() {
   const frame = useCurrentFrame()
@@ -16,38 +17,49 @@ export function WheelBuild() {
   // Center appears first (0-20 relative)
   const centerOpacity = fadeIn(frame, 0, 20)
 
-  // Quadrant arcs build sequentially (20-120 relative)
+  // Quadrant arcs build sequentially (15-90 relative) — order: biens→personnes→projets→futur
   const quadrantProgress = [0, 1, 2, 3].map(i =>
-    arcDraw(frame, 20 + i * STAGGER, 35)
+    arcDraw(frame, 15 + i * STAGGER, 35)
   )
 
-  // Labels fade in after arcs are mostly drawn (80-140 relative)
-  const labelOpacity = [0, 1, 2, 3].map(i =>
-    fadeIn(frame, 80 + i * STAGGER, 20)
-  )
-
-  // Icons scale up after labels (100-170 relative)
-  const iconOpacity = [0, 1, 2, 3].map(i =>
-    fadeIn(frame, 100 + i * STAGGER, 18)
-  )
-
-  // Glow builds up gently
-  const glowOpacity = [0, 1, 2, 3].map(i => {
-    const p = quadrantProgress[i]
-    return p > 0.5 ? 0.3 * fadeIn(frame, 50 + i * STAGGER, 30) : 0
+  // Micro-rotation: each arc rotates from -8° to 0° during its build
+  const quadrantRotation = [0, 1, 2, 3].map(i => {
+    const progress = quadrantProgress[i]
+    return interpolate(progress, [0, 1], [-8, 0], {
+      extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    })
   })
 
-  // Overall scale: slight grow from 0.92 to 1
-  const overallScale = 0.92 + centerOpacity * 0.08
+  // Labels overlap with arcs — start 10 frames AFTER each quadrant's arc start
+  const labelOpacity = [0, 1, 2, 3].map(i =>
+    fadeIn(frame, 25 + i * STAGGER, 18)
+  )
+
+  // Icons scale up after labels (90-160 relative)
+  const iconOpacity = [0, 1, 2, 3].map(i =>
+    fadeIn(frame, 90 + i * STAGGER, 18)
+  )
+
+  // Glow builds up with arcs
+  const glowOpacity = [0, 1, 2, 3].map(i => {
+    const p = quadrantProgress[i]
+    return p > 0.3 ? 0.45 * fadeIn(frame, 30 + i * STAGGER, 30) : 0
+  })
+
+  // Overall scale: slight grow from 0.92 to 1 with overshoot
+  const overallScale = interpolate(frame, [0, 25], [0.88, 1], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.back(1.03)),
+  })
 
   return (
     <div style={{
       width: '100%', height: '100%',
-      backgroundColor: NAVY,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <WheelSVG
         quadrantProgress={quadrantProgress}
+        quadrantRotation={quadrantRotation}
         opacity={1}
         scale={overallScale}
         centerText="VOUS"

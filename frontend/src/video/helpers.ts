@@ -3,17 +3,18 @@ import { WHEEL } from './constants'
 
 const { CX, CY } = WHEEL
 
-// Hoisted easing functions — avoid per-call closure allocation
-const EASE_OUT_CUBIC = Easing.out(Easing.cubic)
-const EASE_IN_CUBIC = Easing.in(Easing.cubic)
+// Baloise official easing curve
+const BALOISE_EASE = Easing.bezier(0.25, 0.8, 0.5, 1)
+const BALOISE_EASE_IN = Easing.bezier(0.5, 0, 0.75, 0.2)
 const EASE_OUT_BACK = Easing.out(Easing.back(1.05))
+const EASE_OUT_EXPO = Easing.bezier(0.16, 1, 0.3, 1)
 
 /** Fade in opacity over a frame range */
 export function fadeIn(frame: number, start: number, duration = 20): number {
   return interpolate(frame, [start, start + duration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EASE_OUT_CUBIC,
+    easing: BALOISE_EASE,
   })
 }
 
@@ -22,7 +23,7 @@ export function fadeOut(frame: number, start: number, duration = 15): number {
   return interpolate(frame, [start, start + duration], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EASE_IN_CUBIC,
+    easing: BALOISE_EASE_IN,
   })
 }
 
@@ -31,7 +32,7 @@ export function slideUp(frame: number, start: number, distance = 30, duration = 
   return interpolate(frame, [start, start + duration], [distance, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EASE_OUT_CUBIC,
+    easing: BALOISE_EASE,
   })
 }
 
@@ -49,13 +50,22 @@ export function arcDraw(frame: number, start: number, duration = 25): number {
   return interpolate(frame, [start, start + duration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EASE_OUT_CUBIC,
+    easing: BALOISE_EASE,
   })
 }
 
 /** Subtle breathing pulse */
 export function pulse(frame: number, speed = 0.02, amount = 0.005): number {
   return 1 + Math.sin(frame * speed * Math.PI * 2) * amount
+}
+
+/** Expo ease-out interpolation (punchy) */
+export function expoOut(frame: number, start: number, duration: number, from: number, to: number): number {
+  return interpolate(frame, [start, start + duration], [from, to], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EASE_OUT_EXPO,
+  })
 }
 
 // ─── SVG geometry helpers ───────────────────────────────────

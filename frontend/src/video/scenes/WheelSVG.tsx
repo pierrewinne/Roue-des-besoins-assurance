@@ -43,6 +43,8 @@ interface WheelProps {
   labelOpacity?: number[]
   /** Glow pulse opacity (0-1) per quadrant */
   glowOpacity?: number[]
+  /** Per-quadrant rotation in degrees (for build animation) */
+  quadrantRotation?: number[]
 }
 
 export function WheelSVG({
@@ -56,6 +58,7 @@ export function WheelSVG({
   iconOpacity = [1, 1, 1, 1],
   labelOpacity = [1, 1, 1, 1],
   glowOpacity = [0.3, 0.3, 0.3, 0.3],
+  quadrantRotation = [0, 0, 0, 0],
 }: WheelProps) {
   return (
     <svg
@@ -90,7 +93,7 @@ export function WheelSVG({
         {/* Glow filters */}
         {QUADRANT_SEGMENTS.map((seg, i) => (
           <filter key={`glow-${i}`} id={`glow-${i}`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="10" result="blur" />
+            <feGaussianBlur stdDeviation="16" result="blur" />
             <feFlood floodColor={seg.glowColor} floodOpacity="0.5" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
@@ -108,7 +111,7 @@ export function WheelSVG({
 
       {/* Outer decorative ring (dashed) */}
       <circle cx={CX} cy={CY} r={OUTER_R2 + 14} fill="none"
-        stroke="rgba(255,255,255,0.05)" strokeWidth={0.5} strokeDasharray="3 7" />
+        stroke="rgba(255,255,255,0.08)" strokeWidth={0.5} strokeDasharray="3 7" />
 
       {/* Quadrant arcs */}
       {QUADRANT_SEGMENTS.map((seg, i) => {
@@ -119,7 +122,7 @@ export function WheelSVG({
         const a2 = a1 + 90 * progress
 
         return (
-          <g key={seg.key} opacity={progress}>
+          <g key={seg.key} opacity={progress} transform={`rotate(${quadrantRotation[i]}, ${CX}, ${CY})`}>
             {/* Glow */}
             <path
               d={arcSectorPath(INNER_R1, OUTER_R2, a1, a2)}
@@ -199,7 +202,7 @@ export function WheelSVG({
 
       {/* Inner decorative ring */}
       <circle cx={CX} cy={CY} r={INNER_R1 - 4} fill="none"
-        stroke="rgba(255,255,255,0.06)" strokeWidth={0.5} />
+        stroke="rgba(255,255,255,0.10)" strokeWidth={0.5} />
 
       {/* Center circle */}
       <circle cx={CX} cy={CY} r={CENTER_R} fill="url(#center-grad)"
@@ -212,9 +215,9 @@ export function WheelSVG({
       />
 
       {/* Center text */}
-      <text x={CX} y={CY + 24} textAnchor="middle" fill={WHITE}
-        fontSize={14} fontWeight={700} fontFamily={FONT_HEADLINE}
-        letterSpacing="0.14em" opacity={0.9}>
+      <text x={CX} y={CY + 26} textAnchor="middle" fill={WHITE}
+        fontSize={18} fontWeight={700} fontFamily={FONT_HEADLINE}
+        letterSpacing="0.14em" opacity={0.95}>
         {centerText}
       </text>
     </svg>

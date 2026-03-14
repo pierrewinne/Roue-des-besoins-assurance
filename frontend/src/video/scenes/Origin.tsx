@@ -1,59 +1,108 @@
 /**
- * Scene 1: Origin (0-3s / frames 0-90)
- * White dot → "VOUS" text morph, navy background
+ * Act 1: L'angle mort (0-5s / 150 frames)
+ * Staccato text — certainties then doubts — flash transition to wheel.
  */
-import { useCurrentFrame } from 'remotion'
-import { NAVY, WHITE, FONT_HEADLINE, WHEEL } from '../constants'
-import { fadeIn, scaleIn } from '../helpers'
+import { useCurrentFrame, interpolate, Easing } from 'remotion'
+import { NAVY, WHITE, FONT_HEADLINE } from '../constants'
+import { fadeIn, fadeOut } from '../helpers'
 
-const { CX, CY, VIEWBOX } = WHEEL
+const BALOISE_EASE = Easing.bezier(0.25, 0.8, 0.5, 1)
+
+const PHRASES: { text: string; start: number; isQuestion: boolean }[] = [
+  { text: 'Votre maison est assurée.', start: 8, isQuestion: false },
+  { text: 'Votre voiture aussi.', start: 33, isQuestion: false },
+  { text: 'Mais vos projets ?', start: 58, isQuestion: true },
+  { text: 'Votre famille ?', start: 78, isQuestion: true },
+  { text: 'Votre avenir ?', start: 96, isQuestion: true },
+]
 
 export function Origin() {
   const frame = useCurrentFrame()
 
-  // Dot appears and grows (0-30)
-  const dotScale = scaleIn(frame, 0, 30)
-  const dotR = 4 + dotScale * 8
+  // Flash blanc (128-132)
+  const flashOpacity = interpolate(frame, [126, 128, 131, 134], [0, 0.7, 0.7, 0], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+  })
 
-  // "VOUS" fades in and scales (30-70)
-  const textOpacity = fadeIn(frame, 30, 25)
-  const textScale = scaleIn(frame, 30, 25)
-
-  // Subtle radial glow
-  const glowOpacity = fadeIn(frame, 15, 40) * 0.3
+  // Expanding ring after flash (130-150)
+  const ringScale = interpolate(frame, [130, 150], [0, 3.5], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    easing: BALOISE_EASE,
+  })
+  const ringOpacity = interpolate(frame, [130, 150], [0.5, 0], {
+    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+  })
 
   return (
     <div style={{
       width: '100%', height: '100%',
-      backgroundColor: NAVY,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', overflow: 'hidden',
     }}>
-      <svg viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} width={VIEWBOX * 2} height={VIEWBOX * 2}>
-        {/* Radial glow behind dot */}
-        <radialGradient id="origin-glow" cx="50%" cy="50%">
-          <stop offset="0%" stopColor={WHITE} stopOpacity={0.15} />
-          <stop offset="100%" stopColor={WHITE} stopOpacity={0} />
-        </radialGradient>
-        <circle cx={CX} cy={CY} r={80} fill="url(#origin-glow)" opacity={glowOpacity} />
+      {/* Phrases — staccato */}
+      {PHRASES.map((phrase, i) => {
+        const nextStart = PHRASES[i + 1]?.start ?? 126
+        const fadeInDur = 10
+        const fadeOutStart = nextStart - 8
+        const fadeOutDur = 8
 
-        {/* Center dot */}
-        <circle cx={CX} cy={CY} r={dotR} fill={WHITE} opacity={dotScale} />
+        const inOp = fadeIn(frame, phrase.start, fadeInDur)
+        const outOp = i < PHRASES.length - 1
+          ? fadeOut(frame, fadeOutStart, fadeOutDur)
+          : fadeOut(frame, 120, 8)
+        const opacity = inOp * outOp
 
-        {/* VOUS text */}
-        <text
-          x={CX} y={CY + 50}
-          textAnchor="middle"
-          fill={WHITE}
-          fontSize={28}
-          fontWeight={700}
-          fontFamily={FONT_HEADLINE}
-          letterSpacing="0.2em"
-          opacity={textOpacity}
-          style={{ transform: `scale(${textScale})`, transformOrigin: `${CX}px ${CY + 50}px` }}
-        >
-          VOUS
-        </text>
-      </svg>
+        const slideY = interpolate(frame, [phrase.start, phrase.start + fadeInDur], [24, 0], {
+          extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+          easing: BALOISE_EASE,
+        })
+
+        // Questions: slightly reduced max opacity + bigger font
+        const maxOpacity = phrase.isQuestion ? 0.8 : 1
+        const fontSize = phrase.isQuestion ? 48 : 44
+
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            transform: `translate(-50%, calc(-50% + ${slideY}px))`,
+            opacity: opacity * maxOpacity,
+            whiteSpace: 'nowrap',
+          }}>
+            <span style={{
+              color: WHITE,
+              fontSize,
+              fontFamily: FONT_HEADLINE,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+            }}>
+              {phrase.text}
+            </span>
+          </div>
+        )
+      })}
+
+      {/* Flash blanc */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundColor: WHITE,
+        opacity: flashOpacity,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Expanding ring — transition to wheel */}
+      {frame > 129 && (
+        <div style={{
+          position: 'absolute',
+          left: '50%', top: '50%',
+          transform: `translate(-50%, -50%) scale(${ringScale})`,
+          width: 180, height: 180,
+          borderRadius: '50%',
+          border: `1.5px solid rgba(255,255,255,0.5)`,
+          opacity: ringOpacity,
+          pointerEvents: 'none',
+        }} />
+      )}
     </div>
   )
 }
