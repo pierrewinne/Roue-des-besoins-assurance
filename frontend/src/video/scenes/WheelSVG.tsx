@@ -2,11 +2,25 @@
  * Shared wheel SVG — exact replica of app NeedsWheel.
  * Used across multiple scenes with different animation states.
  */
-import { Img, staticFile } from 'remotion'
-import { WHEEL, QUADRANT_SEGMENTS, NAVY, NAVY_MID, NAVY_DARK, WHITE } from '../constants'
+import { staticFile } from 'remotion'
+import { WHEEL, QUADRANT_SEGMENTS, FONT_HEADLINE, NAVY, NAVY_MID, NAVY_DARK, WHITE } from '../constants'
 import { polarXY, arcSectorPath, gradientCoords } from '../helpers'
 
-const { VIEWBOX, CX, CY, CENTER_R, INNER_R1, INNER_R2, RING_GAP, OUTER_R1, OUTER_R2, HALF } = WHEEL
+const { VIEWBOX, CX, CY, CENTER_R, INNER_R1, INNER_R2, OUTER_R1, OUTER_R2, HALF } = WHEEL
+
+// Precompute gradient coords (constant per quadrant)
+const GRADIENT_COORDS = QUADRANT_SEGMENTS.map(seg => gradientCoords(seg.angle))
+
+// Precompute label positions (constant per quadrant)
+const LABEL_R = (INNER_R1 + INNER_R2) / 2
+const LABEL_POSITIONS = QUADRANT_SEGMENTS.map(seg => polarXY(LABEL_R, seg.angle))
+
+// Precompute divider line endpoints (constant)
+const DIVIDER_LINES = [0, 90, 180, 270].map(angle => ({
+  angle,
+  inner: polarXY(INNER_R1, angle),
+  outer: polarXY(OUTER_R2, angle),
+}))
 
 interface WheelProps {
   /** Per-quadrant progress 0-1 (for ring fill animation) */
@@ -53,7 +67,7 @@ export function WheelSVG({
       <defs>
         {/* Gradients for each quadrant */}
         {QUADRANT_SEGMENTS.map((seg, i) => {
-          const gc = gradientCoords(seg.angle)
+          const gc = GRADIENT_COORDS[i]
           return (
             <g key={`grad-${i}`}>
               <linearGradient id={`outer-${i}`} x1={gc.x1} y1={gc.y1} x2={gc.x2} y2={gc.y2}>
@@ -102,33 +116,32 @@ export function WheelSVG({
         if (progress <= 0) return null
 
         const a1 = seg.angle - HALF
-        const a2Outer = a1 + 90 * progress
-        const a2Inner = a1 + 90 * progress
+        const a2 = a1 + 90 * progress
 
         return (
           <g key={seg.key} opacity={progress}>
             {/* Glow */}
             <path
-              d={arcSectorPath(INNER_R1, OUTER_R2, a1, a2Outer)}
+              d={arcSectorPath(INNER_R1, OUTER_R2, a1, a2)}
               fill={seg.glowColor}
               filter={`url(#glow-${i})`}
               opacity={glowOpacity[i]}
             />
             {/* Outer ring */}
             <path
-              d={arcSectorPath(OUTER_R1, OUTER_R2, a1, a2Outer)}
+              d={arcSectorPath(OUTER_R1, OUTER_R2, a1, a2)}
               fill={`url(#outer-${i})`}
               opacity={0.95}
             />
             {/* Inner ring */}
             <path
-              d={arcSectorPath(INNER_R1, INNER_R2, a1, a2Inner)}
+              d={arcSectorPath(INNER_R1, INNER_R2, a1, a2)}
               fill={`url(#inner-${i})`}
               opacity={0.8}
             />
             {/* Highlight overlay */}
             <path
-              d={arcSectorPath(INNER_R1, OUTER_R2, a1, a2Outer)}
+              d={arcSectorPath(INNER_R1, OUTER_R2, a1, a2)}
               fill="url(#highlight)"
             />
 
@@ -142,25 +155,20 @@ export function WheelSVG({
             )}
 
             {/* Labels */}
-            {progress > 0.8 && (() => {
-              const midAngle = seg.angle
-              const labelR = (INNER_R1 + INNER_R2) / 2
-              const [lx, ly] = polarXY(labelR, midAngle)
-              return (
-                <g opacity={labelOpacity[i]}>
-                  <text x={lx} y={ly - 6} textAnchor="middle" fill={WHITE}
-                    fontSize={9.5} fontWeight={700} fontFamily="'BaloiseCreateHeadline','Inter',sans-serif"
-                    letterSpacing="0.06em">
-                    {seg.lines[0]}
-                  </text>
-                  <text x={lx} y={ly + 8} textAnchor="middle" fill={WHITE}
-                    fontSize={10} fontWeight={700} fontFamily="'BaloiseCreateHeadline','Inter',sans-serif"
-                    letterSpacing="0.06em">
-                    {seg.lines[1]}
-                  </text>
-                </g>
-              )
-            })()}
+            {progress > 0.8 && (
+              <g opacity={labelOpacity[i]}>
+                <text x={LABEL_POSITIONS[i][0]} y={LABEL_POSITIONS[i][1] - 6} textAnchor="middle" fill={WHITE}
+                  fontSize={9.5} fontWeight={700} fontFamily={FONT_HEADLINE}
+                  letterSpacing="0.06em">
+                  {seg.lines[0]}
+                </text>
+                <text x={LABEL_POSITIONS[i][0]} y={LABEL_POSITIONS[i][1] + 8} textAnchor="middle" fill={WHITE}
+                  fontSize={10} fontWeight={700} fontFamily={FONT_HEADLINE}
+                  letterSpacing="0.06em">
+                  {seg.lines[1]}
+                </text>
+              </g>
+            )}
 
             {/* Icons */}
             {showIcons && progress > 0.9 && seg.icons.map((icon, j) => {
@@ -184,14 +192,10 @@ export function WheelSVG({
       })}
 
       {/* Divider lines */}
-      {[0, 90, 180, 270].map((angle) => {
-        const [ix, iy] = polarXY(INNER_R1, angle)
-        const [ox, oy] = polarXY(OUTER_R2, angle)
-        return (
-          <line key={angle} x1={ix} y1={iy} x2={ox} y2={oy}
-            stroke="rgba(0,3,30,0.95)" strokeWidth={4} />
-        )
-      })}
+      {DIVIDER_LINES.map(({ angle, inner: [ix, iy], outer: [ox, oy] }) => (
+        <line key={angle} x1={ix} y1={iy} x2={ox} y2={oy}
+          stroke="rgba(0,3,30,0.95)" strokeWidth={4} />
+      ))}
 
       {/* Inner decorative ring */}
       <circle cx={CX} cy={CY} r={INNER_R1 - 4} fill="none"
@@ -209,7 +213,7 @@ export function WheelSVG({
 
       {/* Center text */}
       <text x={CX} y={CY + 24} textAnchor="middle" fill={WHITE}
-        fontSize={14} fontWeight={700} fontFamily="'BaloiseCreateHeadline','Inter',sans-serif"
+        fontSize={14} fontWeight={700} fontFamily={FONT_HEADLINE}
         letterSpacing="0.14em" opacity={0.9}>
         {centerText}
       </text>

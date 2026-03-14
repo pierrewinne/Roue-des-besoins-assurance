@@ -1,14 +1,19 @@
-import { interpolate, Easing, spring } from 'remotion'
+import { interpolate, Easing } from 'remotion'
 import { WHEEL } from './constants'
 
 const { CX, CY } = WHEEL
+
+// Hoisted easing functions — avoid per-call closure allocation
+const EASE_OUT_CUBIC = Easing.out(Easing.cubic)
+const EASE_IN_CUBIC = Easing.in(Easing.cubic)
+const EASE_OUT_BACK = Easing.out(Easing.back(1.05))
 
 /** Fade in opacity over a frame range */
 export function fadeIn(frame: number, start: number, duration = 20): number {
   return interpolate(frame, [start, start + duration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT_CUBIC,
   })
 }
 
@@ -17,7 +22,7 @@ export function fadeOut(frame: number, start: number, duration = 15): number {
   return interpolate(frame, [start, start + duration], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.in(Easing.cubic),
+    easing: EASE_IN_CUBIC,
   })
 }
 
@@ -26,7 +31,7 @@ export function slideUp(frame: number, start: number, distance = 30, duration = 
   return interpolate(frame, [start, start + duration], [distance, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT_CUBIC,
   })
 }
 
@@ -35,7 +40,7 @@ export function scaleIn(frame: number, start: number, duration = 18): number {
   return interpolate(frame, [start, start + duration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.back(1.05)),
+    easing: EASE_OUT_BACK,
   })
 }
 
@@ -44,7 +49,7 @@ export function arcDraw(frame: number, start: number, duration = 25): number {
   return interpolate(frame, [start, start + duration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT_CUBIC,
   })
 }
 

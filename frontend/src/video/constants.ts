@@ -16,7 +16,7 @@ export const GREY_300 = '#b6b6b6'
 export const QUADRANT_SEGMENTS = [
   {
     key: 'biens' as const,
-    lines: ['Protection', 'des biens'] as [string, string],
+    lines: ['Protection', 'des biens'],
     angle: 315,
     outerGrad: ['#3D4691', '#6B78C4'],
     innerGrad: ['#4E5BA6', '#8890D0'],
@@ -30,7 +30,7 @@ export const QUADRANT_SEGMENTS = [
   },
   {
     key: 'personnes' as const,
-    lines: ['Protection', 'des personnes'] as [string, string],
+    lines: ['Protection', 'des personnes'],
     angle: 45,
     outerGrad: ['#1D4ED8', '#3B82F6'],
     innerGrad: ['#2563EB', '#60A5FA'],
@@ -43,7 +43,7 @@ export const QUADRANT_SEGMENTS = [
   },
   {
     key: 'projets' as const,
-    lines: ['Protection', 'des projets'] as [string, string],
+    lines: ['Protection', 'des projets'],
     angle: 225,
     outerGrad: ['#008A6E', '#2DD4AE'],
     innerGrad: ['#00b28f', '#4ECDB2'],
@@ -56,7 +56,7 @@ export const QUADRANT_SEGMENTS = [
   },
   {
     key: 'futur' as const,
-    lines: ['Protection', 'du futur'] as [string, string],
+    lines: ['Protection', 'du futur'],
     angle: 135,
     outerGrad: ['#7B3DA6', '#B86EE0'],
     innerGrad: ['#9f52cc', '#C084E4'],
@@ -90,6 +90,10 @@ export const WHEEL = {
   OUTER_R2: 228,
   HALF: 45,
 } as const
+
+// Demo diagnostic fill (shared between Diagnostic and Results scenes)
+export const DEMO_FILL_TARGETS = [0.78, 0.92, 0.45, 0.65] as const
+export const DEMO_FILL_COLORS = [SCORE_COLORS.moderate, SCORE_COLORS.high, SCORE_COLORS.low, SCORE_COLORS.moderate] as const
 
 // Font
 export const FONT_HEADLINE = "'BaloiseCreateHeadline','Inter',sans-serif"

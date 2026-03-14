@@ -4,7 +4,7 @@
  * HOME pulses as priority, typewriter CTA text.
  */
 import { useCurrentFrame, interpolate, Easing } from 'remotion'
-import { NAVY, NAVY_MID, WHITE, FONT_HEADLINE, FONT_BODY, SCORE_COLORS, WHEEL, QUADRANT_SEGMENTS } from '../constants'
+import { NAVY, WHITE, FONT_HEADLINE, FONT_BODY, SCORE_COLORS, QUADRANT_SEGMENTS, DEMO_FILL_TARGETS, DEMO_FILL_COLORS } from '../constants'
 import { fadeIn, scaleIn } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 
@@ -16,6 +16,7 @@ const PRODUCTS = [
 ]
 
 const CTA_TEXT = 'Un diagnostic complet en 5 minutes.'
+const EASE_OUT = Easing.out(Easing.cubic)
 
 export function Results() {
   const frame = useCurrentFrame()
@@ -23,16 +24,12 @@ export function Results() {
   // Wheel shrinks to top-left (0-30 relative)
   const wheelScale = interpolate(frame, [0, 30], [1, 0.38], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT,
   })
   const wheelY = interpolate(frame, [0, 30], [0, -260], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT,
   })
-
-  // Fill values (from diagnostic scene)
-  const fillProgress = [0.78, 0.92, 0.45, 0.65]
-  const fillColors = [SCORE_COLORS.moderate, SCORE_COLORS.high, SCORE_COLORS.low, SCORE_COLORS.moderate]
 
   // Product cards stagger in (30-120)
   const cards = PRODUCTS.map((p, i) => {
@@ -43,7 +40,7 @@ export function Results() {
     // Score bar fill
     const barFill = interpolate(frame, [cardStart + 10, cardStart + 40], [0, p.score / 100], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-      easing: Easing.out(Easing.cubic),
+      easing: EASE_OUT,
     })
 
     // Priority pulse for HOME
@@ -78,8 +75,8 @@ export function Results() {
         opacity: frame > 5 ? 1 : 0,
       }}>
         <WheelSVG
-          fillProgress={fillProgress}
-          fillColors={fillColors}
+          fillProgress={DEMO_FILL_TARGETS as unknown as number[]}
+          fillColors={DEMO_FILL_COLORS as unknown as string[]}
           centerText="VOUS"
           scale={0.5}
         />

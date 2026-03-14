@@ -4,7 +4,7 @@
  * then wheel returns to center and fills asymmetrically with score colors.
  */
 import { useCurrentFrame, interpolate, Easing } from 'remotion'
-import { NAVY, WHITE, FONT_HEADLINE, FONT_BODY, SCORE_COLORS, WHEEL } from '../constants'
+import { NAVY, WHITE, FONT_HEADLINE, FONT_BODY, DEMO_FILL_TARGETS, DEMO_FILL_COLORS } from '../constants'
 import { fadeIn, fadeOut } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 
@@ -14,9 +14,7 @@ const QUESTIONS = [
   { q: 'Votre véhicule a-t-il moins de 3 ans ?', a: 'Non' },
 ]
 
-// Diagnostic fill targets (visual demo — asymmetric)
-const FILL_TARGETS = [0.78, 0.92, 0.45, 0.65]
-const FILL_COLORS = [SCORE_COLORS.moderate, SCORE_COLORS.high, SCORE_COLORS.low, SCORE_COLORS.moderate]
+const EASE_OUT = Easing.out(Easing.cubic)
 
 export function Diagnostic() {
   const frame = useCurrentFrame()
@@ -24,27 +22,27 @@ export function Diagnostic() {
   // Phase 1 (0-160): Wheel moves left, questions appear
   const wheelX = interpolate(frame, [0, 40], [0, -320], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT,
   })
   const wheelScale = interpolate(frame, [0, 40], [1, 0.65], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT,
   })
 
   // Phase 2 (160-300): Wheel returns to center and fills
   const returnProgress = interpolate(frame, [160, 200], [0, 1], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: Easing.out(Easing.cubic),
+    easing: EASE_OUT,
   })
 
   const finalWheelX = frame < 160 ? wheelX : interpolate(returnProgress, [0, 1], [wheelX, 0])
   const finalWheelScale = frame < 160 ? wheelScale : interpolate(returnProgress, [0, 1], [wheelScale, 1])
 
   // Fill progress (200-280)
-  const fillProgress = FILL_TARGETS.map((target, i) =>
+  const fillProgress = DEMO_FILL_TARGETS.map((target, i) =>
     interpolate(frame, [200 + i * 12, 250 + i * 12], [0, target], {
       extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-      easing: Easing.out(Easing.cubic),
+      easing: EASE_OUT,
     })
   )
 
@@ -68,7 +66,7 @@ export function Diagnostic() {
       }}>
         <WheelSVG
           fillProgress={frame > 200 ? fillProgress : undefined}
-          fillColors={FILL_COLORS}
+          fillColors={DEMO_FILL_COLORS as unknown as string[]}
           centerText="VOUS"
         />
       </div>
@@ -95,7 +93,6 @@ export function Diagnostic() {
               borderRadius: 16,
               padding: '28px 32px',
               border: '1px solid rgba(255,255,255,0.1)',
-              backdropFilter: 'blur(10px)',
             }}>
               <div style={{
                 color: WHITE,

@@ -3,7 +3,7 @@
  * Logo text + "Roue des Besoins" + CTA pulsing, ghost wheel rotating in background.
  */
 import { useCurrentFrame } from 'remotion'
-import { NAVY, NAVY_MID, WHITE, FONT_HEADLINE, FONT_BODY, WHEEL } from '../constants'
+import { NAVY, WHITE, FONT_HEADLINE, FONT_BODY } from '../constants'
 import { fadeIn, scaleIn, pulse } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 
