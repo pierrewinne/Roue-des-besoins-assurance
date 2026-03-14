@@ -21,12 +21,8 @@ const EASE_OUT = Easing.out(Easing.cubic)
 export function Results() {
   const frame = useCurrentFrame()
 
-  // Wheel shrinks to top-left (0-30 relative)
-  const wheelScale = interpolate(frame, [0, 30], [1, 0.38], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-    easing: EASE_OUT,
-  })
-  const wheelY = interpolate(frame, [0, 30], [0, -260], {
+  // Wheel slides left and shrinks slightly (stays large and visible)
+  const wheelScale = interpolate(frame, [0, 30], [1, 0.82], {
     extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
     easing: EASE_OUT,
   })
@@ -65,31 +61,34 @@ export function Results() {
       display: 'flex', alignItems: 'center',
       position: 'relative',
     }}>
-      {/* Mini wheel — left side */}
+      {/* Two-column layout: wheel left, cards right */}
+      {/* Wheel — left column, large and centered */}
       <div style={{
-        position: 'absolute',
-        left: 60, top: '50%',
-        transform: `translateY(-50%) scale(${wheelScale})`,
-        transformOrigin: 'center',
-        opacity: frame > 5 ? 1 : 0,
+        width: '42%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <WheelSVG
-          fillProgress={DEMO_FILL_TARGETS as unknown as number[]}
-          fillColors={DEMO_FILL_COLORS as unknown as string[]}
-          centerText="VOUS"
-          scale={0.45}
-        />
+        <div style={{
+          transform: `scale(${wheelScale})`,
+          opacity: frame > 5 ? 1 : 0,
+        }}>
+          <WheelSVG
+            fillProgress={DEMO_FILL_TARGETS as unknown as number[]}
+            fillColors={DEMO_FILL_COLORS as unknown as string[]}
+            centerText="VOUS"
+            scale={0.52}
+          />
+        </div>
       </div>
 
-      {/* Product cards — right side, clear of wheel */}
+      {/* Product cards — right column, vertically centered */}
       <div style={{
-        position: 'absolute',
-        right: 80,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        display: 'flex',
-        gap: 20,
+        width: '58%', height: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
+        <div style={{
+          display: 'flex',
+          gap: 18,
+        }}>
         {cards.map((card, i) => (
           <div key={i} style={{
             width: 200,
@@ -167,6 +166,7 @@ export function Results() {
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       {/* CTA typewriter */}
