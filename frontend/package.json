@@ -11,6 +11,8 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@remotion/bundler": "^4.0.435",
+    "@remotion/cli": "^4.0.435",
     "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -19,6 +21,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^28.1.0",
+    "remotion": "^4.0.435",
     "tailwindcss": "^4.2.1",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
