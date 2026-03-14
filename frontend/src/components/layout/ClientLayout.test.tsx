@@ -34,14 +34,9 @@ function renderLayout(path = '/dashboard') {
 }
 
 describe('ClientLayout', () => {
-  it('renders the brand badge "RB"', () => {
+  it('renders the Baloise logo', () => {
     renderLayout()
-    expect(screen.getAllByText('RB').length).toBeGreaterThan(0)
-  })
-
-  it('renders the brand name', () => {
-    renderLayout()
-    expect(screen.getByText('Roue des Besoins')).toBeInTheDocument()
+    expect(screen.getAllByLabelText('Baloise').length).toBeGreaterThan(0)
   })
 
   it('renders the dashboard nav link', () => {
@@ -81,11 +76,6 @@ describe('ClientLayout', () => {
       screen.getByText('Déconnexion').click()
     })
     expect(screen.getByText('Impossible de se déconnecter. Veuillez réessayer.')).toBeInTheDocument()
-  })
-
-  it('renders footer with "Roue des Besoins Assurance"', () => {
-    renderLayout()
-    expect(screen.getByText('Roue des Besoins Assurance')).toBeInTheDocument()
   })
 
   it('renders footer with "Diagnostic personnalisé"', () => {

@@ -172,8 +172,6 @@ export const TRANSITION = {
   easing: 'cubic-bezier(0.25, 0.8, 0.5, 1)',
 } as const
 
-export const LOGO_GRADIENT = 'linear-gradient(135deg, #0014aa 0%, #000739 100%)'
-
 export const PAGE_TRANSITION_STYLE = { animation: 'bal-fade-in 400ms cubic-bezier(0.25,0.8,0.5,1) both' } as const
 
 export function getPriorityBarColor(filled: boolean, priority: number): string {

@@ -2,12 +2,15 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import type { IconName } from '../../components/ui/Icon.tsx'
+import BaloiseLogo from '../../components/ui/BaloiseLogo.tsx'
 import NeedsWheel, { WHEEL_SEGMENTS } from '../../components/landing/NeedsWheel.tsx'
 import { QUADRANT_WHEEL_COLORS, QUADRANT_PRODUCTS } from '../../lib/constants.ts'
 
 /* ─────────────────────────────────────────
    Universe detail data
    ───────────────────────────────────────── */
+// Order must match WHEEL_SEGMENTS: biens, personnes, projets, futur
 const universeDetails = [
   {
     key: 'biens',
@@ -28,15 +31,6 @@ const universeDetails = [
     covers: ['Accidents de la vie', 'Hospitalisation & soins', 'Assistance voyage 24/7', 'Protection juridique'],
   },
   {
-    key: 'futur',
-    label: 'Protection du futur',
-    product: QUADRANT_PRODUCTS.futur,
-    icon: 'gift' as const,
-    color: QUADRANT_WHEEL_COLORS.futur.dark,
-    desc: 'Épargne, retraite, prévoyance : préparez l\'avenir sereinement avec les solutions Baloise.',
-    covers: ['Épargne-pension (art. 111bis)', 'Assurance vie', 'Capital retraite', 'Prévoyance fiscale'],
-  },
-  {
     key: 'projets',
     label: 'Protection des projets',
     product: QUADRANT_PRODUCTS.projets,
@@ -44,6 +38,15 @@ const universeDetails = [
     color: QUADRANT_WHEEL_COLORS.projets.light,
     desc: 'Immobilier, investissements, nouveaux projets : accompagnez vos ambitions en toute sérénité.',
     covers: ['Acquisition immobilière', 'Solde restant dû', 'Projets d\'investissement', 'Épargne projet'],
+  },
+  {
+    key: 'futur',
+    label: 'Protection du futur',
+    product: QUADRANT_PRODUCTS.futur,
+    icon: 'gift' as const,
+    color: QUADRANT_WHEEL_COLORS.futur.dark,
+    desc: 'Épargne, retraite, prévoyance : préparez l\'avenir sereinement avec les solutions Baloise.',
+    covers: ['Épargne-pension (art. 111bis)', 'Assurance vie', 'Capital retraite', 'Prévoyance fiscale'],
   },
 ]
 
@@ -55,6 +58,67 @@ const steps = [
   { num: '02', icon: 'chart-pie' as const, title: 'Diagnostic automatique', desc: 'Analyse de vos besoins dans 4 univers.' },
   { num: '03', icon: 'shield-check' as const, title: 'Recommandations ciblées', desc: 'Plan d\'action priorisé et rapport PDF.' },
 ]
+
+/* ─────────────────────────────────────────
+   Detail card (shared between desktop & mobile)
+   ───────────────────────────────────────── */
+interface DetailCardProps {
+  icon: IconName
+  color: string
+  label: string
+  product: string
+  desc: string
+  covers: string[]
+  onClose: () => void
+  showCta?: boolean
+}
+
+function DetailCard({ icon, color, label, product, desc, covers, onClose, showCta }: DetailCardProps) {
+  return (
+    <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl ring-1 ring-white/[0.08] p-6">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center"
+            style={{ background: `${color}25` }}
+          >
+            <Icon name={icon} size={20} strokeWidth={1.5} style={{ color }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">{label}</h3>
+            <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: `${color}cc` }}>
+              {product}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)]"
+          aria-label="Fermer le panneau"
+        >
+          <Icon name="x" size={14} strokeWidth={2} />
+        </button>
+      </div>
+      <p className="text-sm text-white/70 leading-relaxed mb-4">{desc}</p>
+      <div className={`grid grid-cols-2 gap-2${showCta ? ' mb-6' : ''}`}>
+        {covers.map(item => (
+          <div key={item} className="flex items-center gap-2 text-xs text-white/55">
+            <Icon name="check" size={13} strokeWidth={2.5} className="text-accent-teal shrink-0" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+      {showCta && (
+        <Link to="/login">
+          <Button size="lg" className="hero-cta-btn px-8 py-3.5 text-base w-full">
+            Démarrer mon diagnostic
+            <Icon name="chevron-right" size={18} strokeWidth={2} className="ml-2" />
+          </Button>
+        </Link>
+      )}
+    </div>
+  )
+}
 
 /* ─────────────────────────────────────────
    Intersection observer hook
@@ -91,6 +155,14 @@ export default function HomePage() {
     setActiveSegment(prev => prev === index ? null : index)
   }, [])
 
+  const dismissDetail = useCallback(() => {
+    setActiveSegment(null)
+  }, [])
+
+  const stopPropagation = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+  }, [])
+
   /* Scroll detail into view on mobile when segment activates */
   useEffect(() => {
     if (activeSegment !== null && detailRef.current && window.innerWidth < 1024) {
@@ -106,7 +178,7 @@ export default function HomePage() {
       {/* ════════════════════════════════════
           SCREEN 1: HERO WITH INTERACTIVE WHEEL
          ════════════════════════════════════ */}
-      <section className="relative min-h-screen flex flex-col bg-gradient-to-b from-primary-950 via-primary-900 to-primary-800 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col bg-gradient-to-b from-primary-950 via-primary-900 to-primary-800 overflow-hidden" onClick={dismissDetail}>
         {/* Background effects */}
         <div className="hero-grid absolute inset-0 pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 65% 50%, rgba(148, 227, 212, 0.03) 0%, transparent 70%)' }} />
@@ -114,12 +186,7 @@ export default function HomePage() {
 
         {/* Nav bar */}
         <nav className="relative z-20 flex items-center justify-between px-6 md:px-12 py-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-xs">RB</span>
-            </div>
-            <span className="text-white/70 font-bold text-sm tracking-tight">Roue des Besoins</span>
-          </div>
+          <BaloiseLogo variant="dark" height={24} />
           <div className="flex items-center gap-4">
             <Link to="/conseiller" className="text-sm text-white/30 hover:text-white/60 transition-colors duration-300">
               Espace conseiller
@@ -135,50 +202,74 @@ export default function HomePage() {
           <div className="w-full max-w-7xl mx-auto px-6 md:px-12 py-12 lg:py-0">
             <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-start lg:pt-16">
 
-              {/* LEFT: Text content */}
+              {/* LEFT: Intro text OR detail panel (desktop) */}
               <div className="text-center lg:text-left">
-                {/* Tag */}
-                <div className="reveal inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] ring-1 ring-white/[0.08] mb-8">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent-teal hero-pulse-dot" />
-                  <span className="text-xs font-bold text-white/60 tracking-wide">Baloise Luxembourg</span>
+                {detail ? (
+                  /* ── Detail panel (desktop: replaces intro, no scroll needed) ── */
+                  <div className="hidden lg:block" style={{ animation: 'bal-fade-in 350ms cubic-bezier(0.25,0.8,0.5,1) both' }} key={detail.key} onClick={stopPropagation}>
+                    <DetailCard {...detail} onClose={dismissDetail} showCta />
+                  </div>
+                ) : (
+                  /* ── Intro text (default state) ── */
+                  <div className="hidden lg:block">
+                    <div className="reveal inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] ring-1 ring-white/[0.08] mb-8">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent-teal hero-pulse-dot" />
+                      <span className="text-xs font-bold text-white/60 tracking-wide">Baloise Luxembourg</span>
+                    </div>
+                    <h1 className="reveal hero-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-6">
+                      Votre couverture{' '}
+                      <span className="hero-accent-text">analysée en profondeur</span>
+                    </h1>
+                    <p className="reveal text-base text-primary-200 max-w-md lg:mx-0 leading-relaxed mb-8" style={{ transitionDelay: '120ms' }}>
+                      Cliquez sur un univers de la roue pour découvrir ce qu'il couvre. Un diagnostic intelligent qui cartographie vos besoins et vous guide vers les bonnes décisions.
+                    </p>
+                    <div className="reveal flex flex-col sm:flex-row lg:items-start gap-4" style={{ transitionDelay: '240ms' }}>
+                      <Link to="/login">
+                        <Button size="lg" className="hero-cta-btn px-8 py-3.5 text-base">
+                          Démarrer mon diagnostic
+                          <Icon name="chevron-right" size={18} strokeWidth={2} className="ml-2" />
+                        </Button>
+                      </Link>
+                      <a href="#method" className="text-sm font-bold text-white/50 hover:text-white/80 transition-colors duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] flex items-center gap-1.5">
+                        En savoir plus
+                        <Icon name="chevron-right" size={14} strokeWidth={2} />
+                      </a>
+                    </div>
+                    <p className="reveal mt-8 text-xs text-white/25 flex items-center lg:justify-start gap-1.5" style={{ transitionDelay: '360ms' }}>
+                      <Icon name="lock" size={12} strokeWidth={1.5} />
+                      Gratuit, confidentiel, sans engagement
+                    </p>
+                  </div>
+                )}
+
+                {/* Mobile-only: intro text (always visible above wheel) */}
+                <div className="lg:hidden mb-8">
+                  <div className="reveal inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] ring-1 ring-white/[0.08] mb-8">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-teal hero-pulse-dot" />
+                    <span className="text-xs font-bold text-white/60 tracking-wide">Baloise Luxembourg</span>
+                  </div>
+                  <h1 className="reveal hero-title text-3xl sm:text-4xl font-bold text-white leading-[1.1] tracking-tight mb-6">
+                    Votre couverture{' '}
+                    <span className="hero-accent-text">analysée en profondeur</span>
+                  </h1>
+                  <p className="reveal text-base text-primary-200 max-w-md mx-auto leading-relaxed mb-8" style={{ transitionDelay: '120ms' }}>
+                    Cliquez sur un univers de la roue pour découvrir ce qu'il couvre.
+                  </p>
+                  <div className="reveal flex flex-col sm:flex-row items-center gap-4" style={{ transitionDelay: '240ms' }}>
+                    <Link to="/login">
+                      <Button size="lg" className="hero-cta-btn px-8 py-3.5 text-base">
+                        Démarrer mon diagnostic
+                        <Icon name="chevron-right" size={18} strokeWidth={2} className="ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-
-                {/* Title */}
-                <h1 className="reveal hero-title text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-6">
-                  Votre couverture{' '}
-                  <span className="hero-accent-text">analysée en profondeur</span>
-                </h1>
-
-                {/* Subtitle */}
-                <p className="reveal text-base text-primary-200 max-w-md mx-auto lg:mx-0 leading-relaxed mb-8" style={{ transitionDelay: '120ms' }}>
-                  Cliquez sur un univers de la roue pour découvrir ce qu'il couvre. Un diagnostic intelligent qui cartographie vos besoins et vous guide vers les bonnes décisions.
-                </p>
-
-                {/* CTA */}
-                <div className="reveal flex flex-col sm:flex-row items-center lg:items-start gap-4" style={{ transitionDelay: '240ms' }}>
-                  <Link to="/login">
-                    <Button size="lg" className="hero-cta-btn px-8 py-3.5 text-base">
-                      Démarrer mon diagnostic
-                      <Icon name="chevron-right" size={18} strokeWidth={2} className="ml-2" />
-                    </Button>
-                  </Link>
-                  <a href="#method" className="text-sm font-bold text-white/50 hover:text-white/80 transition-colors duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)] flex items-center gap-1.5">
-                    En savoir plus
-                    <Icon name="chevron-right" size={14} strokeWidth={2} />
-                  </a>
-                </div>
-
-                {/* Trust line */}
-                <p className="reveal mt-8 text-xs text-white/25 flex items-center justify-center lg:justify-start gap-1.5" style={{ transitionDelay: '360ms' }}>
-                  <Icon name="lock" size={12} strokeWidth={1.5} />
-                  Gratuit, confidentiel, sans engagement
-                </p>
               </div>
 
-              {/* RIGHT: Wheel + Detail panel */}
+              {/* RIGHT: Wheel + Detail panel (mobile only) */}
               <div className="reveal flex flex-col items-center" style={{ transitionDelay: '200ms' }}>
                 {/* Wheel container */}
-                <div className="relative w-full max-w-[560px] mx-auto px-6 sm:px-0">
+                <div className="relative w-full max-w-[560px] mx-auto px-6 sm:px-0" onClick={stopPropagation}>
                   {/* Ambient glow behind wheel - reacts to active segment */}
                   <div
                     className="absolute inset-0 scale-[1.3] rounded-full pointer-events-none wheel-ambient-glow"
@@ -204,53 +295,14 @@ export default function HomePage() {
                   </p>
                 )}
 
-                {/* Detail panel */}
+                {/* Detail panel — mobile only (below wheel, with scroll) */}
                 <div
                   ref={detailRef}
-                  className={`w-full max-w-[560px] mt-4 wheel-detail-panel ${activeSegment !== null ? 'wheel-detail-open' : 'wheel-detail-closed'}`}
+                  className={`lg:hidden w-full max-w-[560px] mt-4 wheel-detail-panel ${activeSegment !== null ? 'wheel-detail-open' : 'wheel-detail-closed'}`}
+                  onClick={stopPropagation}
                 >
                   {detail && (
-                    <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl ring-1 ring-white/[0.08] p-6">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center"
-                            style={{ background: `${detail.color}25` }}
-                          >
-                            <Icon name={detail.icon} size={20} strokeWidth={1.5} style={{ color: detail.color }} />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-bold text-white">{detail.label}</h3>
-                            <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: `${detail.color}cc` }}>
-                              {detail.product}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setActiveSegment(null)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/[0.06] transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.5,1)]"
-                          aria-label="Fermer le panneau"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 6 6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Description */}
-                      <p className="text-sm text-white/70 leading-relaxed mb-4">{detail.desc}</p>
-
-                      {/* Covers list */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {detail.covers.map(item => (
-                          <div key={item} className="flex items-center gap-2 text-xs text-white/55">
-                            <Icon name="check" size={13} strokeWidth={2.5} className="text-accent-teal shrink-0" />
-                            <span>{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <DetailCard {...detail} onClose={dismissDetail} />
                   )}
                 </div>
               </div>
@@ -340,12 +392,7 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="bg-primary-950 py-6 px-6">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-                <span className="text-white font-bold text-[10px]">RB</span>
-              </div>
-              <span className="text-white/40 font-bold text-sm tracking-tight">Roue des Besoins</span>
-            </div>
+            <BaloiseLogo variant="dark" height={20} className="opacity-40" />
             <p className="text-[11px] text-white/20">
               &copy; {new Date().getFullYear()} Baloise Luxembourg. Tous droits réservés.
             </p>

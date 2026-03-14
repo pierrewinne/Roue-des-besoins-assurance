@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../ui/Button.tsx'
-import { LOGO_GRADIENT, PAGE_TRANSITION_STYLE } from '../../lib/constants.ts'
+import BaloiseLogo from '../ui/BaloiseLogo.tsx'
+import { PAGE_TRANSITION_STYLE } from '../../lib/constants.ts'
 
 export default function AdvisorLayout() {
   const { signOut, profile } = useAuth()
@@ -30,10 +31,7 @@ export default function AdvisorLayout() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
             <Link to="/conseiller/dashboard" className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: LOGO_GRADIENT }}>
-                <span className="text-white font-bold text-sm tracking-wide">RB</span>
-              </div>
-              <span className="font-bold text-primary-700 tracking-tight">Roue des Besoins</span>
+              <BaloiseLogo variant="light" height={24} />
               <span className="text-xs bg-primary-50 text-primary-700 ring-1 ring-primary-700/10 px-2 py-0.5 rounded-full font-bold">Conseiller</span>
             </Link>
 
@@ -80,12 +78,7 @@ export default function AdvisorLayout() {
 
       <footer className="border-t border-grey-200 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-sm flex items-center justify-center" style={{ background: LOGO_GRADIENT }}>
-              <span className="text-white font-bold text-[8px] tracking-wide">RB</span>
-            </div>
-            <span className="text-xs text-grey-300">Roue des Besoins Assurance</span>
-          </div>
+          <BaloiseLogo variant="light" height={16} className="opacity-40" />
           <span className="text-xs text-grey-300">Espace conseiller</span>
         </div>
       </footer>

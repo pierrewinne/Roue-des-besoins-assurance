@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import BaloiseLogo from '../../components/ui/BaloiseLogo.tsx'
 
 const features = [
   { icon: 'users' as const, title: 'Portefeuille clients', desc: 'Vue d\'ensemble de vos clients et de leur couverture d\'assurance.' },
@@ -18,11 +19,8 @@ export default function AdvisorHomePage() {
 
         {/* Nav bar */}
         <nav className="relative z-20 flex items-center justify-between px-6 md:px-12 py-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-xs">RB</span>
-            </div>
-            <span className="text-white/70 font-bold text-sm tracking-tight">Roue des Besoins</span>
+          <div className="flex items-center gap-3">
+            <BaloiseLogo variant="dark" height={24} />
             <span className="text-xs bg-white/10 text-white/60 ring-1 ring-white/10 px-2 py-0.5 rounded-full font-bold">Conseiller</span>
           </div>
           <Link to="/conseiller/login" className="text-sm font-bold text-white/60 hover:text-white transition-colors duration-300">
@@ -84,12 +82,7 @@ export default function AdvisorHomePage() {
       {/* Footer */}
       <footer className="bg-primary-950 py-6 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-[10px]">RB</span>
-            </div>
-            <span className="text-white/40 font-bold text-sm tracking-tight">Roue des Besoins</span>
-          </div>
+          <BaloiseLogo variant="dark" height={20} className="opacity-40" />
           <p className="text-[11px] text-white/20">
             &copy; {new Date().getFullYear()} Baloise Luxembourg. Tous droits réservés.
           </p>

@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../../components/ui/Button.tsx'
 import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import BaloiseLogo from '../../components/ui/BaloiseLogo.tsx'
 import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
 
 const isDev = import.meta.env.DEV
@@ -72,13 +73,10 @@ export default function ClientLoginPage() {
           style={{ background: 'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.03) 0%, transparent 60%)' }}
         />
         <div className="relative z-10 max-w-md w-full">
-          <div className="flex items-center justify-center gap-3 mb-14">
-            <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-sm">RB</span>
-            </div>
-            <span className="text-white/70 font-bold tracking-tight">Roue des Besoins</span>
+          <div className="flex items-center justify-center mb-14">
+            <BaloiseLogo variant="dark" height={28} />
           </div>
-          <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" />
+          <NeedsWheel className="w-full max-w-[320px] mx-auto mb-12" showProducts={false} />
           <div className="text-center">
             <h2 className="text-xl font-bold text-white mb-3 leading-snug">
               Évaluez et optimisez votre
@@ -119,13 +117,10 @@ export default function ClientLoginPage() {
         {/* Mobile hero band */}
         {!isConfirmation && (
           <div className="lg:hidden bg-gradient-to-b from-primary-950 to-primary-900 px-6 pt-10 pb-8 text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-                <span className="text-white font-bold text-xs">RB</span>
-              </div>
-              <span className="text-white/70 font-bold text-sm">Roue des Besoins</span>
+            <div className="flex items-center justify-center mb-6">
+              <BaloiseLogo variant="dark" height={22} />
             </div>
-            <NeedsWheel className="w-48 mx-auto mb-5" />
+            <NeedsWheel className="w-48 mx-auto mb-5" showProducts={false} />
             <p className="text-primary-200 text-xs">Diagnostic assurance personnalisé</p>
           </div>
         )}

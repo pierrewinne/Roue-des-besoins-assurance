@@ -219,6 +219,12 @@ export default function NeedsWheel({
         <filter id="nw-center-shadow" x="-30%" y="-30%" width="160%" height="160%">
           <feDropShadow dx="0" dy="2" stdDeviation="10" floodColor="rgba(0, 3, 30, 0.50)" />
         </filter>
+        {/* Quadrant clip paths — straight boundaries matching parallel dividers */}
+        {/* Order matches WHEEL_SEGMENTS: 0=biens(top-left), 1=personnes(top-right), 2=projets(bottom-left), 3=futur(bottom-right) */}
+        <clipPath id="nw-qclip-0"><rect x="0" y="0" width={CX + 1} height={CY + 1} /></clipPath>
+        <clipPath id="nw-qclip-1"><rect x={CX - 1} y="0" width={CX + 51} height={CY + 1} /></clipPath>
+        <clipPath id="nw-qclip-2"><rect x="0" y={CY - 1} width={CX + 1} height={CY + 51} /></clipPath>
+        <clipPath id="nw-qclip-3"><rect x={CX - 1} y={CY - 1} width={CX + 51} height={CY + 51} /></clipPath>
       </defs>
 
       {/* Decorative rings */}
@@ -299,6 +305,7 @@ export default function NeedsWheel({
           <g
             key={seg.key}
             className="wheel-segment-premium focus:outline-none focus-visible:outline-2 focus-visible:outline-white/60 focus-visible:outline-offset-[-2px]"
+            clipPath={`url(#nw-qclip-${i})`}
             style={{
               cursor: isClickable ? 'pointer' : 'default',
               filter: isOther && !isCompleted ? 'saturate(0.25)' : undefined,

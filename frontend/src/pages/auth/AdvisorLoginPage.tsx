@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import Button from '../../components/ui/Button.tsx'
 import Input from '../../components/ui/Input.tsx'
 import Icon from '../../components/ui/Icon.tsx'
+import BaloiseLogo from '../../components/ui/BaloiseLogo.tsx'
 
 export default function AdvisorLoginPage() {
   const [email, setEmail] = useState('')
@@ -50,10 +51,7 @@ export default function AdvisorLoginPage() {
         />
         <div className="relative z-10 max-w-md w-full text-center">
           <div className="flex items-center justify-center gap-3 mb-14">
-            <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-sm">RB</span>
-            </div>
-            <span className="text-white/70 font-bold tracking-tight">Roue des Besoins</span>
+            <BaloiseLogo variant="dark" height={28} />
             <span className="text-xs bg-white/10 text-white/70 ring-1 ring-white/10 px-2 py-0.5 rounded-full font-bold">Conseiller</span>
           </div>
 
@@ -100,10 +98,7 @@ export default function AdvisorLoginPage() {
         {/* Mobile hero band */}
         <div className="lg:hidden bg-gradient-to-b from-primary-950 to-primary-900 px-6 pt-10 pb-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-              <span className="text-white font-bold text-xs">RB</span>
-            </div>
-            <span className="text-white/70 font-bold text-sm">Roue des Besoins</span>
+            <BaloiseLogo variant="dark" height={22} />
             <span className="text-[10px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded-full font-bold">Conseiller</span>
           </div>
           <p className="text-primary-200 text-xs">Espace professionnel</p>

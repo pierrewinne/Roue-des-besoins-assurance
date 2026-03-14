@@ -34,19 +34,14 @@ function renderLayout(path = '/conseiller/dashboard') {
 }
 
 describe('AdvisorLayout', () => {
-  it('renders the brand badge "RB"', () => {
+  it('renders the Baloise logo', () => {
     renderLayout()
-    expect(screen.getAllByText('RB').length).toBeGreaterThan(0)
+    expect(screen.getAllByLabelText('Baloise').length).toBeGreaterThan(0)
   })
 
   it('renders the "Conseiller" badge', () => {
     renderLayout()
     expect(screen.getByText('Conseiller')).toBeInTheDocument()
-  })
-
-  it('renders the brand name', () => {
-    renderLayout()
-    expect(screen.getByText('Roue des Besoins')).toBeInTheDocument()
   })
 
   it('renders dashboard nav link', () => {

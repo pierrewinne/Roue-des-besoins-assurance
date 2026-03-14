@@ -142,6 +142,7 @@ export default function ClientDashboard() {
           globalNeedLevel={progress.globalNeedLevel}
           onSegmentClick={handleSegmentClick}
           variant="light"
+          showProducts={false}
         />
       </div>
 
