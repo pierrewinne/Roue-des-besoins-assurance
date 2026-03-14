@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.tsx'
 import { verifyAdvisorRelation, fetchClientProfile } from '../../lib/api/advisor.ts'
 import { fetchLatestDiagnostic, fetchActions, hydrateDiagnostic, logAuditEvent } from '../../lib/api/diagnostics.ts'
 import { fetchCompletedAnswers } from '../../lib/api/questionnaire.ts'
-import InsuranceWheel from '../../components/wheel/InsuranceWheel.tsx'
+import NeedsWheel, { buildSegmentStates } from '../../components/landing/NeedsWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
 import ActionList from '../../components/diagnostic/ActionList.tsx'
@@ -15,6 +15,7 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
+import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 
 interface ClientProfile {
@@ -127,7 +128,19 @@ export default function ClientDetailPage() {
               </div>
               <p className="text-xs text-grey-400 mb-5">Score global de besoin</p>
               <div ref={wheelRef}>
-                <InsuranceWheel diagnostic={diagnostic} size={250} showLabels={false} />
+                {(() => {
+                  const { segmentStates, completedCount } = buildSegmentStates(diagnostic)
+                  return (
+                    <NeedsWheel
+                      segmentStates={segmentStates}
+                      completedCount={completedCount}
+                      globalScore={diagnostic.globalScore}
+                      globalNeedLevel={getNeedLevel(diagnostic.globalScore)}
+                      variant="light"
+                      className="w-full max-w-[280px] mx-auto"
+                    />
+                  )
+                })()}
               </div>
               <WheelLegend diagnostic={diagnostic} showScores />
             </Card>

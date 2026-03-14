@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, Quadrant, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
-import { QUADRANT_LABELS, NEED_COLORS, NEED_LABELS, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_LABELS, QUADRANT_PRODUCTS, NEED_COLORS, NEED_LABELS, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import { QUESTIONS, SECTION_LABELS, type QuestionQuadrant, type QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 import { BALOISE, ACTION_STYLES, PRIORITY_DOTS } from './pdf-tokens.ts'
@@ -131,12 +131,13 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           <Text style={styles.sectionTitle}>Analyse détaillée par univers</Text>
           {activeUniverses.map(([key, score]) => (
             <View key={key} style={{ ...styles.universeCard, borderLeftColor: NEED_COLORS[score.needLevel] }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
                 <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
                 <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: NEED_COLORS[score.needLevel] }}>
                   {score.needScore}/100
                 </Text>
               </View>
+              <Text style={{ fontSize: 8, color: BALOISE.grey400, marginBottom: 6 }}>{QUADRANT_PRODUCTS[key as keyof typeof QUADRANT_PRODUCTS]}</Text>
 
               <View style={styles.row}>
                 <Text style={styles.label}>Exposition au risque</Text>

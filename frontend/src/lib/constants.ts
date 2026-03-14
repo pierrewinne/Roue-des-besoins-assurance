@@ -85,6 +85,8 @@ export const PRODUCT_BADGE_COLORS: Record<Product, 'green' | 'orange' | 'red' | 
   pension_plan: 'blue',
   life_plan: 'blue',
   switch_plan: 'green',
+  solde_restant_du: 'green',
+  kids_plan: 'green',
 }
 
 /* ─── Wheel Config (4 quadrants) ─── */
@@ -111,6 +113,15 @@ export const PRODUCT_LABELS: Record<Product, string> = {
   pension_plan: 'Baloise Pension Plan',
   life_plan: 'Baloise Life Plan',
   switch_plan: 'Baloise Switch Plan',
+  solde_restant_du: 'Solde Restant Dû',
+  kids_plan: 'Kids Plan',
+}
+
+export const QUADRANT_PRODUCTS: Record<Quadrant, string> = {
+  biens: 'DRIVE · HOME',
+  personnes: 'B-SAFE · TRAVEL',
+  futur: 'Pension Plan · Life Plan',
+  projets: 'Solde Restant Dû · Kids Plan',
 }
 
 export const QUADRANT_ICONS: Record<Quadrant, IconName> = {
@@ -140,6 +151,8 @@ export const PRODUCT_COLORS: Record<Product, { primary: string; accent: string; 
   pension_plan: { primary: '#7b3da3', accent: '#b87ee6', light: '#f0e4fa', dark: '#5a2d78', bg: '#f7f0fc' },
   life_plan: { primary: '#9f52cc', accent: '#c48ae6', light: '#f0e4fa', dark: '#7b3da3', bg: '#f7f0fc' },
   switch_plan: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
+  solde_restant_du: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
+  kids_plan: { primary: '#00b28f', accent: '#21d9ac', light: '#cbf2ec', dark: '#1b5951', bg: '#e9fbf7' },
 }
 
 export const PRODUCT_ICONS: Record<Product, IconName> = {
@@ -150,6 +163,8 @@ export const PRODUCT_ICONS: Record<Product, IconName> = {
   pension_plan: 'gift',
   life_plan: 'shield-check',
   switch_plan: 'leaf',
+  solde_restant_du: 'home',
+  kids_plan: 'users',
 }
 
 export const TRANSITION = {

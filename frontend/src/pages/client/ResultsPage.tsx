@@ -2,8 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { fetchDiagnosticById, fetchActions, hydrateDiagnostic } from '../../lib/api/diagnostics.ts'
-import NeedsWheel from '../../components/landing/NeedsWheel.tsx'
-import type { QuadrantState } from '../../components/landing/NeedsWheel.tsx'
+import NeedsWheel, { buildSegmentStates } from '../../components/landing/NeedsWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
 import ActionList from '../../components/diagnostic/ActionList.tsx'
@@ -15,9 +14,9 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
 import Icon from '../../components/ui/Icon.tsx'
-import { getScoreColorClass, QUADRANT_ORDER } from '../../lib/constants.ts'
+import { getScoreColorClass } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
-import type { DiagnosticResult, Quadrant } from '../../shared/scoring/types.ts'
+import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 
 export default function ResultsPage() {
   const { diagnosticId } = useParams<{ diagnosticId: string }>()
@@ -83,14 +82,7 @@ export default function ResultsPage() {
                   'bg-danger-light ring-danger/10'
 
   // Build NeedsWheel segment states from diagnostic scores (QW-02)
-  const { segmentStates, wheelCompletedCount } = useMemo(() => {
-    const states: QuadrantState[] = QUADRANT_ORDER.map(q => {
-      const score = diagnostic.quadrantScores[q as Quadrant]
-      if (!score || !score.active) return { status: 'locked' as const }
-      return { status: 'completed' as const, score: score.needScore, needLevel: score.needLevel }
-    })
-    return { segmentStates: states, wheelCompletedCount: states.filter(s => s.status === 'completed').length }
-  }, [diagnostic])
+  const { segmentStates, completedCount: wheelCompletedCount } = useMemo(() => buildSegmentStates(diagnostic), [diagnostic])
 
   return (
     <div>

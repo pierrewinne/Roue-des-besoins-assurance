@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../components/ui/Button.tsx'
 import Icon from '../../components/ui/Icon.tsx'
 import NeedsWheel, { WHEEL_SEGMENTS } from '../../components/landing/NeedsWheel.tsx'
-import { QUADRANT_WHEEL_COLORS } from '../../lib/constants.ts'
+import { QUADRANT_WHEEL_COLORS, QUADRANT_PRODUCTS } from '../../lib/constants.ts'
 
 /* ─────────────────────────────────────────
    Universe detail data
@@ -12,7 +12,7 @@ const universeDetails = [
   {
     key: 'biens',
     label: 'Protection des biens',
-    product: 'Home · Drive',
+    product: QUADRANT_PRODUCTS.biens,
     icon: 'home' as const,
     color: QUADRANT_WHEEL_COLORS.biens.light,
     desc: 'Habitation, véhicules, objets de valeur : protégez votre patrimoine matériel au quotidien.',
@@ -21,7 +21,7 @@ const universeDetails = [
   {
     key: 'personnes',
     label: 'Protection des personnes',
-    product: 'Bsafe · Travel',
+    product: QUADRANT_PRODUCTS.personnes,
     icon: 'shield-check' as const,
     color: QUADRANT_WHEEL_COLORS.personnes.light,
     desc: 'Accidents, hospitalisation, voyages : sécurisez votre famille contre les aléas de la vie.',
@@ -30,7 +30,7 @@ const universeDetails = [
   {
     key: 'futur',
     label: 'Protection du futur',
-    product: 'Pension Plan',
+    product: QUADRANT_PRODUCTS.futur,
     icon: 'gift' as const,
     color: QUADRANT_WHEEL_COLORS.futur.dark,
     desc: 'Épargne, retraite, prévoyance : préparez l\'avenir sereinement avec les solutions Baloise.',
@@ -39,7 +39,7 @@ const universeDetails = [
   {
     key: 'projets',
     label: 'Protection des projets',
-    product: 'GoodStart',
+    product: QUADRANT_PRODUCTS.projets,
     icon: 'chart-pie' as const,
     color: QUADRANT_WHEEL_COLORS.projets.light,
     desc: 'Immobilier, investissements, nouveaux projets : accompagnez vos ambitions en toute sérénité.',
@@ -133,7 +133,7 @@ export default function HomePage() {
         {/* Main hero content: split layout */}
         <div className="relative z-10 flex-1 flex items-center">
           <div className="w-full max-w-7xl mx-auto px-6 md:px-12 py-12 lg:py-0">
-            <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-center">
+            <div className="grid lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-16 items-start lg:pt-16">
 
               {/* LEFT: Text content */}
               <div className="text-center lg:text-left">
@@ -178,7 +178,7 @@ export default function HomePage() {
               {/* RIGHT: Wheel + Detail panel */}
               <div className="reveal flex flex-col items-center" style={{ transitionDelay: '200ms' }}>
                 {/* Wheel container */}
-                <div className="relative w-full max-w-[480px] mx-auto px-6 sm:px-0">
+                <div className="relative w-full max-w-[560px] mx-auto px-6 sm:px-0">
                   {/* Ambient glow behind wheel - reacts to active segment */}
                   <div
                     className="absolute inset-0 scale-[1.3] rounded-full pointer-events-none wheel-ambient-glow"
@@ -193,6 +193,7 @@ export default function HomePage() {
                     className="relative z-10 w-full hero-wheel-float"
                     activeSegment={activeSegment}
                     onSegmentClick={handleSegmentClick}
+                    showProducts={false}
                   />
                 </div>
 
@@ -206,7 +207,7 @@ export default function HomePage() {
                 {/* Detail panel */}
                 <div
                   ref={detailRef}
-                  className={`w-full max-w-[480px] mt-4 wheel-detail-panel ${activeSegment !== null ? 'wheel-detail-open' : 'wheel-detail-closed'}`}
+                  className={`w-full max-w-[560px] mt-4 wheel-detail-panel ${activeSegment !== null ? 'wheel-detail-open' : 'wheel-detail-closed'}`}
                 >
                   {detail && (
                     <div className="bg-white/[0.06] backdrop-blur-sm rounded-xl ring-1 ring-white/[0.08] p-6">

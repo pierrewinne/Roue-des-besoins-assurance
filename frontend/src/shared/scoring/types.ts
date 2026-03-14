@@ -2,7 +2,7 @@
 
 export type Quadrant = 'biens' | 'personnes' | 'projets' | 'futur'
 
-export type Product = 'drive' | 'home' | 'travel' | 'bsafe' | 'pension_plan' | 'life_plan' | 'switch_plan'
+export type Product = 'drive' | 'home' | 'travel' | 'bsafe' | 'pension_plan' | 'life_plan' | 'switch_plan' | 'solde_restant_du' | 'kids_plan'
 
 export type NeedLevel = 'low' | 'moderate' | 'high' | 'critical'
 

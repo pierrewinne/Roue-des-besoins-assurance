@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
 import type { DiagnosticResult, QuadrantScore, Recommendation } from '../../shared/scoring/types.ts'
-import { QUADRANT_LABELS, NEED_COLORS, NEED_MESSAGES, NEED_LEGEND_MESSAGES, PRODUCT_LABELS } from '../../lib/constants.ts'
+import { QUADRANT_LABELS, QUADRANT_PRODUCTS, NEED_COLORS, NEED_MESSAGES, NEED_LEGEND_MESSAGES, PRODUCT_LABELS } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import { BALOISE, ACTION_STYLES, PRIORITY_DOTS, type AdvisorInfo } from './pdf-tokens.ts'
 
@@ -94,6 +94,7 @@ export default function PdfClientReport({ diagnostic, clientName, wheelImageUri,
                 <View style={{ ...styles.legendDot, backgroundColor: NEED_COLORS[score.needLevel] }} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.legendName}>{QUADRANT_LABELS[key as keyof typeof QUADRANT_LABELS]}</Text>
+                  <Text style={{ fontSize: 7.5, color: BALOISE.navy, marginTop: 1 }}>{QUADRANT_PRODUCTS[key as keyof typeof QUADRANT_PRODUCTS]}</Text>
                   <Text style={styles.legendMessage}>{NEED_LEGEND_MESSAGES[score.needLevel]}</Text>
                 </View>
               </View>

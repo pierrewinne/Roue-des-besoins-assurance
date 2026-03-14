@@ -1,18 +1,20 @@
 import { useRef, useEffect } from 'react'
-import type { NeedLevel } from '../../shared/scoring/types.ts'
+import type { NeedLevel, Quadrant, DiagnosticResult } from '../../shared/scoring/types.ts'
 import { getNeedColor } from '../../shared/scoring/thresholds.ts'
+import { QUADRANT_PRODUCTS, QUADRANT_ORDER } from '../../lib/constants.ts'
 
 /* ─── Geometry (viewBox 500×500) ─── */
 const CX = 250
 const CY = 250
-const CENTER_R = 56
-const INNER_R1 = 64
-const INNER_R2 = 120
-const RING_GAP = 4
+const CENTER_R = 46
+const INNER_R1 = 54
+const INNER_R2 = 130
+const RING_GAP = 3
 const OUTER_R1 = INNER_R2 + RING_GAP
-const OUTER_R2 = 210
-const QUAD_GAP = 3
-const HALF = (90 - QUAD_GAP) / 2
+const OUTER_R2 = 228
+const HALF = 45
+const DIVIDER_ANGLES = [0, 90, 180, 270]
+const DIVIDER_WIDTH = 4
 
 /* ─── Quadrant state (diagnostic mode) ─── */
 export interface QuadrantState {
@@ -22,11 +24,20 @@ export interface QuadrantState {
   progress?: number
 }
 
+/** Build QuadrantState[] from a completed DiagnosticResult (shared helper) */
+export function buildSegmentStates(diagnostic: DiagnosticResult): { segmentStates: QuadrantState[]; completedCount: number } {
+  const segmentStates: QuadrantState[] = QUADRANT_ORDER.map(q => {
+    const score = diagnostic.quadrantScores[q]
+    if (!score || !score.active) return { status: 'locked' as const }
+    return { status: 'completed' as const, score: score.needScore, needLevel: score.needLevel }
+  })
+  return { segmentStates, completedCount: segmentStates.filter(s => s.status === 'completed').length }
+}
+
 /* ─── Segment data ─── */
 export interface WheelSegment {
-  key: string
+  key: Quadrant
   lines: [string, string]
-  product: string
   angle: number
   color: string
   outerGradient: [string, string]
@@ -38,63 +49,59 @@ export interface WheelSegment {
 export const WHEEL_SEGMENTS: WheelSegment[] = [
   {
     key: 'biens',
-    lines: ['Protection des', 'biens'],
-    product: 'Home \u00b7 Drive',
+    lines: ['Protection', 'des biens'],
     angle: 315,
-    color: '#293485',
-    outerGradient: ['#1A2260', '#3D4691'],
-    innerGradient: ['#293485', '#4E5BA6'],
-    glowColor: 'rgba(41, 52, 133, 0.35)',
+    color: '#4E5BA6',
+    outerGradient: ['#3D4691', '#6B78C4'],
+    innerGradient: ['#4E5BA6', '#8890D0'],
+    glowColor: 'rgba(78, 91, 166, 0.40)',
     icons: [
-      { src: '/icons/wheel/biens-house.png', anglePct: 0.18, radiusPct: 0.78 },
-      { src: '/icons/wheel/biens-car.png', anglePct: 0.45, radiusPct: 0.30 },
-      { src: '/icons/wheel/biens-motorcycle.png', anglePct: 0.82, radiusPct: 0.75 },
-      { src: '/icons/wheel/biens-watch.png', anglePct: 0.60, radiusPct: 0.65 },
+      { src: '/icons/wheel/biens-house.png', anglePct: 0.15, radiusPct: 0.55 },
+      { src: '/icons/wheel/biens-car.png', anglePct: 0.40, radiusPct: 0.55 },
+      { src: '/icons/wheel/biens-motorcycle.png', anglePct: 0.65, radiusPct: 0.55 },
+      { src: '/icons/wheel/biens-watch.png', anglePct: 0.88, radiusPct: 0.55 },
     ],
   },
   {
     key: 'personnes',
-    lines: ['Protection des', 'personnes'],
-    product: 'Bsafe \u00b7 Travel',
+    lines: ['Protection', 'des personnes'],
     angle: 45,
-    color: '#0014AA',
-    outerGradient: ['#000D6E', '#1A3BC2'],
-    innerGradient: ['#0014AA', '#2D4FD4'],
-    glowColor: 'rgba(0, 20, 170, 0.35)',
+    color: '#2563EB',
+    outerGradient: ['#1D4ED8', '#3B82F6'],
+    innerGradient: ['#2563EB', '#60A5FA'],
+    glowColor: 'rgba(37, 99, 235, 0.40)',
     icons: [
-      { src: '/icons/wheel/personnes-couple.png', anglePct: 0.20, radiusPct: 0.78 },
-      { src: '/icons/wheel/personnes-travel.png', anglePct: 0.50, radiusPct: 0.28 },
-      { src: '/icons/wheel/personnes-accidents.png', anglePct: 0.80, radiusPct: 0.72 },
-    ],
-  },
-  {
-    key: 'futur',
-    lines: ['Protection du', 'futur'],
-    product: 'Pension Plan',
-    angle: 135,
-    color: '#000D6E',
-    outerGradient: ['#000739', '#0A1F8C'],
-    innerGradient: ['#000D6E', '#1A2FA0'],
-    glowColor: 'rgba(0, 13, 110, 0.35)',
-    icons: [
-      { src: '/icons/wheel/futur-retirement.png', anglePct: 0.20, radiusPct: 0.76 },
-      { src: '/icons/wheel/futur-pension.png', anglePct: 0.52, radiusPct: 0.30 },
-      { src: '/icons/wheel/futur-umbrella.png', anglePct: 0.82, radiusPct: 0.78 },
+      { src: '/icons/wheel/personnes-couple.png', anglePct: 0.20, radiusPct: 0.55 },
+      { src: '/icons/wheel/personnes-travel.png', anglePct: 0.50, radiusPct: 0.55 },
+      { src: '/icons/wheel/personnes-accidents.png', anglePct: 0.80, radiusPct: 0.55 },
     ],
   },
   {
     key: 'projets',
-    lines: ['Protection des', 'projets'],
-    product: 'GoodStart',
+    lines: ['Protection', 'des projets'],
     angle: 225,
-    color: '#3D4691',
-    outerGradient: ['#2A3170', '#656EA8'],
-    innerGradient: ['#3D4691', '#7E86B8'],
-    glowColor: 'rgba(61, 70, 145, 0.35)',
+    color: '#00b28f',
+    outerGradient: ['#008A6E', '#2DD4AE'],
+    innerGradient: ['#00b28f', '#4ECDB2'],
+    glowColor: 'rgba(0, 178, 143, 0.35)',
     icons: [
-      { src: '/icons/wheel/projets-dream-house.png', anglePct: 0.20, radiusPct: 0.78 },
-      { src: '/icons/wheel/projets-savings.png', anglePct: 0.52, radiusPct: 0.28 },
-      { src: '/icons/wheel/projets-lightbulb.png', anglePct: 0.82, radiusPct: 0.76 },
+      { src: '/icons/wheel/projets-dream-house.png', anglePct: 0.25, radiusPct: 0.55 },
+      { src: '/icons/wheel/projets-savings.png', anglePct: 0.55, radiusPct: 0.55 },
+      { src: '/icons/wheel/projets-lightbulb.png', anglePct: 0.82, radiusPct: 0.55 },
+    ],
+  },
+  {
+    key: 'futur',
+    lines: ['Protection', 'du futur'],
+    angle: 135,
+    color: '#9f52cc',
+    outerGradient: ['#7B3DA6', '#B86EE0'],
+    innerGradient: ['#9f52cc', '#C084E4'],
+    glowColor: 'rgba(159, 82, 204, 0.35)',
+    icons: [
+      { src: '/icons/wheel/futur-retirement.png', anglePct: 0.25, radiusPct: 0.55 },
+      { src: '/icons/wheel/futur-pension.png', anglePct: 0.55, radiusPct: 0.55 },
+      { src: '/icons/wheel/futur-umbrella.png', anglePct: 0.82, radiusPct: 0.55 },
     ],
   },
 ]
@@ -134,6 +141,7 @@ interface NeedsWheelProps {
   globalNeedLevel?: NeedLevel
   compact?: boolean
   variant?: 'dark' | 'light'
+  showProducts?: boolean
 }
 
 const ease = 'cubic-bezier(0.25,0.8,0.5,1)'
@@ -148,6 +156,7 @@ export default function NeedsWheel({
   globalNeedLevel,
   compact = false,
   variant = 'dark',
+  showProducts = true,
 }: NeedsWheelProps) {
   const reducedMotion = useRef(false)
   useEffect(() => { reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches }, [])
@@ -363,7 +372,7 @@ export default function NeedsWheel({
               const iconAngle = a1 + (a2 - a1) * icon.anglePct
               const iconR = OUTER_R1 + (OUTER_R2 - OUTER_R1) * icon.radiusPct
               const [ix, iy] = xy(iconR, iconAngle)
-              const sz = 32
+              const sz = 52
               return (
                 <image key={j} href={icon.src} x={ix - sz / 2} y={iy - sz / 2} width={sz} height={sz} opacity={iconOp} className="pointer-events-none" style={{ transition: reducedMotion.current ? 'none' : `opacity 300ms ${ease}` }} />
               )
@@ -386,31 +395,44 @@ export default function NeedsWheel({
                 x={lx} y={ly}
                 textAnchor="middle"
                 fill={isCompleted ? 'white' : variant === 'light' && !isLocked ? `rgba(0,13,110,${labelOp})` : `rgba(255,255,255,${labelOp})`}
-                fontSize={isActive ? '13' : '12'}
+                fontSize={isActive ? '10' : '9.5'}
                 fontWeight="700"
                 fontFamily="'BaloiseCreateHeadline','Inter',sans-serif"
                 className="pointer-events-none select-none"
                 style={{ transition: `fill 300ms ${ease}` }}
               >
                 <tspan x={lx} dy="-6">{seg.lines[0]}</tspan>
-                <tspan x={lx} dy="15" fontSize={isActive ? '14' : '13'}>{seg.lines[1]}</tspan>
+                <tspan x={lx} dy="14" fontSize={isActive ? '13' : '12'} fill={isCompleted ? 'white' : variant === 'light' && !isLocked ? `rgba(0,13,110,1)` : 'rgba(255,255,255,0.95)'}>{seg.lines[1]}</tspan>
               </text>
             )}
 
-            {/* Tick + product label (landing mode only) */}
-            {!isDiagnostic && !compact && (
-              <>
-                {(() => {
-                  const [t1x, t1y] = xy(OUTER_R2 + 3, seg.angle)
-                  const [t2x, t2y] = xy(OUTER_R2 + 14, seg.angle)
-                  return <line x1={t1x} y1={t1y} x2={t2x} y2={t2y} stroke={isActive ? `${seg.color}80` : 'rgba(255,255,255,0.05)'} strokeWidth="1" strokeLinecap="round" className="pointer-events-none" style={{ transition: `stroke 300ms ${ease}` }} />
-                })()}
-                <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fill={isActive ? seg.color : isOther ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)'} fontSize="10" fontWeight="700" fontFamily="'BaloiseCreateText','Inter',sans-serif" letterSpacing="0.14em" className="pointer-events-none select-none" style={{ filter: isActive ? `drop-shadow(0 0 6px ${seg.glowColor})` : undefined, transition: `fill 300ms ${ease}` }}>
-                  {seg.product.toUpperCase()}
-                </text>
-              </>
-            )}
+            {/* Tick + product label — shown when showProducts is true OR when segment is completed */}
+            {!compact && (showProducts || isCompleted) && (() => {
+              const productLabel = QUADRANT_PRODUCTS[seg.key]
+              const [t1x, t1y] = xy(OUTER_R2 + 3, seg.angle)
+              const [t2x, t2y] = xy(OUTER_R2 + 14, seg.angle)
+              const fillColor = isCompleted
+                ? (variant === 'light' ? seg.color : 'rgba(255,255,255,0.85)')
+                : isActive ? seg.color : isOther ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.55)'
+              return (
+                <>
+                  <line x1={t1x} y1={t1y} x2={t2x} y2={t2y} stroke={isCompleted ? `${seg.color}80` : isActive ? `${seg.color}80` : 'rgba(255,255,255,0.05)'} strokeWidth="1" strokeLinecap="round" className="pointer-events-none" style={{ transition: `stroke 300ms ${ease}` }} />
+                  <text x={px} y={py} textAnchor="middle" dominantBaseline="middle" fill={fillColor} fontSize="8.5" fontWeight="700" fontFamily="'BaloiseCreateText','Inter',sans-serif" letterSpacing="0.10em" className="pointer-events-none select-none" style={{ filter: isCompleted ? `drop-shadow(0 0 4px ${seg.glowColor})` : isActive ? `drop-shadow(0 0 6px ${seg.glowColor})` : undefined, transition: `fill 300ms ${ease}` }}>
+                    {productLabel.toUpperCase()}
+                  </text>
+                </>
+              )
+            })()}
           </g>
+        )
+      })}
+
+      {/* ─── Parallel divider lines ─── */}
+      {DIVIDER_ANGLES.map(angle => {
+        const [x1, y1] = xy(INNER_R1 - 1, angle)
+        const [x2, y2] = xy(OUTER_R2 + 1, angle)
+        return (
+          <line key={`div-${angle}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={variant === 'light' ? 'rgba(255,255,255,0.95)' : 'rgba(0,3,30,0.95)'} strokeWidth={DIVIDER_WIDTH} className="pointer-events-none" />
         )
       })}
 
@@ -442,7 +464,7 @@ export default function NeedsWheel({
       )}
 
       {/* Center content */}
-      <image href="/icons/wheel/center-family.png" x={CX - 14} y={CY - 22} width="28" height="28" className="pointer-events-none" opacity={0.80} />
+      <image href="/icons/wheel/center-family.png" x={CX - 16} y={CY - 24} width="32" height="32" className="pointer-events-none" opacity={0.85} />
 
       {isDiagnostic && globalScore !== undefined && completedCount === 4 ? (
         <>
@@ -455,10 +477,7 @@ export default function NeedsWheel({
           <text x={CX} y={CY + 30} textAnchor="middle" fill={completedCount > 0 ? 'white' : 'rgba(255,255,255,0.40)'} fontSize="16" fontWeight="700" fontFamily="'BaloiseCreateHeadline','Inter',sans-serif" className="pointer-events-none select-none">{completedCount}/4</text>
         </>
       ) : (
-        <>
-          <text x={CX} y={CY + 14} textAnchor="middle" fill="white" fontSize="8" fontWeight="700" letterSpacing="0.10em" fontFamily="'BaloiseCreateText','Inter',sans-serif" opacity={0.80} className="pointer-events-none select-none">CLIENTS</text>
-          <text x={CX} y={CY + 24} textAnchor="middle" fill="white" fontSize="7.5" fontWeight="700" letterSpacing="0.08em" fontFamily="'BaloiseCreateText','Inter',sans-serif" opacity={0.60} className="pointer-events-none select-none">PARTICULIERS</text>
-        </>
+        <text x={CX} y={CY + 20} textAnchor="middle" fill="white" fontSize="14" fontWeight="700" letterSpacing="0.14em" fontFamily="'BaloiseCreateHeadline','Inter',sans-serif" opacity={0.90} className="pointer-events-none select-none">VOUS</text>
       )}
     </svg>
   )
