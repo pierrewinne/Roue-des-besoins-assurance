@@ -71,28 +71,28 @@ export function Results() {
         />
       </div>
 
-      {/* Product cards — right side */}
+      {/* Product cards + CTA — right side, vertically centered together */}
       <div style={{
         position: 'absolute',
-        right: 80,
+        right: 140,
         top: '50%',
         transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 14,
+        gap: 18,
       }}>
         {cards.map((card, i) => (
           <div key={i} style={{
             opacity: card.opacity,
             transform: `scale(${card.scale * card.pulse})`,
-            transformOrigin: 'right center',
+            transformOrigin: 'center center',
           }}>
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 16,
+              display: 'flex', alignItems: 'center', gap: 20,
               background: 'rgba(255,255,255,0.06)',
-              borderRadius: 14,
-              padding: '16px 24px',
-              width: 340,
+              borderRadius: 16,
+              padding: '20px 28px',
+              width: 440,
               border: card.priority
                 ? `2px solid ${card.level}`
                 : '1px solid rgba(255,255,255,0.08)',
@@ -100,10 +100,10 @@ export function Results() {
               {/* Score number */}
               <div style={{
                 color: card.level,
-                fontSize: 32,
+                fontSize: 42,
                 fontFamily: FONT_HEADLINE,
                 fontWeight: 700,
-                minWidth: 52,
+                minWidth: 64,
                 textAlign: 'right',
               }}>
                 {Math.round(card.barFill * card.score)}
@@ -113,20 +113,20 @@ export function Results() {
               <div style={{ flex: 1 }}>
                 <div style={{
                   color: WHITE,
-                  fontSize: 15,
+                  fontSize: 20,
                   fontFamily: FONT_HEADLINE,
                   fontWeight: 700,
                   letterSpacing: '0.08em',
-                  marginBottom: 6,
+                  marginBottom: 8,
                 }}>
                   {card.name}
                   {card.priority && card.opacity > 0.5 && (
                     <span style={{
-                      marginLeft: 10,
-                      fontSize: 10,
+                      marginLeft: 12,
+                      fontSize: 12,
                       background: card.level,
-                      borderRadius: 8,
-                      padding: '2px 8px',
+                      borderRadius: 10,
+                      padding: '3px 10px',
                       verticalAlign: 'middle',
                     }}>
                       PRIORITÉ
@@ -134,7 +134,7 @@ export function Results() {
                   )}
                 </div>
                 <div style={{
-                  width: '100%', height: 5, borderRadius: 3,
+                  width: '100%', height: 6, borderRadius: 3,
                   background: 'rgba(255,255,255,0.1)',
                   overflow: 'hidden',
                 }}>
@@ -148,26 +148,24 @@ export function Results() {
             </div>
           </div>
         ))}
-      </div>
 
-      {/* CTA typewriter */}
-      <div style={{
-        position: 'absolute',
-        bottom: 60,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        opacity: fadeIn(frame, 160, 15),
-      }}>
-        <span style={{
-          color: WHITE,
-          fontSize: 22,
-          fontFamily: FONT_HEADLINE,
-          fontWeight: 700,
-          letterSpacing: '0.04em',
+        {/* CTA — synthèse sous les cards */}
+        <div style={{
+          opacity: fadeIn(frame, 160, 15),
+          marginTop: 12,
+          textAlign: 'center',
         }}>
-          {CTA_TEXT.slice(0, ctaChars)}
-          <span style={{ opacity: Math.sin(frame * 0.15) > 0 ? 1 : 0 }}>|</span>
-        </span>
+          <span style={{
+            color: WHITE,
+            fontSize: 28,
+            fontFamily: FONT_HEADLINE,
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+          }}>
+            {CTA_TEXT.slice(0, ctaChars)}
+            <span style={{ opacity: Math.sin(frame * 0.15) > 0 ? 1 : 0 }}>|</span>
+          </span>
+        </div>
       </div>
     </div>
   )
