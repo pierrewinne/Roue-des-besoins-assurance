@@ -16,6 +16,7 @@ export default defineConfig({
         manualChunks: {
           recharts: ['recharts'],
           'react-pdf': ['@react-pdf/renderer'],
+          lottie: ['lottie-web'],
         },
       },
     },

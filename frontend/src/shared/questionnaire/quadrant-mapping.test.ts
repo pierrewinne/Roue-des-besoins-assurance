@@ -11,8 +11,8 @@ import {
 } from './quadrant-mapping.ts'
 
 describe('getProfilQuestions', () => {
-  it('returns all 7 profil questions', () => {
-    expect(getProfilQuestions()).toHaveLength(7)
+  it('returns all 8 profil questions', () => {
+    expect(getProfilQuestions()).toHaveLength(8)
   })
 
   it('returns questions matching PROFIL_QUESTION_IDS', () => {
@@ -64,10 +64,11 @@ describe('isProfilComplete', () => {
     professional_status: 'employee',
     income_contributors: 'one',
     life_event: ['none'],
+    income_range: '5k_8k',
   }
 
   it('returns true when all visible required profil questions are answered', () => {
-    // single has no children_count dependency, so 6 answers suffice
+    // single has no children_count dependency, so 7 answers suffice
     expect(isProfilComplete(baseProfile)).toBe(true)
   })
 

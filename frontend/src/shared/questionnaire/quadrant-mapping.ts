@@ -7,7 +7,7 @@ const QUESTION_BY_ID = new Map(QUESTIONS.map(q => [q.id, q]))
 // Profil express question IDs (asked first, feed all quadrants)
 export const PROFIL_QUESTION_IDS = [
   'residence_status', 'age_range', 'family_status', 'children_count',
-  'professional_status', 'income_contributors', 'life_event',
+  'professional_status', 'income_contributors', 'life_event', 'income_range',
 ]
 
 // Quadrant-specific question IDs
@@ -22,17 +22,27 @@ export const QUADRANT_QUESTION_IDS: Record<Quadrant, string[]> = {
   personnes: [
     'travel_frequency', 'travel_destinations', 'travel_budget', 'travel_coverage_existing',
     'sports_activities', 'accident_coverage_existing',
-    'income_range', 'financial_dependents', 'work_incapacity_concern',
-    'health_concerns', 'savings_protection', 'other_properties',
+    'financial_dependents', 'work_incapacity_concern',
   ],
   projets: [],
   futur: [
     'income_range', 'financial_dependents', 'work_incapacity_concern',
-    'savings_protection', 'esg_interest',
+    'savings_protection', 'other_properties', 'esg_interest',
   ],
 }
 
 export const ALL_QUADRANTS: Quadrant[] = ['biens', 'personnes', 'projets', 'futur']
+
+// Quadrants that must be completed before others can be started (present before future)
+export const QUADRANT_PREREQUISITES: Partial<Record<Quadrant, Quadrant[]>> = {
+  projets: ['biens', 'personnes'],
+  futur: ['biens', 'personnes'],
+}
+
+export function arePrerequisitesMet(quadrant: Quadrant, completedUniverses: Record<string, boolean>): boolean {
+  const prereqs = QUADRANT_PREREQUISITES[quadrant]
+  return !prereqs || prereqs.every(q => completedUniverses[q])
+}
 
 function isAnswered(val: unknown): boolean {
   if (val === undefined || val === null || val === '') return false

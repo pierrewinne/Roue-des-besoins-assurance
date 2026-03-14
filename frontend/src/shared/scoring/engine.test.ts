@@ -25,15 +25,15 @@ describe('computeBiensScore (DRIVE)', () => {
   })
 
   it('has higher exposure for new/expensive vehicle', () => {
-    const oldCar = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_old', vehicle_usage: 'occasional' })
-    const newCar = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_new', vehicle_usage: 'occasional' })
+    const oldCar = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_old', vehicle_usage: 'leisure' })
+    const newCar = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_new', vehicle_usage: 'leisure' })
     expect(newCar.quadrantScores.biens.exposure).toBeGreaterThan(oldCar.quadrantScores.biens.exposure)
   })
 
   it('has higher exposure for professional usage', () => {
-    const occasional = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_recent', vehicle_usage: 'occasional' })
+    const leisure = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_recent', vehicle_usage: 'leisure' })
     const professional = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_recent', vehicle_usage: 'professional' })
-    expect(professional.quadrantScores.biens.exposure).toBeGreaterThan(occasional.quadrantScores.biens.exposure)
+    expect(professional.quadrantScores.biens.exposure).toBeGreaterThan(leisure.quadrantScores.biens.exposure)
   })
 
   it('has low coverage with rc_only', () => {
@@ -66,12 +66,6 @@ describe('computePersonnesScore (B-SAFE)', () => {
     const base = computeDiagnostic({ work_incapacity_concern: 'more_12_months' })
     const vulnerable = computeDiagnostic({ work_incapacity_concern: 'less_1_month' })
     expect(vulnerable.quadrantScores.personnes.exposure).toBeGreaterThan(base.quadrantScores.personnes.exposure)
-  })
-
-  it('increases exposure with health concerns', () => {
-    const base = computeDiagnostic({ health_concerns: ['none'] })
-    const withConcerns = computeDiagnostic({ health_concerns: ['physical_job', 'frequent_driving'] })
-    expect(withConcerns.quadrantScores.personnes.exposure).toBeGreaterThan(base.quadrantScores.personnes.exposure)
   })
 
   it('has low coverage without accident or savings protection', () => {
@@ -267,32 +261,12 @@ describe('family status impacts on personnes quadrant', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('computeBiensExposure - vehicle_details granulaire', () => {
-  const baseAnswers = { vehicle_count: 1, vehicle_usage: 'occasional' }
+  const baseAnswers = { vehicle_count: 1, vehicle_usage: 'leisure' }
 
-  it('electric has higher exposure than car_recent', () => {
-    const electric = computeDiagnostic({ ...baseAnswers, vehicle_details: 'electric' })
+  it('car_new has higher exposure than car_recent', () => {
+    const newCar = computeDiagnostic({ ...baseAnswers, vehicle_details: 'car_new' })
     const recent = computeDiagnostic({ ...baseAnswers, vehicle_details: 'car_recent' })
-    expect(electric.quadrantScores.biens.exposure).toBeGreaterThan(recent.quadrantScores.biens.exposure)
-  })
-
-  it('suv_crossover has higher exposure than car_recent', () => {
-    const suv = computeDiagnostic({ ...baseAnswers, vehicle_details: 'suv_crossover' })
-    const recent = computeDiagnostic({ ...baseAnswers, vehicle_details: 'car_recent' })
-    expect(suv.quadrantScores.biens.exposure).toBeGreaterThan(recent.quadrantScores.biens.exposure)
-  })
-
-  it('moto has higher exposure than scooter', () => {
-    const moto = computeDiagnostic({ ...baseAnswers, vehicle_details: 'moto' })
-    const scooter = computeDiagnostic({ ...baseAnswers, vehicle_details: 'scooter' })
-    expect(moto.quadrantScores.biens.exposure).toBeGreaterThan(scooter.quadrantScores.biens.exposure)
-  })
-
-  it('utility has moderate exposure (between scooter and car_recent)', () => {
-    const utility = computeDiagnostic({ ...baseAnswers, vehicle_details: 'utility' })
-    const scooter = computeDiagnostic({ ...baseAnswers, vehicle_details: 'scooter' })
-    const recent = computeDiagnostic({ ...baseAnswers, vehicle_details: 'car_recent' })
-    expect(utility.quadrantScores.biens.exposure).toBeGreaterThan(scooter.quadrantScores.biens.exposure)
-    expect(utility.quadrantScores.biens.exposure).toBeLessThan(recent.quadrantScores.biens.exposure)
+    expect(newCar.quadrantScores.biens.exposure).toBeGreaterThan(recent.quadrantScores.biens.exposure)
   })
 
   it('car_old has lowest exposure among cars', () => {
@@ -314,24 +288,16 @@ describe('computeBiensExposure - vehicle_details granulaire', () => {
 describe('computeBiensExposure - vehicle_usage granulaire', () => {
   const baseAnswers = { vehicle_count: 1, vehicle_details: 'car_recent' }
 
-  it('daily_commute has higher exposure than occasional', () => {
+  it('daily_commute has higher exposure than leisure', () => {
     const daily = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'daily_commute' })
-    const occasional = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'occasional' })
-    expect(daily.quadrantScores.biens.exposure).toBeGreaterThan(occasional.quadrantScores.biens.exposure)
-  })
-
-  it('mixed has higher exposure than occasional', () => {
-    const mixed = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'mixed' })
-    const occasional = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'occasional' })
-    expect(mixed.quadrantScores.biens.exposure).toBeGreaterThan(occasional.quadrantScores.biens.exposure)
+    const leisure = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'leisure' })
+    expect(daily.quadrantScores.biens.exposure).toBeGreaterThan(leisure.quadrantScores.biens.exposure)
   })
 
   it('professional has highest exposure', () => {
     const professional = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'professional' })
     const daily = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'daily_commute' })
-    const mixed = computeDiagnostic({ ...baseAnswers, vehicle_usage: 'mixed' })
     expect(professional.quadrantScores.biens.exposure).toBeGreaterThan(daily.quadrantScores.biens.exposure)
-    expect(professional.quadrantScores.biens.exposure).toBeGreaterThan(mixed.quadrantScores.biens.exposure)
   })
 })
 
@@ -358,7 +324,7 @@ describe('computeBiensExposure - vehicle_options_interest impact', () => {
 })
 
 describe('computeBiensExposure - life_event=new_vehicle impact', () => {
-  const baseAnswers = { vehicle_count: 1, vehicle_details: 'car_recent', vehicle_usage: 'occasional' }
+  const baseAnswers = { vehicle_count: 1, vehicle_details: 'car_recent', vehicle_usage: 'leisure' }
 
   it('new_vehicle life event increases biens exposure', () => {
     const noEvent = computeDiagnostic({ ...baseAnswers })
@@ -685,18 +651,6 @@ describe('computeDriveOptions', () => {
     expect(driveOpts.some(o => o.optionId === 'drive_dommages_materiels')).toBe(true)
   })
 
-  it('generates omnium option for electric without full_omnium', () => {
-    const result = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'electric', vehicle_coverage_existing: 'mini_omnium' })
-    const driveOpts = result.productScores.find(p => p.product === 'drive')!.options
-    expect(driveOpts.some(o => o.optionId === 'drive_dommages_materiels')).toBe(true)
-  })
-
-  it('generates omnium option for suv_crossover without full_omnium', () => {
-    const result = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'suv_crossover', vehicle_coverage_existing: 'none' })
-    const driveOpts = result.productScores.find(p => p.product === 'drive')!.options
-    expect(driveOpts.some(o => o.optionId === 'drive_dommages_materiels')).toBe(true)
-  })
-
   it('does NOT generate omnium option when already full_omnium', () => {
     const result = computeDiagnostic({ vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'full_omnium' })
     const driveOpts = result.productScores.find(p => p.product === 'drive')!.options
@@ -787,18 +741,6 @@ describe('computeBsafeOptions', () => {
     expect(bsafeOpts.some(o => o.optionId === 'bsafe_incapacite')).toBe(false)
   })
 
-  it('generates aide menagere for aging_parents health concern', () => {
-    const result = computeDiagnostic({ health_concerns: ['aging_parents'] })
-    const bsafeOpts = result.productScores.find(p => p.product === 'bsafe')!.options
-    expect(bsafeOpts.some(o => o.optionId === 'bsafe_aide_menagere')).toBe(true)
-  })
-
-  it('does NOT generate aide menagere without aging_parents', () => {
-    const result = computeDiagnostic({ health_concerns: ['physical_job', 'frequent_driving'] })
-    const bsafeOpts = result.productScores.find(p => p.product === 'bsafe')!.options
-    expect(bsafeOpts.some(o => o.optionId === 'bsafe_aide_menagere')).toBe(false)
-  })
-
   it('generates frais divers when children_count > 0', () => {
     const result = computeDiagnostic({ children_count: 2 })
     const bsafeOpts = result.productScores.find(p => p.product === 'bsafe')!.options
@@ -816,7 +758,7 @@ describe('computeBsafeOptions', () => {
       vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'rc_only',
       vehicle_options_interest: ['new_vehicle_value', 'replacement_needed', 'vehicle_customized', 'bonus_important'],
       financial_dependents: 'partner_children', sports_activities: ['winter_sports'],
-      work_incapacity_concern: 'less_1_month', health_concerns: ['aging_parents'], children_count: 2,
+      work_incapacity_concern: 'less_1_month', children_count: 2,
     })
     for (const ps of result.productScores) {
       for (const opt of ps.options) {
@@ -896,7 +838,7 @@ describe('non-regression: invariants du moteur de scoring', () => {
     {},
     { vehicle_count: 0 },
     { vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'none' },
-    { vehicle_count: 3, vehicle_details: 'electric', vehicle_usage: 'professional', vehicle_coverage_existing: 'full_omnium' },
+    { vehicle_count: 3, vehicle_details: 'car_new', vehicle_usage: 'professional', vehicle_coverage_existing: 'full_omnium' },
     { family_status: 'single_parent', income_contributors: 'one', financial_dependents: 'partner_children' },
     { professional_status: 'independent', work_incapacity_concern: 'less_1_month', income_range: '12k_plus' },
     { sports_activities: ['winter_sports', 'motor_sports', 'combat_contact'], accident_coverage_existing: 'none' },
@@ -1094,7 +1036,7 @@ describe('edge cases', () => {
   it('extreme max profile (all high-risk) returns valid result', () => {
     const result = computeDiagnostic({
       vehicle_count: 5,
-      vehicle_details: 'electric',
+      vehicle_details: 'car_new',
       vehicle_usage: 'professional',
       vehicle_coverage_existing: 'none',
       vehicle_options_interest: ['new_vehicle_value', 'replacement_needed', 'vehicle_customized', 'bonus_important', 'professional_equipment'],

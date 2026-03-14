@@ -214,18 +214,6 @@ const bsafeRules: RuleDefinition[] = [
     },
   },
   {
-    id: 'bsafe_06_aging_parents',
-    condition: (_, a) =>
-      arr(a.health_concerns).includes('aging_parents'),
-    recommendation: {
-      product: 'bsafe', optionId: 'bsafe_aide_menagere',
-      type: 'deferred', priority: 3,
-      title: 'Vous protéger pour continuer à accompagner vos proches',
-      message: 'Si vous accompagnez des parents âgés, une immobilisation suite à un accident rendrait cette aide impossible. L\'option aide ménagère et soins à domicile vous soutient pendant votre rétablissement.',
-      advisorNote: 'B-Safe Aide ménagère/Soins à domicile. Argument : qui prend le relais si vous ne pouvez plus vous déplacer ?',
-    },
-  },
-  {
     id: 'bsafe_07_mortgage_no_death_cover',
     condition: (_, a) =>
       s(a.housing_status) === 'owner_with_mortgage' &&
@@ -251,21 +239,6 @@ const bsafeRules: RuleDefinition[] = [
       title: 'Anticiper votre protection long terme',
       message: 'Sans pension complémentaire ni assurance-vie, une invalidité permanente suite à un accident réduirait vos revenus futurs bien au-delà de ce que la sécurité sociale compense. La rente viagère B-Safe sécurise votre avenir en complément.',
       advisorNote: 'B-Safe Rente Viagère. Au Luxembourg, le taux de remplacement retraite diminue. Argumenter sur l\'écart pension légale vs niveau de vie actuel.',
-    },
-  },
-  {
-    id: 'bsafe_09_physical_exposure',
-    condition: (_, a) => {
-      const concerns = arr(a.health_concerns)
-      return (concerns.includes('physical_job') || concerns.includes('frequent_driving')) &&
-        ['none', 'employer_only'].includes(s(a.accident_coverage_existing))
-    },
-    recommendation: {
-      product: 'bsafe', optionId: 'bsafe_hospitalisation',
-      type: 'immediate', priority: 3,
-      title: 'Adapter votre protection à votre quotidien',
-      message: 'Votre activité et vos déplacements vous exposent davantage aux risques d\'accident. En complément de la sécurité sociale, B-Safe vous protège contre les conséquences financières d\'une hospitalisation et des frais médicaux liés.',
-      advisorNote: 'B-Safe étendu (Hospitalisation + Frais divers). Mentionner chirurgie esthétique réparatrice si pertinent.',
     },
   },
   {

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { verifyAdvisorRelation, fetchClientProfile } from '../../lib/api/advisor.ts'
-import { fetchLatestDiagnostic, fetchActions, hydrateDiagnostic, logAuditEvent } from '../../lib/api/diagnostics.ts'
+import { fetchLatestDiagnostic, loadDiagnosticResult, logAuditEvent } from '../../lib/api/diagnostics.ts'
 import { fetchCompletedAnswers } from '../../lib/api/questionnaire.ts'
 import NeedsWheel, { buildSegmentStates } from '../../components/landing/NeedsWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
@@ -65,9 +65,7 @@ export default function ClientDetailPage() {
       const diag = diagResult.data
       if (diag) {
         await logAuditEvent('view_client_diagnostic', 'diagnostics', diag.id, { client_id: clientId })
-
-        const { data: actionsData } = await fetchActions(diag.id, clientId)
-        setDiagnostic(hydrateDiagnostic(diag, actionsData || []))
+        setDiagnostic(await loadDiagnosticResult(diag, qrAnswers, clientId))
       }
       setLoading(false)
     }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { fetchDiagnosticHistory, computeDiagnosticRPC } from '../../lib/api/diagnostics.ts'
+import { fetchDiagnosticHistory, computeAndSaveDiagnostic } from '../../lib/api/diagnostics.ts'
 import { exportMyData, deleteMyData } from '../../lib/api/gdpr.ts'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
@@ -50,9 +50,7 @@ export default function ClientDashboard() {
       navigate('/questionnaire/profil')
       return
     }
-    if (progress.completedUniverses[quadrant]) {
-      return
-    }
+    if (progress.quadrantStates[quadrant].status !== 'available') return
     navigate(`/questionnaire/${quadrant}`)
   }
 
@@ -67,7 +65,7 @@ export default function ClientDashboard() {
     setFinishError(null)
 
     try {
-      const { data: diagId, error } = await computeDiagnosticRPC(progress.responseId)
+      const { data: diagId, error } = await computeAndSaveDiagnostic(progress.responseId, user.id, progress.answers)
 
       if (error || !diagId) {
         throw new Error(error?.message || 'Échec de la création du diagnostic')
@@ -158,8 +156,9 @@ export default function ClientDashboard() {
                 const colors = QUADRANT_WHEEL_COLORS[u]
                 const icon = QUADRANT_ICONS[u]
                 const isCompleted = state.status === 'completed'
+                const isLocked = state.status === 'locked'
                 const hasQuestions = QUADRANT_QUESTION_IDS[u].length > 0
-                const isDisabled = isCompleted || !hasQuestions
+                const isDisabled = isCompleted || !hasQuestions || isLocked
 
                 return (
                   <button
@@ -168,7 +167,7 @@ export default function ClientDashboard() {
                     disabled={isDisabled}
                     style={{ animation: `bal-fade-in 500ms cubic-bezier(0.25,0.8,0.5,1) both`, animationDelay: `${idx * 80}ms` }}
                     className={`p-4 rounded-xl text-left transition-all duration-300 ${
-                      !hasQuestions
+                      !hasQuestions || isLocked
                         ? 'bg-grey-50 shadow-card cursor-default opacity-60'
                         : isCompleted
                           ? 'bg-white shadow-card cursor-default'
@@ -180,11 +179,11 @@ export default function ClientDashboard() {
                         className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: isCompleted && state.needLevel ? `${getNeedColor(state.needLevel)}15` : `${colors.base}10` }}
                       >
-                        <Icon name={icon} size={20} className={isCompleted || !hasQuestions ? 'text-grey-400' : ''} style={!isCompleted && hasQuestions ? { color: colors.base } : undefined} />
+                        <Icon name={icon} size={20} className={isCompleted || !hasQuestions || isLocked ? 'text-grey-400' : ''} style={!isCompleted && hasQuestions && !isLocked ? { color: colors.base } : undefined} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <h3 className={`text-sm font-bold ${hasQuestions ? 'text-primary-700' : 'text-grey-300'}`}>
+                          <h3 className={`text-sm font-bold ${hasQuestions && !isLocked ? 'text-primary-700' : 'text-grey-300'}`}>
                             {labels.lines[0]} {labels.lines[1]}
                           </h3>
                           {isCompleted && state.needLevel && (
@@ -197,9 +196,14 @@ export default function ClientDashboard() {
                               Bientôt
                             </span>
                           )}
+                          {isLocked && hasQuestions && (
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-grey-100 text-grey-300">
+                              Verrouillé
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-grey-300 mt-0.5">
-                          {!hasQuestions ? 'Bientôt disponible' : isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} — Cliquez pour commencer`}
+                          {!hasQuestions ? 'Bientôt disponible' : isLocked ? 'Complétez d\'abord Biens et Personnes' : isCompleted ? `Score : ${state.score}/100` : `${labels.subtitle} — Cliquez pour commencer`}
                         </p>
                       </div>
                     </div>

@@ -3,9 +3,9 @@ import { render } from '@testing-library/react'
 import Spinner from './Spinner.tsx'
 
 describe('Spinner', () => {
-  it('renders an animated spinner element', () => {
+  it('renders a container for the animation', () => {
     const { container } = render(<Spinner />)
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument()
+    expect(container.firstElementChild).toBeInTheDocument()
   })
 
   it('applies default py-20 className', () => {

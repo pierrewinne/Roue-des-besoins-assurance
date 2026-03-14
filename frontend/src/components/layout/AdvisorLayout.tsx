@@ -32,7 +32,7 @@ export default function AdvisorLayout() {
       <header className="sticky top-0 z-50 bg-white border-b border-grey-200 shadow-header">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <Link to="/conseiller/dashboard" className="flex items-center gap-3">
+            <Link to="/conseiller" className="flex items-center gap-3">
               <BaloiseLogo variant="light" height={24} />
               <span className="text-xs bg-primary-50 text-primary-700 ring-1 ring-primary-700/10 px-2 py-0.5 rounded-full font-bold">Conseiller</span>
             </Link>

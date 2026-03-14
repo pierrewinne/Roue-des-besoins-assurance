@@ -1,6 +1,22 @@
 import { supabase } from '../supabase.ts'
 import type { DiagnosticResult, QuadrantScore, Recommendation, Quadrant } from '../../shared/scoring/types.ts'
+import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
+import { computeDiagnostic } from '../../shared/scoring/engine.ts'
+
+/** Recalculate a diagnostic from questionnaire answers (for stale DB scores) */
+export function recalculateDiagnostic(
+  diagMeta: { id: string; created_at: string; scoring_version?: string },
+  answers: QuestionnaireAnswers,
+): DiagnosticResult {
+  const result = computeDiagnostic(answers)
+  return {
+    ...result,
+    id: diagMeta.id,
+    createdAt: diagMeta.created_at,
+    scoringVersion: diagMeta.scoring_version ?? 'v1',
+  }
+}
 
 /** Hydrate raw DB diagnostic + actions into a DiagnosticResult */
 export function hydrateDiagnostic(
@@ -74,9 +90,67 @@ export async function fetchActions(diagnosticId: string, profileId: string) {
     .order('priority', { ascending: false })
 }
 
-/** Compute and save a diagnostic (server-side scoring) */
-export async function computeDiagnosticRPC(questionnaireId: string) {
-  return supabase.rpc('compute_and_save_diagnostic', { p_questionnaire_id: questionnaireId })
+/** Load a diagnostic result — recalculates from answers if available, else hydrates from DB */
+export async function loadDiagnosticResult(
+  diag: { id: string; created_at: string; scoring_version?: string },
+  answers: QuestionnaireAnswers | null,
+  profileId: string,
+): Promise<DiagnosticResult> {
+  if (answers && Object.keys(answers).length > 0) {
+    return recalculateDiagnostic(diag, answers)
+  }
+  const { data: actionsData } = await fetchActions(diag.id, profileId)
+  return hydrateDiagnostic(diag as Parameters<typeof hydrateDiagnostic>[0], actionsData || [])
+}
+
+// DB constraint limits universe to drive/home/travel/bsafe — map futur products accordingly
+const VALID_UNIVERSES = new Set(['drive', 'home', 'travel', 'bsafe'])
+
+/** Compute diagnostic client-side and save to DB */
+export async function computeAndSaveDiagnostic(questionnaireId: string, profileId: string, answers: QuestionnaireAnswers) {
+  const result = computeDiagnostic(answers)
+
+  // Insert diagnostic
+  const { data: diag, error: diagError } = await supabase
+    .from('diagnostics')
+    .insert({
+      questionnaire_id: questionnaireId,
+      profile_id: profileId,
+      scores: result.quadrantScores,
+      global_score: result.globalScore,
+      weightings: result.weightings,
+      scoring_version: 'v1',
+    })
+    .select('id')
+    .single()
+
+  if (diagError || !diag) return { data: null, error: diagError }
+
+  // Insert actions + mark questionnaire completed (independent writes, parallel)
+  const writes: Promise<unknown>[] = [
+    supabase
+      .from('questionnaire_responses')
+      .update({ completed: true })
+      .eq('id', questionnaireId)
+      .eq('profile_id', profileId),
+  ]
+
+  if (result.recommendations.length > 0) {
+    const actions = result.recommendations.map(r => ({
+      diagnostic_id: diag.id,
+      profile_id: profileId,
+      type: r.type,
+      universe: VALID_UNIVERSES.has(r.product) ? r.product : null,
+      priority: r.priority,
+      title: r.title,
+      description: r.message,
+    }))
+    writes.push(supabase.from('actions').insert(actions))
+  }
+
+  await Promise.all(writes)
+
+  return { data: diag.id as string, error: null }
 }
 
 /** Log an audit event */

@@ -417,7 +417,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'home_coverage_existing',
-    quadrant: 'projets',
+    quadrant: 'biens',
     label: 'Disposez-vous d\'une assurance habitation ?',
     type: 'select',
     required: true,
@@ -434,7 +434,7 @@ export const QUESTIONS: Question[] = [
   // ══════════════════════════════════════════
   {
     id: 'income_range',
-    quadrant: 'personnes',
+    quadrant: 'profil_express',
     label: 'Dans quelle tranche se situent les revenus nets mensuels de votre foyer ?',
     helpText: 'Cette information reste strictement confidentielle. Elle nous permet d\'évaluer l\'impact financier d\'un arrêt de travail ou d\'une incapacité.',
     type: 'select',
@@ -480,22 +480,8 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 'health_concerns',
-    quadrant: 'personnes',
-    label: 'Avez-vous des préoccupations particulières liées à votre santé ou votre activité ?',
-    type: 'multi_select',
-    required: true,
-    options: [
-      { value: 'none', label: 'Non, rien de particulier' },
-      { value: 'physical_job', label: 'Mon travail est physiquement exigeant' },
-      { value: 'frequent_driving', label: 'Je conduis beaucoup (trajet long, professionnel)' },
-      { value: 'family_history', label: 'Antécédents familiaux de maladie grave' },
-      { value: 'aging_parents', label: 'Parents âgés à accompagner' },
-    ],
-  },
-  {
     id: 'savings_protection',
-    quadrant: 'personnes',
+    quadrant: 'futur',
     label: 'Avez-vous mis en place une épargne ou un dispositif pour protéger votre avenir ?',
     type: 'multi_select',
     required: true,
@@ -510,7 +496,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 'other_properties',
-    quadrant: 'personnes',
+    quadrant: 'futur',
     label: 'Possédez-vous d\'autres biens immobiliers (résidence secondaire, investissement locatif) ?',
     type: 'select',
     required: true,

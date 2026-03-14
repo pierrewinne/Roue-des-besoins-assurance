@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { fetchActiveQuestionnaire } from '../lib/api/questionnaire.ts'
 import { computeQuadrantScore, computeDiagnostic } from '../shared/scoring/engine.ts'
 import { getNeedLevel } from '../shared/scoring/thresholds.ts'
-import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS } from '../shared/questionnaire/quadrant-mapping.ts'
+import { ALL_QUADRANTS, QUADRANT_QUESTION_IDS, arePrerequisitesMet } from '../shared/questionnaire/quadrant-mapping.ts'
 import type { QuestionnaireAnswers } from '../shared/questionnaire/schema.ts'
 import type { Quadrant, NeedLevel } from '../shared/scoring/types.ts'
 import type { QuadrantState } from '../components/landing/NeedsWheel.tsx'
@@ -74,10 +74,10 @@ export function useDiagnosticProgress(): DiagnosticProgress {
         const score = computeQuadrantScore(q, answers)
         s = { status: 'completed', score: score.needScore, needLevel: score.needLevel }
         count++
-      } else if (profilCompleted) {
-        s = { status: 'available' }
-      } else {
+      } else if (!profilCompleted || !arePrerequisitesMet(q, completedUniverses)) {
         s = { status: 'locked' }
+      } else {
+        s = { status: 'available' }
       }
       states[q] = s
       segments[QUADRANT_ORDER.indexOf(q)] = s

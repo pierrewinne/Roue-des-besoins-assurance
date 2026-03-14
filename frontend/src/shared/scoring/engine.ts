@@ -92,7 +92,7 @@ function computePersonnesExposure(a: Answers): number {
   let score = 0
   let weights = 0
 
-  // Family vulnerability (weight 25)
+  // Family vulnerability (weight 30)
   let familyScore = 20
   const familyStatus = asString(a.family_status)
   if (['couple_with_children', 'single_parent', 'recomposed'].includes(familyStatus)) {
@@ -101,8 +101,8 @@ function computePersonnesExposure(a: Answers): number {
   if (asString(a.income_contributors) === 'one' && familyScore >= 70) {
     familyScore = 100
   }
-  score += familyScore * 0.25
-  weights += 0.25
+  score += familyScore * 0.30
+  weights += 0.30
 
   // Financial dependents (weight 20)
   score += (DEPENDENTS_RISK[asString(a.financial_dependents)] ?? 30) * 0.20
@@ -121,20 +121,15 @@ function computePersonnesExposure(a: Answers): number {
   score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.10
   weights += 0.10
 
-  // Sports risk (weight 15)
+  // Sports risk (weight 20)
   const activities = asStringArray(a.sports_activities)
   let sportsScore = 0
   for (const act of activities) {
     if (HIGH_RISK_SPORTS.includes(act)) sportsScore += 25
     if (['running_cycling', 'team_sports'].includes(act)) sportsScore += 10
   }
-  score += Math.min(sportsScore, 100) * 0.15
-  weights += 0.15
-
-  // Health concerns (weight 10)
-  const healthCount = countNonNone(a.health_concerns)
-  score += Math.min(healthCount * 30, 100) * 0.10
-  weights += 0.10
+  score += Math.min(sportsScore, 100) * 0.20
+  weights += 0.20
 
   // Age factor (weight 5)
   const ageRisk: Record<string, number> = {
@@ -465,7 +460,6 @@ function computeDriveOptions(a: Answers): OptionScore[] {
 
 function computeBsafeOptions(a: Answers): OptionScore[] {
   const options: OptionScore[] = []
-  const healthConcerns = asStringArray(a.health_concerns)
   const sports = asStringArray(a.sports_activities)
 
   if (asString(a.financial_dependents) !== 'none') {
@@ -477,9 +471,6 @@ function computeBsafeOptions(a: Answers): OptionScore[] {
   const wic = asString(a.work_incapacity_concern)
   if (['less_1_month', '1_3_months'].includes(wic)) {
     options.push({ optionId: 'bsafe_incapacite', optionLabel: 'Incapacité de travail', relevance: 95, triggerQuestions: ['work_incapacity_concern'] })
-  }
-  if (healthConcerns.includes('aging_parents')) {
-    options.push({ optionId: 'bsafe_aide_menagere', optionLabel: 'Aide ménagère / Soins domicile', relevance: 70, triggerQuestions: ['health_concerns'] })
   }
   if (asNumber(a.children_count) > 0) {
     options.push({ optionId: 'bsafe_frais_divers', optionLabel: 'Garde enfants / Rattrapage scolaire', relevance: 75, triggerQuestions: ['children_count'] })

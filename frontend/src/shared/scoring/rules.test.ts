@@ -246,42 +246,6 @@ describe('incomeSource correction', () => {
 // TESTS COMPLEMENTAIRES — REGLES DRIVE MANQUANTES
 // ═══════════════════════════════════════════════════════════════════
 
-describe('drive_03: electric vehicle protection', () => {
-  it('recommends protection for electric vehicle without full_omnium', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      vehicle_count: 1,
-      vehicle_details: 'electric',
-      vehicle_coverage_existing: 'rc_only',
-    })
-    const rec = recommendations.find(r => r.id === 'drive_03_electric_no_protection')
-    expect(rec).toBeDefined()
-    expect(rec!.type).toBe('immediate')
-    expect(rec!.priority).toBe(4)
-    expect(rec!.title).toContain('électrique')
-  })
-
-  it('does NOT trigger for electric with full_omnium', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      vehicle_count: 1,
-      vehicle_details: 'electric',
-      vehicle_coverage_existing: 'full_omnium',
-    })
-    expect(recommendations.find(r => r.id === 'drive_03_electric_no_protection')).toBeUndefined()
-  })
-
-  it('does NOT trigger for non-electric vehicle', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      vehicle_count: 1,
-      vehicle_details: 'car_new',
-      vehicle_coverage_existing: 'rc_only',
-    })
-    expect(recommendations.find(r => r.id === 'drive_03_electric_no_protection')).toBeUndefined()
-  })
-})
-
 describe('drive_05: bonus protection', () => {
   it('recommends bonus protection when bonus_important interest', () => {
     const scores = makeScores()
@@ -449,28 +413,6 @@ describe('bsafe_05: children coverage', () => {
   })
 })
 
-describe('bsafe_06: aging parents coverage', () => {
-  it('triggers when health_concerns includes aging_parents', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['aging_parents'],
-    })
-    const rec = recommendations.find(r => r.id === 'bsafe_06_aging_parents')
-    expect(rec).toBeDefined()
-    expect(rec!.optionId).toBe('bsafe_aide_menagere')
-    expect(rec!.type).toBe('deferred')
-    expect(rec!.priority).toBe(3)
-  })
-
-  it('does NOT trigger without aging_parents concern', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['physical_job', 'frequent_driving'],
-    })
-    expect(recommendations.find(r => r.id === 'bsafe_06_aging_parents')).toBeUndefined()
-  })
-})
-
 describe('bsafe_07: mortgage without death cover', () => {
   it('triggers for owner_with_mortgage + no coverage + no life insurance', () => {
     const scores = makeScores()
@@ -567,47 +509,6 @@ describe('bsafe_08: no pension over 45', () => {
   })
 })
 
-describe('bsafe_09: physical exposure', () => {
-  it('triggers for physical_job + no personal coverage', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['physical_job'],
-      accident_coverage_existing: 'none',
-    })
-    const rec = recommendations.find(r => r.id === 'bsafe_09_physical_exposure')
-    expect(rec).toBeDefined()
-    expect(rec!.priority).toBe(3)
-    expect(rec!.optionId).toBe('bsafe_hospitalisation')
-  })
-
-  it('triggers for frequent_driving + employer_only', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['frequent_driving'],
-      accident_coverage_existing: 'employer_only',
-    })
-    expect(recommendations.find(r => r.id === 'bsafe_09_physical_exposure')).toBeDefined()
-  })
-
-  it('does NOT trigger with individual_basic coverage', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['physical_job'],
-      accident_coverage_existing: 'individual_basic',
-    })
-    expect(recommendations.find(r => r.id === 'bsafe_09_physical_exposure')).toBeUndefined()
-  })
-
-  it('does NOT trigger without physical_job or frequent_driving', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      health_concerns: ['family_history', 'aging_parents'],
-      accident_coverage_existing: 'none',
-    })
-    expect(recommendations.find(r => r.id === 'bsafe_09_physical_exposure')).toBeUndefined()
-  })
-})
-
 describe('bsafe_12: divorce event', () => {
   it('triggers for life_event=divorce', () => {
     const scores = makeScores()
@@ -639,7 +540,7 @@ describe('rules - combinaisons multi-regles', () => {
   it('maximum risk profile triggers many recommendations', () => {
     const result = computeDiagnostic({
       vehicle_count: 1,
-      vehicle_details: 'electric',
+      vehicle_details: 'car_new',
       vehicle_coverage_existing: 'none',
       vehicle_usage: 'daily_commute',
       vehicle_options_interest: ['bonus_important', 'vehicle_customized', 'professional_equipment', 'new_vehicle_value', 'replacement_needed'],
@@ -688,7 +589,7 @@ describe('rules - combinaisons multi-regles', () => {
 
   it('all recommendations have unique IDs (no duplicates)', () => {
     const result = computeDiagnostic({
-      vehicle_count: 1, vehicle_details: 'electric', vehicle_coverage_existing: 'none',
+      vehicle_count: 1, vehicle_details: 'car_new', vehicle_coverage_existing: 'none',
       vehicle_options_interest: ['bonus_important', 'vehicle_customized'],
       family_status: 'couple_with_children', income_contributors: 'one',
       accident_coverage_existing: 'none', sports_activities: ['winter_sports'],
@@ -747,18 +648,6 @@ describe('rules - drive_01 vehicle type variants', () => {
     expect(recommendations.find(r => r.id === 'drive_01_recent_no_omnium')).toBeDefined()
   })
 
-  it('triggers for electric', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, { ...baseAnswers, vehicle_details: 'electric' })
-    expect(recommendations.find(r => r.id === 'drive_01_recent_no_omnium')).toBeDefined()
-  })
-
-  it('triggers for suv_crossover', () => {
-    const scores = makeScores()
-    const recommendations = generateRecommendations(scores, { ...baseAnswers, vehicle_details: 'suv_crossover' })
-    expect(recommendations.find(r => r.id === 'drive_01_recent_no_omnium')).toBeDefined()
-  })
-
   it('does NOT trigger for car_recent', () => {
     const scores = makeScores()
     const recommendations = generateRecommendations(scores, { ...baseAnswers, vehicle_details: 'car_recent' })
@@ -813,10 +702,10 @@ describe('rules - drive_04 mobility need variants', () => {
     expect(recommendations.find(r => r.id === 'drive_04_mobility_need')).toBeDefined()
   })
 
-  it('triggers for replacement_needed interest even with occasional usage', () => {
+  it('triggers for replacement_needed interest even with leisure usage', () => {
     const scores = makeScores()
     const recommendations = generateRecommendations(scores, {
-      vehicle_count: 1, vehicle_usage: 'occasional',
+      vehicle_count: 1, vehicle_usage: 'leisure',
       vehicle_options_interest: ['replacement_needed'],
       vehicle_coverage_existing: 'rc_only',
     })
@@ -965,7 +854,7 @@ describe('home_01: tenant no coverage', () => {
 
   it('does NOT trigger for tenant with basic coverage', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { housing_status: 'tenant', home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { housing_status: 'tenant', home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_01_tenant_no_coverage')).toBeUndefined()
   })
 
@@ -991,7 +880,7 @@ describe('home_02: owner with mortgage gap', () => {
 
   it('does NOT trigger with basic coverage', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { housing_status: 'owner_with_mortgage', home_coverage_existing: 'basic_baloise' })
+    const recs = generateRecommendations(scores, { housing_status: 'owner_with_mortgage', home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_02_owner_mortgage_gap')).toBeUndefined()
   })
 })
@@ -999,13 +888,13 @@ describe('home_02: owner with mortgage gap', () => {
 describe('home_03: garden/pool', () => {
   it('triggers for garden without options coverage', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { home_specifics: ['garden'], home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { home_specifics: ['garden'], home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_03_garden_pool')).toBeDefined()
   })
 
   it('triggers for pool without options coverage', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { home_specifics: ['pool'], home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { home_specifics: ['pool'], home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_03_garden_pool')).toBeDefined()
   })
 
@@ -1019,7 +908,7 @@ describe('home_03: garden/pool', () => {
 describe('home_04: solar panels', () => {
   it('triggers for solar_panels without options', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { home_specifics: ['solar_panels'], home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { home_specifics: ['solar_panels'], home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_04_solar_panels')).toBeDefined()
   })
 
@@ -1049,7 +938,7 @@ describe('home_05: wine cellar', () => {
 describe('home_06: multimedia', () => {
   it('triggers for multimedia possessions without options', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { valuable_possessions: ['multimedia'], home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { valuable_possessions: ['multimedia'], home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_06_multimedia')).toBeDefined()
   })
 
@@ -1158,7 +1047,7 @@ describe('home_11: no security with valuables', () => {
 describe('home_12: reequipement', () => {
   it('triggers for high contents value without options', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { home_contents_value: '50k_100k', home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { home_contents_value: '50k_100k', home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_12_reequipement')).toBeDefined()
   })
 
@@ -1170,7 +1059,7 @@ describe('home_12: reequipement', () => {
 
   it('does NOT trigger for low value', () => {
     const scores = makeScores()
-    const recs = generateRecommendations(scores, { home_contents_value: '20k_50k', home_coverage_existing: 'basic_other' })
+    const recs = generateRecommendations(scores, { home_contents_value: '20k_50k', home_coverage_existing: 'basic' })
     expect(recs.find(r => r.id === 'home_12_reequipement')).toBeUndefined()
   })
 })
@@ -1607,10 +1496,10 @@ describe('rules - non-regression: all four products', () => {
     expect(result.recommendations.length).toBeGreaterThanOrEqual(15)
   })
 
-  it('all 46 rule IDs are unique', () => {
+  it('all 45 rule IDs are unique', () => {
     const allAnswers = {
       residence_status: 'resident_gdl',
-      vehicle_count: 2, vehicle_details: 'electric', vehicle_coverage_existing: 'none',
+      vehicle_count: 2, vehicle_details: 'car_new', vehicle_coverage_existing: 'none',
       vehicle_usage: 'daily_commute',
       vehicle_options_interest: ['bonus_important', 'vehicle_customized', 'professional_equipment', 'replacement_needed'],
       life_event: ['birth', 'new_vehicle', 'divorce', 'retirement', 'property_purchase', 'renovation'],

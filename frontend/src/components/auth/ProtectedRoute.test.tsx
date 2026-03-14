@@ -38,9 +38,7 @@ describe('ProtectedRoute', () => {
       profileError: false,
     })
 
-    const { container } = renderWithRouter()
-    // Spinner renders an animated div
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument()
+    renderWithRouter()
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
   })
 
@@ -89,8 +87,7 @@ describe('ProtectedRoute', () => {
       profileError: false,
     })
 
-    const { container } = renderWithRouter('client')
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument()
+    renderWithRouter('client')
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
   })
 

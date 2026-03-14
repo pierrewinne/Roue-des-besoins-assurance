@@ -40,6 +40,17 @@ export async function fetchCompletedAnswers(profileId: string): Promise<Question
   return data ? (data.responses as QuestionnaireAnswers) : null
 }
 
+/** Fetch answers by questionnaire ID */
+export async function fetchAnswersByQuestionnaireId(questionnaireId: string, profileId: string): Promise<QuestionnaireAnswers | null> {
+  const { data } = await supabase
+    .from('questionnaire_responses')
+    .select('responses')
+    .eq('id', questionnaireId)
+    .eq('profile_id', profileId)
+    .single()
+  return data ? (data.responses as QuestionnaireAnswers) : null
+}
+
 /** Save answers to an existing questionnaire */
 export async function saveAnswers(id: string, profileId: string, answers: QuestionnaireAnswers) {
   return supabase

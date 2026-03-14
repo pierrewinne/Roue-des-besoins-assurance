@@ -132,7 +132,7 @@ export default function UniverseQuestionnairePage() {
 
   // Cross-quadrant questions already answered (e.g. personnes → futur) are skipped
   const visibleQuestions = getVisibleQuadrantQuestions(universe, answers)
-    .filter(q => q.quadrant === universe || !isAnsweredValue(answers[q.id]))
+    .filter(q => q.quadrant === universe || q.quadrant === 'profil_express' || !isAnsweredValue(answers[q.id]))
   const labels = QUADRANT_WHEEL_LABELS[universe]
   const isValid = isQuadrantComplete(universe, answers)
   const questionProgress = getQuadrantProgress(universe, answers)

@@ -28,7 +28,7 @@ export default function ClientLayout() {
       <header className="sticky top-0 z-50 bg-white border-b border-grey-200 shadow-header">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex justify-between items-center h-16">
-            <Link to="/dashboard" className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3">
               <BaloiseLogo variant="light" height={24} />
             </Link>
 
