@@ -22,7 +22,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^28.1.0",
     "remotion": "^4.0.435",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.2.2",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
