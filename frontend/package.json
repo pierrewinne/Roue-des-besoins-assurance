@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@remotion/bundler": "^4.0.435",
+    "@remotion/bundler": "^4.0.438",
     "@remotion/cli": "^4.0.435",
     "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
