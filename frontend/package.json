@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@remotion/bundler": "^4.0.435",
-    "@remotion/cli": "^4.0.435",
+    "@remotion/cli": "^4.0.438",
     "@tailwindcss/vite": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
