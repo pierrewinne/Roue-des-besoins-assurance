@@ -9,8 +9,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    // Bypass Web Locks API — prevents "Lock broken by another request with the 'steal' option"
-    // errors caused by HMR creating competing lock requests in development
-    lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
+    // Bypass Web Locks API in dev only — prevents HMR competing lock requests
+    ...(import.meta.env.DEV && {
+      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => fn(),
+    }),
   },
 })

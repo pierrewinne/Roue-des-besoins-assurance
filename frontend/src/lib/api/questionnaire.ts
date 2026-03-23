@@ -10,7 +10,7 @@ export interface ActiveQuestionnaire {
 
 /** Fetch the latest incomplete questionnaire for a user */
 export async function fetchActiveQuestionnaire(profileId: string): Promise<ActiveQuestionnaire | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('questionnaire_responses')
     .select('id, responses, profil_completed, completed_universes')
     .eq('profile_id', profileId)
@@ -18,6 +18,12 @@ export async function fetchActiveQuestionnaire(profileId: string): Promise<Activ
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
+  if (error) {
+    // PGRST116 = no rows found — not an error, just no active questionnaire
+    if (error.code === 'PGRST116') return null
+    console.error('fetchActiveQuestionnaire failed:', error.message)
+    return null
+  }
   if (!data) return null
   return {
     id: data.id,
@@ -29,7 +35,7 @@ export async function fetchActiveQuestionnaire(profileId: string): Promise<Activ
 
 /** Fetch the latest completed questionnaire answers for a profile */
 export async function fetchCompletedAnswers(profileId: string): Promise<QuestionnaireAnswers | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('questionnaire_responses')
     .select('responses')
     .eq('profile_id', profileId)
@@ -37,17 +43,23 @@ export async function fetchCompletedAnswers(profileId: string): Promise<Question
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
+  if (error && error.code !== 'PGRST116') {
+    console.error('fetchCompletedAnswers failed:', error.message)
+  }
   return data ? (data.responses as QuestionnaireAnswers) : null
 }
 
 /** Fetch answers by questionnaire ID */
 export async function fetchAnswersByQuestionnaireId(questionnaireId: string, profileId: string): Promise<QuestionnaireAnswers | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('questionnaire_responses')
     .select('responses')
     .eq('id', questionnaireId)
     .eq('profile_id', profileId)
     .single()
+  if (error && error.code !== 'PGRST116') {
+    console.error('fetchAnswersByQuestionnaireId failed:', error.message)
+  }
   return data ? (data.responses as QuestionnaireAnswers) : null
 }
 

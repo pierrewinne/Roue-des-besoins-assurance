@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { supabase } from '../../lib/supabase.ts'
 import { fetchActiveQuestionnaire, saveAnswers as apiSaveAnswers, createQuestionnaire, markProfilCompleted } from '../../lib/api/questionnaire.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
@@ -66,17 +67,18 @@ export default function ProfilPage() {
     setError(null)
   }, [user])
 
-  // Flush pending save on tab close (P2-07)
+  // Flush pending save on tab close / hide (P2-07)
+  // visibilitychange is more reliable than beforeunload for async saves
   useEffect(() => {
-    function handleBeforeUnload() {
-      if (saveTimeout.current) {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden' && saveTimeout.current) {
         clearTimeout(saveTimeout.current)
         saveTimeout.current = undefined
         saveAnswers(answersRef.current)
       }
     }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [saveAnswers])
 
   function handleAnswer(questionId: string, value: AnswerValue | undefined) {
@@ -106,6 +108,15 @@ export default function ProfilPage() {
         const { data, error: err } = await createQuestionnaire(user.id, answers, true)
         if (err) throw err
         if (data) responseIdRef.current = data.id
+      }
+
+      // Record RGPD consent timestamp
+      if (rid || responseIdRef.current) {
+        await supabase
+          .from('questionnaire_responses')
+          .update({ consent_given_at: new Date().toISOString() })
+          .eq('id', rid || responseIdRef.current!)
+          .eq('profile_id', user.id)
       }
 
       navigate('/dashboard')

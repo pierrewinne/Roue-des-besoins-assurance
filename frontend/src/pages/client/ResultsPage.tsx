@@ -145,11 +145,33 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* Scoring transparency (MAJ-05) */}
+      <details className="mt-10 bg-white rounded-xl shadow-card">
+        <summary className="p-5 cursor-pointer text-sm font-bold text-primary-700 hover:text-primary-600 select-none">
+          Comment est calculé votre score ?
+        </summary>
+        <div className="px-5 pb-5 text-xs text-grey-500 leading-relaxed space-y-3">
+          <p>Votre score de besoin est calculé pour chaque univers selon deux axes :</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Exposition au risque</strong> — évalue votre niveau de risque en fonction de votre situation personnelle, familiale et professionnelle (nombre de véhicules, personnes à charge, activités sportives, etc.).</li>
+            <li><strong>Couverture existante</strong> — mesure les protections d'assurance déjà en place (type de couverture auto, assurance accidents, épargne de précaution, etc.).</li>
+          </ul>
+          <p>
+            Le croisement de ces deux axes dans une matrice exposition/couverture produit un <strong>score de besoin de 0 à 100</strong> :
+            un score faible (vert) signifie que votre couverture est adaptée, un score élevé (rouge) signale des lacunes à combler.
+          </p>
+          <p>
+            Les pondérations entre univers s'adaptent à votre profil : par exemple, une famille monoparentale verra l'univers « Personnes » renforcé,
+            tandis qu'un profil multi-véhicules accentuera l'univers « Biens ».
+          </p>
+        </div>
+      </details>
+
       {/* IDD Disclaimer (CRIT-3) */}
-      <div className="mt-10 p-5 bg-grey-50 rounded-xl ring-1 ring-grey-100 text-xs text-grey-400 leading-relaxed">
-        <p className="font-bold text-grey-500 mb-2">Information importante</p>
+      <div className="mt-4 p-5 bg-warning-light rounded-xl ring-1 ring-warning/10 text-sm text-grey-600 leading-relaxed">
+        <p className="font-bold text-grey-700 mb-2">⚠ Information importante</p>
         <p>
-          Ce diagnostic est un outil d'aide à la réflexion et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d'Assurance (IDD — Directive (UE) 2016/97).
+          Ce diagnostic est un <strong>outil d'aide à la réflexion</strong> et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d'Assurance (IDD — Directive (UE) 2016/97).
           Les résultats présentés sont basés uniquement sur les informations que vous avez fournies et ne remplacent pas l'analyse personnalisée d'un conseiller en assurance qualifié.
           Aucune garantie n'est apportée quant à l'exactitude ou l'exhaustivité de cette analyse.
           Veuillez consulter votre conseiller Baloise pour obtenir des recommandations adaptées à votre situation personnelle.

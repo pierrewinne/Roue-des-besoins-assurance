@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { pdf } from '@react-pdf/renderer'
-import { toPng } from 'html-to-image'
 import Button from '../ui/Button.tsx'
 import PdfClientReport from './PdfClientReport.tsx'
 import PdfAdvisorReport from './PdfAdvisorReport.tsx'
@@ -28,9 +27,10 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
     try {
       let wheelImageUri: string | undefined
 
-      // Capture wheel as PNG
+      // Capture wheel as PNG (dynamic import to keep html-to-image out of main bundle)
       if (wheelRef?.current) {
         try {
+          const { toPng } = await import('html-to-image')
           wheelImageUri = await toPng(wheelRef.current, {
             backgroundColor: '#ffffff',
             pixelRatio: 2,

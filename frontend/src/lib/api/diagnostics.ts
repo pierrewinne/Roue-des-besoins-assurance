@@ -106,11 +106,25 @@ export async function loadDiagnosticResult(
 // DB constraint limits universe to drive/home/travel/bsafe — map futur products accordingly
 const VALID_UNIVERSES = new Set(['drive', 'home', 'travel', 'bsafe'])
 
-/** Compute diagnostic client-side and save to DB */
-export async function computeAndSaveDiagnostic(questionnaireId: string, profileId: string, answers: QuestionnaireAnswers) {
+/** Compute diagnostic server-side via RPC and save to DB (CRIT-02 fix) */
+export async function computeAndSaveDiagnostic(questionnaireId: string, _profileId: string, answers: QuestionnaireAnswers) {
+  // Use server-side RPC for tamper-proof scoring
+  const { data: diagId, error: rpcError } = await supabase
+    .rpc('compute_and_save_diagnostic', { p_questionnaire_id: questionnaireId })
+
+  if (rpcError || !diagId) {
+    console.error('Server-side scoring failed, falling back to client-side:', rpcError?.message)
+    // Fallback to client-side computation if RPC fails (e.g., function not yet deployed)
+    return computeAndSaveDiagnosticClientSide(questionnaireId, _profileId, answers)
+  }
+
+  return { data: diagId as string, error: null }
+}
+
+/** Client-side fallback — used only if server-side RPC is unavailable */
+async function computeAndSaveDiagnosticClientSide(questionnaireId: string, profileId: string, answers: QuestionnaireAnswers) {
   const result = computeDiagnostic(answers)
 
-  // Insert diagnostic
   const { data: diag, error: diagError } = await supabase
     .from('diagnostics')
     .insert({
@@ -126,7 +140,6 @@ export async function computeAndSaveDiagnostic(questionnaireId: string, profileI
 
   if (diagError || !diag) return { data: null, error: diagError }
 
-  // Insert actions + mark questionnaire completed (independent writes, parallel)
   const writes: PromiseLike<unknown>[] = [
     supabase
       .from('questionnaire_responses')

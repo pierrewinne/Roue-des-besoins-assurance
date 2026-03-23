@@ -17,12 +17,14 @@ export default defineConfig({
           recharts: ['recharts'],
           'react-pdf': ['@react-pdf/renderer'],
           lottie: ['lottie-web'],
+          'html-to-image': ['html-to-image'],
         },
       },
     },
   },
   esbuild: {
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace'] : [],
   },
   test: {
     globals: true,

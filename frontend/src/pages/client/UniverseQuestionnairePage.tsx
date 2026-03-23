@@ -77,17 +77,18 @@ export default function UniverseQuestionnairePage() {
     }
   }, [user, validUniverse])
 
-  // Flush pending save on tab close (P2-07)
+  // Flush pending save on tab close / hide (P2-07)
+  // visibilitychange is more reliable than beforeunload for async saves
   useEffect(() => {
-    function handleBeforeUnload() {
-      if (saveTimeout.current) {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden' && saveTimeout.current) {
         clearTimeout(saveTimeout.current)
         saveTimeout.current = undefined
         saveAnswers(answersRef.current)
       }
     }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [saveAnswers])
 
   function handleAnswer(questionId: string, value: AnswerValue | undefined) {
