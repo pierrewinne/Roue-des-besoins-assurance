@@ -16,6 +16,102 @@ const AUTONOMY_RISK: Record<string, number> = {
   '6_12_months': 30, more_12_months: 10,
 }
 
+const VEHICLE_RISK: Record<string, number> = {
+  car_new: 90, car_recent: 60, car_old: 25,
+}
+
+const USAGE_RISK: Record<string, number> = {
+  daily_commute: 70, professional: 90, leisure: 30,
+}
+
+const HOUSING_RISK: Record<string, number> = {
+  owner_with_mortgage: 90, owner_no_mortgage: 60, tenant: 50, lodged_free: 15,
+}
+
+const HOUSING_TYPE_RISK: Record<string, number> = {
+  house: 75, townhouse: 65, apartment: 40, other: 35,
+}
+
+const CONTENTS_RISK: Record<string, number> = {
+  less_20k: 20, '20k_50k': 45, '50k_100k': 75, '100k_plus': 95,
+}
+
+const PROPERTY_RISK: Record<string, number> = {
+  none: 0, secondary: 40, rental: 60, both: 85,
+}
+
+const VEHICLE_COV_SCORE: Record<string, number> = {
+  none: 0, unknown: 10, rc_only: 25, mini_omnium: 55, full_omnium: 90,
+}
+
+const HOME_COV_SCORE: Record<string, number> = {
+  none: 0, unknown: 10, basic: 55, with_options: 90,
+}
+
+const BSAFE_INCOME_RISK: Record<string, number> = {
+  less_3k: 30, '3k_5k': 45, '5k_8k': 65,
+  '8k_12k': 80, '12k_plus': 100, no_answer: 50,
+}
+
+const FUTUR_INCOME_RISK: Record<string, number> = {
+  less_3k: 20, '3k_5k': 40, '5k_8k': 60,
+  '8k_12k': 80, '12k_plus': 100, no_answer: 50,
+}
+
+const AGE_RISK_BSAFE: Record<string, number> = {
+  '18_25': 50, '26_35': 40, '36_45': 55,
+  '46_55': 70, '56_65': 85, '65_plus': 95, '80_plus': 100,
+}
+
+const TRAVEL_FREQ_RISK: Record<string, number> = {
+  never: 0, once_year: 35, several_year: 70, frequent: 95,
+}
+
+const TRAVEL_BUDGET_RISK: Record<string, number> = {
+  less_1k: 20, '1k_3k': 45, '3k_5k': 75, '5k_plus': 95,
+}
+
+const ACCIDENT_COV_SCORE: Record<string, number> = {
+  none: 0, employer_only: 25, individual_basic: 55, individual_complete: 90,
+}
+
+const STATUS_COV: Record<string, number> = {
+  civil_servant: 70, employee: 50, independent: 15, business_owner: 20, retired: 30,
+}
+
+const CONTRIBUTORS_COV: Record<string, number> = {
+  one: 20, two: 60, more: 80,
+}
+
+const PATRIMOINE_COV: Record<string, number> = {
+  none: 0, secondary: 30, rental: 50, both: 70,
+}
+
+const AGE_RISK_FUTUR: Record<string, number> = {
+  '18_25': 30, '26_35': 60, '36_45': 90,
+  '46_55': 100, '56_65': 70,
+}
+
+const CONTRIBUTORS_RISK: Record<string, number> = {
+  one: 85, two: 40, more: 25,
+}
+
+const TRAVEL_COV_SCORE: Record<string, number> = {
+  none: 0, credit_card: 30, per_trip: 60, annual: 90,
+}
+
+// Quadrant combination weights
+const HOME_WEIGHT = 0.55
+const DRIVE_WEIGHT = 0.45
+const BSAFE_WEIGHT = 0.65
+const TRAVEL_WEIGHT = 0.35
+
+/** Returns true if user travels (frequency is set and not 'never') */
+function hasTravel(a: Answers): boolean {
+  const freq = asString(a.travel_frequency)
+  return freq !== '' && freq !== 'never'
+}
+
 // === Biens (DRIVE + HOME) — Exposure ===
 
 function computeDriveExposure(a: Answers): number {
@@ -30,17 +126,11 @@ function computeDriveExposure(a: Answers): number {
   weights += 0.20
 
   // Vehicle age / value at risk (weight 30)
-  const vehicleRisk: Record<string, number> = {
-    car_new: 90, car_recent: 60, car_old: 25,
-  }
-  score += (vehicleRisk[asString(a.vehicle_details)] ?? 50) * 0.30
+  score += (VEHICLE_RISK[asString(a.vehicle_details)] ?? 50) * 0.30
   weights += 0.30
 
   // Vehicle usage intensity (weight 25)
-  const usageRisk: Record<string, number> = {
-    daily_commute: 70, professional: 90, leisure: 30,
-  }
-  score += (usageRisk[asString(a.vehicle_usage)] ?? 50) * 0.25
+  score += (USAGE_RISK[asString(a.vehicle_usage)] ?? 50) * 0.25
   weights += 0.25
 
   // Unmet options needs (weight 15)
@@ -61,24 +151,15 @@ function computeHomeExposure(a: Answers): number {
   let weights = 0
 
   // Housing status — owner with mortgage = highest exposure (weight 25)
-  const housingRisk: Record<string, number> = {
-    owner_with_mortgage: 90, owner_no_mortgage: 60, tenant: 50, lodged_free: 15,
-  }
-  score += (housingRisk[asString(a.housing_status)] ?? 40) * 0.25
+  score += (HOUSING_RISK[asString(a.housing_status)] ?? 40) * 0.25
   weights += 0.25
 
   // Housing type — house = more exposure than apartment (weight 15)
-  const typeRisk: Record<string, number> = {
-    house: 75, townhouse: 65, apartment: 40, other: 35,
-  }
-  score += (typeRisk[asString(a.housing_type)] ?? 45) * 0.15
+  score += (HOUSING_TYPE_RISK[asString(a.housing_type)] ?? 45) * 0.15
   weights += 0.15
 
   // Contents value (weight 20)
-  const contentsRisk: Record<string, number> = {
-    less_20k: 20, '20k_50k': 45, '50k_100k': 75, '100k_plus': 95,
-  }
-  score += (contentsRisk[asString(a.home_contents_value)] ?? 40) * 0.20
+  score += (CONTENTS_RISK[asString(a.home_contents_value)] ?? 40) * 0.20
   weights += 0.20
 
   // Valuable possessions (weight 15)
@@ -92,10 +173,7 @@ function computeHomeExposure(a: Answers): number {
   weights += 0.10
 
   // Other properties (weight 10)
-  const propRisk: Record<string, number> = {
-    none: 0, secondary: 40, rental: 60, both: 85,
-  }
-  score += (propRisk[asString(a.other_properties)] ?? 0) * 0.10
+  score += (PROPERTY_RISK[asString(a.other_properties)] ?? 0) * 0.10
   weights += 0.10
 
   // Life event: property purchase or renovation (weight 5)
@@ -115,7 +193,7 @@ function computeBiensExposure(a: Answers): number {
   // Weighted average: HOME 55%, DRIVE 45% (housing is universal, vehicle is optional)
   const hasDrive = asNumber(a.vehicle_count) > 0
   if (!hasDrive) return homeExp
-  return Math.round(homeExp * 0.55 + driveExp * 0.45)
+  return Math.round(homeExp * HOME_WEIGHT + driveExp * DRIVE_WEIGHT)
 }
 
 // === Biens (DRIVE + HOME) — Coverage ===
@@ -127,11 +205,8 @@ function computeDriveCoverage(a: Answers): number {
   let weights = 0
 
   // Vehicle insurance level (weight 60)
-  const vehicleCovScore: Record<string, number> = {
-    none: 0, unknown: 10, rc_only: 25, mini_omnium: 55, full_omnium: 90,
-  }
   const cov = asString(a.vehicle_coverage_existing)
-  score += (vehicleCovScore[cov] ?? 10) * 0.60
+  score += (VEHICLE_COV_SCORE[cov] ?? 10) * 0.60
   weights += 0.60
 
   // Options coverage gap (weight 40)
@@ -151,10 +226,7 @@ function computeHomeCoverage(a: Answers): number {
   let weights = 0
 
   // Home insurance level (weight 50)
-  const homeCovScore: Record<string, number> = {
-    none: 0, unknown: 10, basic: 55, with_options: 90,
-  }
-  score += (homeCovScore[asString(a.home_coverage_existing)] ?? 10) * 0.50
+  score += (HOME_COV_SCORE[asString(a.home_coverage_existing)] ?? 10) * 0.50
   weights += 0.50
 
   // Security measures (weight 25)
@@ -183,7 +255,7 @@ function computeBiensCoverage(a: Answers): number {
   // Weighted average: HOME 55%, DRIVE 45%
   const hasDrive = asNumber(a.vehicle_count) > 0
   if (!hasDrive) return homeCov
-  return Math.round(homeCov * 0.55 + driveCov * 0.45)
+  return Math.round(homeCov * HOME_WEIGHT + driveCov * DRIVE_WEIGHT)
 }
 
 // === Personnes (B-SAFE + TRAVEL) — Exposure ===
@@ -213,30 +285,22 @@ function computeBsafeExposure(a: Answers): number {
   score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 30) * 0.15
   weights += 0.15
 
-  // Income level at risk (weight 10)
-  const incomeRisk: Record<string, number> = {
-    less_3k: 30, '3k_5k': 45, '5k_8k': 65,
-    '8k_12k': 80, '12k_plus': 100, no_answer: 50,
-  }
-  score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.10
-  weights += 0.10
+  // Income level at risk (weight 15) — key factor for gap between benefits and lifestyle
+  score += (BSAFE_INCOME_RISK[asString(a.income_range)] ?? 50) * 0.15
+  weights += 0.15
 
-  // Sports risk (weight 20)
+  // Sports risk (weight 15)
   const activities = asStringArray(a.sports_activities)
   let sportsScore = 0
   for (const act of activities) {
     if (HIGH_RISK_SPORTS.includes(act)) sportsScore += 25
     if (['running_cycling', 'team_sports'].includes(act)) sportsScore += 10
   }
-  score += Math.min(sportsScore, 100) * 0.20
-  weights += 0.20
+  score += Math.min(sportsScore, 100) * 0.15
+  weights += 0.15
 
   // Age factor (weight 5)
-  const ageRisk: Record<string, number> = {
-    '18_25': 30, '26_35': 50, '36_45': 90,
-    '46_55': 100, '56_65': 70, '65_plus': 40, '80_plus': 20,
-  }
-  score += (ageRisk[asString(a.age_range)] ?? 50) * 0.05
+  score += (AGE_RISK_BSAFE[asString(a.age_range)] ?? 50) * 0.05
   weights += 0.05
 
   return weights > 0 ? Math.round(score / weights) : 50
@@ -249,10 +313,7 @@ function computeTravelExposure(a: Answers): number {
   let weights = 0
 
   // Travel frequency (weight 35)
-  const freqRisk: Record<string, number> = {
-    never: 0, once_year: 35, several_year: 70, frequent: 95,
-  }
-  score += (freqRisk[asString(a.travel_frequency)] ?? 0) * 0.35
+  score += (TRAVEL_FREQ_RISK[asString(a.travel_frequency)] ?? 0) * 0.35
   weights += 0.35
 
   // Destinations risk (weight 25)
@@ -265,10 +326,7 @@ function computeTravelExposure(a: Answers): number {
   weights += 0.25
 
   // Travel budget (weight 25)
-  const budgetRisk: Record<string, number> = {
-    less_1k: 20, '1k_3k': 45, '3k_5k': 75, '5k_plus': 95,
-  }
-  score += (budgetRisk[asString(a.travel_budget)] ?? 30) * 0.25
+  score += (TRAVEL_BUDGET_RISK[asString(a.travel_budget)] ?? 30) * 0.25
   weights += 0.25
 
   // Family travel (weight 15) — children = more at stake
@@ -287,11 +345,9 @@ function computePersonnesExposure(a: Answers): number {
   const travelExp = computeTravelExposure(a)
 
   // If no travel activity, B-SAFE only
-  if (asString(a.travel_frequency) === 'never' || asString(a.travel_frequency) === '') {
-    return bsafeExp
-  }
+  if (!hasTravel(a)) return bsafeExp
   // Weighted: B-SAFE 65%, TRAVEL 35%
-  return Math.round(bsafeExp * 0.65 + travelExp * 0.35)
+  return Math.round(bsafeExp * BSAFE_WEIGHT + travelExp * TRAVEL_WEIGHT)
 }
 
 // === Personnes (B-SAFE + TRAVEL) — Coverage ===
@@ -301,23 +357,26 @@ function computeBsafeCoverage(a: Answers): number {
   let weights = 0
 
   // Accident coverage (weight 45)
-  const accidentCovScore: Record<string, number> = {
-    none: 0, employer_only: 25, individual_basic: 55, individual_complete: 90,
-  }
-  score += (accidentCovScore[asString(a.accident_coverage_existing)] ?? 0) * 0.45
+  score += (ACCIDENT_COV_SCORE[asString(a.accident_coverage_existing)] ?? 0) * 0.45
   weights += 0.45
 
-  // Savings / financial protection (weight 35)
+  // Savings / financial protection (weight 35) — weighted by device quality
   const savingsItems = asStringArray(a.savings_protection)
-  const hasSavings = !savingsItems.includes('none') && savingsItems.length > 0
-  const savingsCov = hasSavings ? Math.min(savingsItems.length * 25, 100) : 0
-  score += savingsCov * 0.35
+  let savingsCov = 0
+  if (!savingsItems.includes('none') && savingsItems.length > 0) {
+    if (savingsItems.includes('life_insurance')) savingsCov += 30
+    if (savingsItems.includes('pension_plan')) savingsCov += 25
+    if (savingsItems.includes('pension_employer')) savingsCov += 20
+    if (savingsItems.includes('real_estate')) savingsCov += 15
+    if (savingsItems.includes('savings_regular')) savingsCov += 10
+  }
+  score += Math.min(savingsCov, 100) * 0.35
   weights += 0.35
 
   // Income protection implicit (weight 20)
   let incomeCov = 10
   const proStatus = asString(a.professional_status)
-  if (proStatus === 'civil_servant') incomeCov = 50
+  if (proStatus === 'civil_servant') incomeCov = 40
   else if (proStatus === 'employee') incomeCov = 30
   const accCov = asString(a.accident_coverage_existing)
   if (accCov === 'individual_complete') incomeCov += 30
@@ -329,24 +388,19 @@ function computeBsafeCoverage(a: Answers): number {
 }
 
 function computeTravelCoverage(a: Answers): number {
-  if (!isTravelEligible(a) || asString(a.travel_frequency) === 'never') return 100
+  if (!isTravelEligible(a) || !hasTravel(a)) return 100
 
   // Travel coverage level (weight 100% — single question drives it)
-  const travelCovScore: Record<string, number> = {
-    none: 0, credit_card: 30, per_trip: 60, annual: 90,
-  }
-  return travelCovScore[asString(a.travel_coverage_existing)] ?? 0
+  return TRAVEL_COV_SCORE[asString(a.travel_coverage_existing)] ?? 0
 }
 
 function computePersonnesCoverage(a: Answers): number {
   const bsafeCov = computeBsafeCoverage(a)
   const travelCov = computeTravelCoverage(a)
 
-  if (asString(a.travel_frequency) === 'never' || asString(a.travel_frequency) === '') {
-    return bsafeCov
-  }
+  if (!hasTravel(a)) return bsafeCov
   // Weighted: B-SAFE 65%, TRAVEL 35%
-  return Math.round(bsafeCov * 0.65 + travelCov * 0.35)
+  return Math.round(bsafeCov * BSAFE_WEIGHT + travelCov * TRAVEL_WEIGHT)
 }
 
 // === Projets — Inactive (empty quadrant) ===
@@ -370,24 +424,13 @@ function computeFuturExposure(a: Answers): number {
   score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 50) * 0.25
 
   // Income level (weight 20%) — higher income = more to protect
-  const incomeRisk: Record<string, number> = {
-    less_3k: 20, '3k_5k': 40, '5k_8k': 60,
-    '8k_12k': 80, '12k_plus': 100, no_answer: 50,
-  }
-  score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.20
+  score += (FUTUR_INCOME_RISK[asString(a.income_range)] ?? 50) * 0.20
 
   // Age factor (weight 15%) — mid-career = highest need
-  const ageRisk: Record<string, number> = {
-    '18_25': 30, '26_35': 60, '36_45': 90,
-    '46_55': 100, '56_65': 70,
-  }
-  score += (ageRisk[asString(a.age_range)] ?? 50) * 0.15
+  score += (AGE_RISK_FUTUR[asString(a.age_range)] ?? 50) * 0.15
 
   // Income contributors (weight 10%) — single income = more vulnerable
-  const contributorsRisk: Record<string, number> = {
-    one: 85, two: 40, more: 25,
-  }
-  score += (contributorsRisk[asString(a.income_contributors)] ?? 50) * 0.10
+  score += (CONTRIBUTORS_RISK[asString(a.income_contributors)] ?? 50) * 0.10
 
   return Math.round(score)
 }
@@ -410,22 +453,13 @@ function computeFuturCoverage(a: Answers): number {
   score += Math.min(devicesCov, 100) * 0.50
 
   // Professional status protection (weight 25%)
-  const statusCov: Record<string, number> = {
-    civil_servant: 70, employee: 50, independent: 15, business_owner: 20, retired: 30,
-  }
-  score += (statusCov[asString(a.professional_status)] ?? 20) * 0.25
+  score += (STATUS_COV[asString(a.professional_status)] ?? 20) * 0.25
 
   // Income contributors (weight 15%) — more contributors = more resilience
-  const contributorsCov: Record<string, number> = {
-    one: 20, two: 60, more: 80,
-  }
-  score += (contributorsCov[asString(a.income_contributors)] ?? 30) * 0.15
+  score += (CONTRIBUTORS_COV[asString(a.income_contributors)] ?? 30) * 0.15
 
   // Real estate patrimony (weight 10%)
-  const patrimoineCov: Record<string, number> = {
-    none: 0, secondary: 30, rental: 50, both: 70,
-  }
-  score += (patrimoineCov[asString(a.other_properties)] ?? 0) * 0.10
+  score += (PATRIMOINE_COV[asString(a.other_properties)] ?? 0) * 0.10
 
   return Math.round(score)
 }
@@ -549,14 +583,26 @@ function computeProductScores(answers: Answers): ProductScore[] {
   const vehicleCov = asString(answers.vehicle_coverage_existing)
   const accidentCov = asString(answers.accident_coverage_existing)
 
-  // DRIVE
-  if (asNumber(answers.vehicle_count) > 0) {
+  // DRIVE — résident GDL uniquement (POG)
+  if (isResidentGDL(answers) && asNumber(answers.vehicle_count) > 0) {
     const driveRelevance = vehicleCov === 'full_omnium' ? 20 : vehicleCov === 'mini_omnium' ? 40 : 80
     scores.push({
       product: 'drive',
       relevance: driveRelevance,
       isExistingClient: !['none', 'unknown'].includes(vehicleCov),
       options: computeDriveOptions(answers),
+    })
+  }
+
+  // HOME — résident GDL uniquement (POG)
+  if (isResidentGDL(answers)) {
+    const homeCov = asString(answers.home_coverage_existing)
+    const homeRelevance = homeCov === 'with_options' ? 20 : homeCov === 'basic' ? 50 : 85
+    scores.push({
+      product: 'home',
+      relevance: homeRelevance,
+      isExistingClient: !['none', 'unknown', ''].includes(homeCov),
+      options: [],
     })
   }
 
@@ -568,6 +614,18 @@ function computeProductScores(answers: Answers): ProductScore[] {
       relevance: bsafeRelevance,
       isExistingClient: ['individual_basic', 'individual_complete'].includes(accidentCov),
       options: computeBsafeOptions(answers),
+    })
+  }
+
+  // TRAVEL — résident ou frontalier éligible (POG)
+  if (isTravelEligible(answers) && hasTravel(answers)) {
+    const travelCov = asString(answers.travel_coverage_existing)
+    const travelRelevance = travelCov === 'annual' ? 15 : travelCov === 'per_trip' ? 40 : travelCov === 'credit_card' ? 65 : 85
+    scores.push({
+      product: 'travel',
+      relevance: travelRelevance,
+      isExistingClient: !['none', ''].includes(travelCov),
+      options: [],
     })
   }
 

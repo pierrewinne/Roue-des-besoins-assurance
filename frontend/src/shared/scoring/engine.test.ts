@@ -247,12 +247,13 @@ describe('computeDiagnostic - globalScore', () => {
     expect(result.globalScore).toBeLessThanOrEqual(100)
   })
 
-  it('returns productScores with only drive and bsafe', () => {
+  it('returns productScores including drive, home, and bsafe for resident GDL', () => {
     const result = computeDiagnostic({ vehicle_count: 1 })
     expect(Array.isArray(result.productScores)).toBe(true)
     const products = result.productScores.map(p => p.product)
-    expect(products).not.toContain('home')
-    expect(products).not.toContain('travel')
+    expect(products).toContain('drive')
+    expect(products).toContain('home')
+    expect(products).toContain('bsafe')
   })
 
   it('returns recommendations array', () => {
@@ -433,10 +434,10 @@ describe('computePersonnesExposure - age_range impact', () => {
     expect(midAge.quadrantScores.personnes.exposure).toBeGreaterThan(young.quadrantScores.personnes.exposure)
   })
 
-  it('65_plus has lower exposure than 46_55 (post-retirement)', () => {
+  it('65_plus has higher exposure than 46_55 (severity increases with age)', () => {
     const senior = computeDiagnostic({ age_range: '65_plus' })
     const midAge = computeDiagnostic({ age_range: '46_55' })
-    expect(midAge.quadrantScores.personnes.exposure).toBeGreaterThan(senior.quadrantScores.personnes.exposure)
+    expect(senior.quadrantScores.personnes.exposure).toBeGreaterThanOrEqual(midAge.quadrantScores.personnes.exposure)
   })
 })
 
