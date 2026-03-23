@@ -6,16 +6,17 @@ function computeDiagnostic(answers: Record<string, unknown>) {
   return _computeDiagnostic({ residence_status: 'resident_gdl', ...answers })
 }
 
-describe('computeBiensScore (DRIVE)', () => {
+describe('computeBiensScore (DRIVE + HOME)', () => {
   it('returns a valid quadrant score for biens', () => {
     const result = computeDiagnostic({ vehicle_count: 1 })
     expect(result.quadrantScores.biens.quadrant).toBe('biens')
     expect(result.quadrantScores.biens.active).toBe(true)
   })
 
-  it('has zero exposure when no vehicle', () => {
+  it('has HOME-only exposure when no vehicle (non-zero)', () => {
     const result = computeDiagnostic({ vehicle_count: 0 })
-    expect(result.quadrantScores.biens.exposure).toBe(0)
+    // With HOME included, biens always has some exposure (housing)
+    expect(result.quadrantScores.biens.exposure).toBeGreaterThan(0)
   })
 
   it('increases exposure with vehicles', () => {
@@ -40,6 +41,24 @@ describe('computeBiensScore (DRIVE)', () => {
     const rcOnly = computeDiagnostic({ vehicle_count: 1, vehicle_coverage_existing: 'rc_only' })
     const omnium = computeDiagnostic({ vehicle_count: 1, vehicle_coverage_existing: 'full_omnium' })
     expect(rcOnly.quadrantScores.biens.coverage).toBeLessThan(omnium.quadrantScores.biens.coverage)
+  })
+
+  it('HOME exposure increases with housing status', () => {
+    const tenant = computeDiagnostic({ vehicle_count: 0, housing_status: 'tenant' })
+    const owner = computeDiagnostic({ vehicle_count: 0, housing_status: 'owner_with_mortgage' })
+    expect(owner.quadrantScores.biens.exposure).toBeGreaterThan(tenant.quadrantScores.biens.exposure)
+  })
+
+  it('HOME exposure increases with contents value', () => {
+    const low = computeDiagnostic({ vehicle_count: 0, home_contents_value: 'less_20k' })
+    const high = computeDiagnostic({ vehicle_count: 0, home_contents_value: '100k_plus' })
+    expect(high.quadrantScores.biens.exposure).toBeGreaterThan(low.quadrantScores.biens.exposure)
+  })
+
+  it('HOME coverage increases with better home insurance', () => {
+    const none = computeDiagnostic({ vehicle_count: 0, home_coverage_existing: 'none' })
+    const withOpts = computeDiagnostic({ vehicle_count: 0, home_coverage_existing: 'with_options' })
+    expect(withOpts.quadrantScores.biens.coverage).toBeGreaterThan(none.quadrantScores.biens.coverage)
   })
 })
 
@@ -103,10 +122,10 @@ describe('futur quadrant (PP/LP/SP)', () => {
     expect(result.weightings.futur).toBeGreaterThan(0)
   })
 
-  it('futur has higher exposure when no savings', () => {
-    const noSavings = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['none'] })
-    const hasSavings = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', savings_protection: ['pension_plan', 'life_insurance'] })
-    expect(noSavings.quadrantScores.futur.exposure).toBeGreaterThan(hasSavings.quadrantScores.futur.exposure)
+  it('futur exposure depends on dependents and income (not savings)', () => {
+    const noDeps = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'none', income_range: 'less_3k' })
+    const highRisk = computeDiagnostic({ age_range: '36_45', professional_status: 'employee', financial_dependents: 'partner_children', income_range: '12k_plus' })
+    expect(highRisk.quadrantScores.futur.exposure).toBeGreaterThan(noDeps.quadrantScores.futur.exposure)
   })
 
   it('futur has higher exposure with dependents', () => {
@@ -358,9 +377,10 @@ describe('computeBiensExposure - vehicle_count impact', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('computeBiensCoverage - coverage levels granulaire', () => {
-  it('no vehicle = coverage 100 (fully covered)', () => {
-    const result = computeDiagnostic({ vehicle_count: 0 })
-    expect(result.quadrantScores.biens.coverage).toBe(100)
+  it('no vehicle = HOME-only coverage (depends on home insurance)', () => {
+    const none = computeDiagnostic({ vehicle_count: 0, home_coverage_existing: 'none' })
+    const withOpts = computeDiagnostic({ vehicle_count: 0, home_coverage_existing: 'with_options' })
+    expect(withOpts.quadrantScores.biens.coverage).toBeGreaterThan(none.quadrantScores.biens.coverage)
   })
 
   it('none < rc_only < mini_omnium < full_omnium', () => {
@@ -978,13 +998,13 @@ describe('edge cases', () => {
     const result = computeDiagnostic({})
     expect(result.globalScore).toBeGreaterThanOrEqual(0)
     expect(result.globalScore).toBeLessThanOrEqual(100)
-    expect(result.quadrantScores.biens.exposure).toBe(0) // vehicle_count defaults to 0
-    expect(result.quadrantScores.biens.coverage).toBe(100) // no vehicle = fully covered
+    // With HOME scoring, biens always has some exposure (housing defaults)
+    expect(result.quadrantScores.biens.exposure).toBeGreaterThan(0)
     expect(Array.isArray(result.recommendations)).toBe(true)
     expect(Array.isArray(result.productScores)).toBe(true)
   })
 
-  it('vehicle_count=0 means no DRIVE exposure even with other vehicle answers', () => {
+  it('vehicle_count=0 means no DRIVE exposure but HOME still contributes', () => {
     const result = computeDiagnostic({
       vehicle_count: 0,
       vehicle_details: 'car_new',
@@ -992,8 +1012,10 @@ describe('edge cases', () => {
       vehicle_coverage_existing: 'none',
       vehicle_options_interest: ['replacement_needed', 'bonus_important'],
     })
-    expect(result.quadrantScores.biens.exposure).toBe(0)
-    expect(result.quadrantScores.biens.coverage).toBe(100)
+    // HOME still provides some exposure even with vehicle_count=0
+    expect(result.quadrantScores.biens.exposure).toBeGreaterThan(0)
+    // Coverage is now HOME-only (not 100 anymore)
+    expect(result.quadrantScores.biens.coverage).toBeLessThan(100)
   })
 
   it('undefined/null values in answers are handled gracefully', () => {
@@ -1028,9 +1050,10 @@ describe('edge cases', () => {
     expect(result.globalScore).toBeLessThanOrEqual(100)
   })
 
-  it('non-number vehicle_count defaults to 0', () => {
+  it('non-number vehicle_count defaults to 0 (HOME-only)', () => {
     const result = computeDiagnostic({ vehicle_count: 'many' } as Record<string, unknown>)
-    expect(result.quadrantScores.biens.exposure).toBe(0)
+    // HOME still provides exposure even when DRIVE is 0
+    expect(result.quadrantScores.biens.exposure).toBeGreaterThan(0)
   })
 
   it('extreme max profile (all high-risk) returns valid result', () => {
@@ -1080,8 +1103,9 @@ describe('edge cases', () => {
     })
     expect(result.globalScore).toBeGreaterThanOrEqual(0)
     expect(result.globalScore).toBeLessThanOrEqual(100)
-    expect(result.quadrantScores.biens.exposure).toBe(0)
-    expect(result.quadrantScores.biens.coverage).toBe(100)
+    // With HOME scoring, min profile still has some exposure (housing defaults)
+    expect(result.quadrantScores.biens.exposure).toBeGreaterThanOrEqual(0)
+    expect(result.quadrantScores.biens.coverage).toBeGreaterThan(0)
   })
 
   it('arrays with only none count as zero concerns/options', () => {

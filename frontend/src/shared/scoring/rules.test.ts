@@ -803,12 +803,17 @@ describe('rules - life events edge cases', () => {
     expect(recommendations.find(r => r.id === 'bsafe_12_divorce_event')).toBeDefined()
   })
 
-  it('marriage/move/career_change do not trigger event rules', () => {
+  it('marriage triggers bsafe_09 event rule, move/career_change do not trigger event rules', () => {
     const scores = makeScores()
-    const recommendations = generateRecommendations(scores, {
-      life_event: ['marriage', 'move', 'career_change'],
+    const marriageRecs = generateRecommendations(scores, {
+      life_event: ['marriage'],
     })
-    const eventRecs = recommendations.filter(r => r.type === 'event')
+    expect(marriageRecs.find(r => r.id === 'bsafe_09_marriage_event')).toBeDefined()
+
+    const otherRecs = generateRecommendations(scores, {
+      life_event: ['move', 'career_change'],
+    })
+    const eventRecs = otherRecs.filter(r => r.type === 'event')
     expect(eventRecs).toHaveLength(0)
   })
 

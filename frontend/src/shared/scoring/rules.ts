@@ -54,6 +54,19 @@ const driveRules: RuleDefinition[] = [
     },
   },
   {
+    id: 'drive_03_recent_rc_only',
+    condition: (_, a) =>
+      s(a.vehicle_details) === 'car_recent' &&
+      ['rc_only', 'none', 'unknown'].includes(s(a.vehicle_coverage_existing)),
+    recommendation: {
+      product: 'drive', optionId: 'drive_dommages_materiels',
+      type: 'immediate', priority: 4,
+      title: 'Protéger votre véhicule',
+      message: 'Votre véhicule a encore une valeur significative. Avec une couverture RC seule, un sinistre total, un vol ou un incendie ne serait pas remboursé. Une couverture dommages hors accidents ou tous dommages protège la valeur restante de votre véhicule.',
+      advisorNote: 'Véhicule 3-8 ans avec RC seule. Évaluer la valeur résiduelle et proposer mini-omnium ou omnium complet selon le profil. Franchise à adapter.',
+    },
+  },
+  {
     id: 'drive_04_mobility_need',
     condition: (_, a) =>
       n(a.vehicle_count) > 0 &&
@@ -162,6 +175,20 @@ const bsafeRules: RuleDefinition[] = [
     },
   },
   {
+    id: 'bsafe_01b_couple_single_income',
+    condition: (_, a) =>
+      s(a.family_status) === 'couple_no_children' &&
+      s(a.income_contributors) === 'one' &&
+      ['none', 'employer_only'].includes(s(a.accident_coverage_existing)),
+    recommendation: {
+      product: 'bsafe', optionId: 'bsafe_incapacite',
+      type: 'immediate', priority: 4,
+      title: 'Protéger votre couple',
+      message: 'Avec un seul revenu dans votre foyer, un accident grave pourrait compromettre votre équilibre financier. B-Safe vous protège en complément de la sécurité sociale contre les conséquences financières d\'une incapacité de travail ou d\'une invalidité.',
+      advisorNote: 'Couple mono-revenu sans enfants : le risque d\'incapacité est le plus impactant. B-Safe Incapacité + Invalidité en priorité. Si projet d\'enfants, anticiper la montée en gamme vers Décès.',
+    },
+  },
+  {
     id: 'bsafe_02_independent_no_coverage',
     condition: (_, a) =>
       ['independent', 'business_owner'].includes(s(a.professional_status)) &&
@@ -239,6 +266,18 @@ const bsafeRules: RuleDefinition[] = [
       title: 'Anticiper votre protection long terme',
       message: 'Sans pension complémentaire ni assurance-vie, une invalidité permanente suite à un accident réduirait vos revenus futurs bien au-delà de ce que la sécurité sociale compense. La rente viagère B-Safe sécurise votre avenir en complément.',
       advisorNote: 'B-Safe Rente Viagère. Au Luxembourg, le taux de remplacement retraite diminue. Argumenter sur l\'écart pension légale vs niveau de vie actuel.',
+    },
+  },
+  {
+    id: 'bsafe_09_marriage_event',
+    condition: (_, a) =>
+      arr(a.life_event).includes('marriage'),
+    recommendation: {
+      product: 'bsafe',
+      type: 'event', priority: 4,
+      title: 'Adapter votre protection à votre nouvelle situation',
+      message: 'Le mariage ou le partenariat est un moment clé pour revoir votre couverture. En protégeant votre conjoint(e), vous sécurisez votre foyer contre les conséquences financières d\'un accident.',
+      advisorNote: 'Mariage/PACS = moment de révision globale. Vérifier bénéficiaires B-Safe, couverture Home (nouveau logement ?), et Futur (capital décès à adapter). Cross-sell naturel multi-produits.',
     },
   },
   {

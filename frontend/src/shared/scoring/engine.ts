@@ -1,7 +1,7 @@
 import type { Quadrant, QuadrantScore, ProductScore, DiagnosticResult, OptionScore } from './types.ts'
-import { computeNeedFromMatrix, getNeedLevel } from './thresholds.ts'
+import { computeNeedFromMatrix, toMatrixLevel, getNeedLevel } from './thresholds.ts'
 import { generateRecommendations } from './rules.ts'
-import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isFuturEligible } from './answer-helpers.ts'
+import { asString, asNumber, asStringArray, countNonNone, includesAny, HIGH_RISK_SPORTS, isResidentGDL, isTravelEligible, isFuturEligible } from './answer-helpers.ts'
 
 import type { QuestionnaireAnswers as Answers } from '../questionnaire/schema.ts'
 
@@ -16,17 +16,17 @@ const AUTONOMY_RISK: Record<string, number> = {
   '6_12_months': 30, more_12_months: 10,
 }
 
-// === Biens (DRIVE) — Exposure ===
+// === Biens (DRIVE + HOME) — Exposure ===
 
-function computeBiensExposure(a: Answers): number {
+function computeDriveExposure(a: Answers): number {
+  const vehicleCount = asNumber(a.vehicle_count)
+  if (vehicleCount === 0) return 0
+
   let score = 0
   let weights = 0
 
   // Vehicle count (weight 20)
-  const vehicleCount = asNumber(a.vehicle_count)
-  if (vehicleCount === 0) return 0 // No vehicle = no DRIVE exposure
-  const countScore = Math.min(vehicleCount * 40, 100)
-  score += countScore * 0.20
+  score += Math.min(vehicleCount * 40, 100) * 0.20
   weights += 0.20
 
   // Vehicle age / value at risk (weight 30)
@@ -44,8 +44,7 @@ function computeBiensExposure(a: Answers): number {
   weights += 0.25
 
   // Unmet options needs (weight 15)
-  const unmetNeeds = countNonNone(a.vehicle_options_interest)
-  score += Math.min(unmetNeeds * 20, 100) * 0.15
+  score += Math.min(countNonNone(a.vehicle_options_interest) * 20, 100) * 0.15
   weights += 0.15
 
   // Life event: new vehicle (weight 10)
@@ -57,10 +56,72 @@ function computeBiensExposure(a: Answers): number {
   return weights > 0 ? Math.round(score / weights) : 50
 }
 
-// === Biens (DRIVE) — Coverage ===
+function computeHomeExposure(a: Answers): number {
+  let score = 0
+  let weights = 0
 
-function computeBiensCoverage(a: Answers): number {
-  if (asNumber(a.vehicle_count) === 0) return 100 // No vehicle = fully covered
+  // Housing status — owner with mortgage = highest exposure (weight 25)
+  const housingRisk: Record<string, number> = {
+    owner_with_mortgage: 90, owner_no_mortgage: 60, tenant: 50, lodged_free: 15,
+  }
+  score += (housingRisk[asString(a.housing_status)] ?? 40) * 0.25
+  weights += 0.25
+
+  // Housing type — house = more exposure than apartment (weight 15)
+  const typeRisk: Record<string, number> = {
+    house: 75, townhouse: 65, apartment: 40, other: 35,
+  }
+  score += (typeRisk[asString(a.housing_type)] ?? 45) * 0.15
+  weights += 0.15
+
+  // Contents value (weight 20)
+  const contentsRisk: Record<string, number> = {
+    less_20k: 20, '20k_50k': 45, '50k_100k': 75, '100k_plus': 95,
+  }
+  score += (contentsRisk[asString(a.home_contents_value)] ?? 40) * 0.20
+  weights += 0.20
+
+  // Valuable possessions (weight 15)
+  const valuables = countNonNone(a.valuable_possessions)
+  score += Math.min(valuables * 20, 100) * 0.15
+  weights += 0.15
+
+  // Home specifics — garden, pool, solar (weight 10)
+  const specifics = countNonNone(a.home_specifics)
+  score += Math.min(specifics * 25, 100) * 0.10
+  weights += 0.10
+
+  // Other properties (weight 10)
+  const propRisk: Record<string, number> = {
+    none: 0, secondary: 40, rental: 60, both: 85,
+  }
+  score += (propRisk[asString(a.other_properties)] ?? 0) * 0.10
+  weights += 0.10
+
+  // Life event: property purchase or renovation (weight 5)
+  const events = asStringArray(a.life_event)
+  if (events.includes('property_purchase') || events.includes('renovation')) {
+    score += 100 * 0.05
+  }
+  weights += 0.05
+
+  return weights > 0 ? Math.round(score / weights) : 50
+}
+
+function computeBiensExposure(a: Answers): number {
+  const driveExp = computeDriveExposure(a)
+  const homeExp = computeHomeExposure(a)
+
+  // Weighted average: HOME 55%, DRIVE 45% (housing is universal, vehicle is optional)
+  const hasDrive = asNumber(a.vehicle_count) > 0
+  if (!hasDrive) return homeExp
+  return Math.round(homeExp * 0.55 + driveExp * 0.45)
+}
+
+// === Biens (DRIVE + HOME) — Coverage ===
+
+function computeDriveCoverage(a: Answers): number {
+  if (asNumber(a.vehicle_count) === 0) return 100
 
   let score = 0
   let weights = 0
@@ -78,17 +139,56 @@ function computeBiensCoverage(a: Answers): number {
   if (cov === 'full_omnium') optionsCov = 70
   else if (cov === 'mini_omnium') optionsCov = 40
   else if (cov === 'rc_only') optionsCov = 15
-  const unmetNeeds = countNonNone(a.vehicle_options_interest)
-  optionsCov = Math.max(optionsCov - unmetNeeds * 12, 0)
+  optionsCov = Math.max(optionsCov - countNonNone(a.vehicle_options_interest) * 12, 0)
   score += optionsCov * 0.40
   weights += 0.40
 
   return weights > 0 ? Math.round(score / weights) : 0
 }
 
-// === Personnes (B-SAFE) — Exposure ===
+function computeHomeCoverage(a: Answers): number {
+  let score = 0
+  let weights = 0
 
-function computePersonnesExposure(a: Answers): number {
+  // Home insurance level (weight 50)
+  const homeCovScore: Record<string, number> = {
+    none: 0, unknown: 10, basic: 55, with_options: 90,
+  }
+  score += (homeCovScore[asString(a.home_coverage_existing)] ?? 10) * 0.50
+  weights += 0.50
+
+  // Security measures (weight 25)
+  const securityCount = countNonNone(a.security_measures)
+  score += Math.min(securityCount * 25, 100) * 0.25
+  weights += 0.25
+
+  // Valuable items coverage gap (weight 25) — more valuables with basic coverage = lower coverage
+  const valuables = countNonNone(a.valuable_possessions)
+  const homeCov = asString(a.home_coverage_existing)
+  let valuablesCov = 50
+  if (homeCov === 'with_options') valuablesCov = 85
+  else if (homeCov === 'basic') valuablesCov = 40
+  else if (homeCov === 'none') valuablesCov = 0
+  valuablesCov = Math.max(valuablesCov - valuables * 10, 0)
+  score += valuablesCov * 0.25
+  weights += 0.25
+
+  return weights > 0 ? Math.round(score / weights) : 0
+}
+
+function computeBiensCoverage(a: Answers): number {
+  const driveCov = computeDriveCoverage(a)
+  const homeCov = computeHomeCoverage(a)
+
+  // Weighted average: HOME 55%, DRIVE 45%
+  const hasDrive = asNumber(a.vehicle_count) > 0
+  if (!hasDrive) return homeCov
+  return Math.round(homeCov * 0.55 + driveCov * 0.45)
+}
+
+// === Personnes (B-SAFE + TRAVEL) — Exposure ===
+
+function computeBsafeExposure(a: Answers): number {
   let score = 0
   let weights = 0
 
@@ -142,25 +242,77 @@ function computePersonnesExposure(a: Answers): number {
   return weights > 0 ? Math.round(score / weights) : 50
 }
 
-// === Personnes (B-SAFE) — Coverage ===
+function computeTravelExposure(a: Answers): number {
+  if (!isTravelEligible(a)) return 0
 
-function computePersonnesCoverage(a: Answers): number {
   let score = 0
   let weights = 0
 
-  // Accident coverage (weight 42) — RC vie privée intégrée dans HOME
+  // Travel frequency (weight 35)
+  const freqRisk: Record<string, number> = {
+    never: 0, once_year: 35, several_year: 70, frequent: 95,
+  }
+  score += (freqRisk[asString(a.travel_frequency)] ?? 0) * 0.35
+  weights += 0.35
+
+  // Destinations risk (weight 25)
+  const dests = asStringArray(a.travel_destinations)
+  let destScore = 0
+  if (dests.includes('worldwide')) destScore += 50
+  if (dests.includes('adventure')) destScore += 40
+  if (dests.includes('europe')) destScore += 15
+  score += Math.min(destScore, 100) * 0.25
+  weights += 0.25
+
+  // Travel budget (weight 25)
+  const budgetRisk: Record<string, number> = {
+    less_1k: 20, '1k_3k': 45, '3k_5k': 75, '5k_plus': 95,
+  }
+  score += (budgetRisk[asString(a.travel_budget)] ?? 30) * 0.25
+  weights += 0.25
+
+  // Family travel (weight 15) — children = more at stake
+  if (asNumber(a.children_count) > 0) {
+    score += 80 * 0.15
+  } else {
+    score += 30 * 0.15
+  }
+  weights += 0.15
+
+  return weights > 0 ? Math.round(score / weights) : 0
+}
+
+function computePersonnesExposure(a: Answers): number {
+  const bsafeExp = computeBsafeExposure(a)
+  const travelExp = computeTravelExposure(a)
+
+  // If no travel activity, B-SAFE only
+  if (asString(a.travel_frequency) === 'never' || asString(a.travel_frequency) === '') {
+    return bsafeExp
+  }
+  // Weighted: B-SAFE 65%, TRAVEL 35%
+  return Math.round(bsafeExp * 0.65 + travelExp * 0.35)
+}
+
+// === Personnes (B-SAFE + TRAVEL) — Coverage ===
+
+function computeBsafeCoverage(a: Answers): number {
+  let score = 0
+  let weights = 0
+
+  // Accident coverage (weight 45)
   const accidentCovScore: Record<string, number> = {
     none: 0, employer_only: 25, individual_basic: 55, individual_complete: 90,
   }
-  score += (accidentCovScore[asString(a.accident_coverage_existing)] ?? 0) * 0.42
-  weights += 0.42
+  score += (accidentCovScore[asString(a.accident_coverage_existing)] ?? 0) * 0.45
+  weights += 0.45
 
-  // Savings / financial protection (weight 38)
+  // Savings / financial protection (weight 35)
   const savingsItems = asStringArray(a.savings_protection)
   const hasSavings = !savingsItems.includes('none') && savingsItems.length > 0
   const savingsCov = hasSavings ? Math.min(savingsItems.length * 25, 100) : 0
-  score += savingsCov * 0.38
-  weights += 0.38
+  score += savingsCov * 0.35
+  weights += 0.35
 
   // Income protection implicit (weight 20)
   let incomeCov = 10
@@ -176,37 +328,53 @@ function computePersonnesCoverage(a: Answers): number {
   return weights > 0 ? Math.round(score / weights) : 0
 }
 
+function computeTravelCoverage(a: Answers): number {
+  if (!isTravelEligible(a) || asString(a.travel_frequency) === 'never') return 100
+
+  // Travel coverage level (weight 100% — single question drives it)
+  const travelCovScore: Record<string, number> = {
+    none: 0, credit_card: 30, per_trip: 60, annual: 90,
+  }
+  return travelCovScore[asString(a.travel_coverage_existing)] ?? 0
+}
+
+function computePersonnesCoverage(a: Answers): number {
+  const bsafeCov = computeBsafeCoverage(a)
+  const travelCov = computeTravelCoverage(a)
+
+  if (asString(a.travel_frequency) === 'never' || asString(a.travel_frequency) === '') {
+    return bsafeCov
+  }
+  // Weighted: B-SAFE 65%, TRAVEL 35%
+  return Math.round(bsafeCov * 0.65 + travelCov * 0.35)
+}
+
 // === Projets — Inactive (empty quadrant) ===
 
 function computeInactiveExposure(): number { return 0 }
 function computeInactiveCoverage(): number { return 100 }
 
 // === Futur (PP/LP/SP) — Exposure ===
+// Note: savings_protection is NOT used here (only in coverage) to avoid double-counting
 
 function computeFuturExposure(a: Answers): number {
   if (!isFuturEligible(a)) return 0
 
   let score = 0
 
-  // Financial dependents (weight 25%)
-  score += (DEPENDENTS_RISK[asString(a.financial_dependents)] ?? 30) * 0.25
+  // Financial dependents (weight 30%) — more dependents = more future to protect
+  score += (DEPENDENTS_RISK[asString(a.financial_dependents)] ?? 30) * 0.30
 
-  // Savings gap (weight 25%) — less existing coverage = more exposure
-  const savingsItems = asStringArray(a.savings_protection)
-  const hasSavings = !savingsItems.includes('none') && savingsItems.length > 0
-  const savingsScore = hasSavings ? Math.max(100 - savingsItems.length * 25, 10) : 100
-  score += savingsScore * 0.25
-
-  // Financial autonomy (weight 20%)
+  // Financial autonomy (weight 25%) — low autonomy = urgent future planning need
   const wic = asString(a.work_incapacity_concern)
-  score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 50) * 0.20
+  score += (wic ? (AUTONOMY_RISK[wic] ?? 50) : 50) * 0.25
 
-  // Income level (weight 15%) — higher income = more to protect
+  // Income level (weight 20%) — higher income = more to protect
   const incomeRisk: Record<string, number> = {
     less_3k: 20, '3k_5k': 40, '5k_8k': 60,
     '8k_12k': 80, '12k_plus': 100, no_answer: 50,
   }
-  score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.15
+  score += (incomeRisk[asString(a.income_range)] ?? 50) * 0.20
 
   // Age factor (weight 15%) — mid-career = highest need
   const ageRisk: Record<string, number> = {
@@ -214,6 +382,12 @@ function computeFuturExposure(a: Answers): number {
     '46_55': 100, '56_65': 70,
   }
   score += (ageRisk[asString(a.age_range)] ?? 50) * 0.15
+
+  // Income contributors (weight 10%) — single income = more vulnerable
+  const contributorsRisk: Record<string, number> = {
+    one: 85, two: 40, more: 25,
+  }
+  score += (contributorsRisk[asString(a.income_contributors)] ?? 50) * 0.10
 
   return Math.round(score)
 }
@@ -258,12 +432,6 @@ function computeFuturCoverage(a: Answers): number {
 
 // === Quadrant score computation ===
 
-function toMatrixLevel(score0to100: number): number {
-  if (score0to100 <= 33) return 0
-  if (score0to100 <= 66) return 1
-  return 2
-}
-
 export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): QuadrantScore {
   let exposure: number
   let coverage: number
@@ -287,8 +455,10 @@ export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): Quad
       break
   }
 
-  const coverageLevel = 2 - toMatrixLevel(coverage)
-  const needScore = computeNeedFromMatrix(toMatrixLevel(exposure), coverageLevel)
+  // 5×5 matrix: exposure maps to row 0-4, coverage inverts to column 0-4
+  const exposureLevel = toMatrixLevel(exposure)
+  const coverageLevel = 4 - toMatrixLevel(coverage) // invert: high coverage → low need column
+  const needScore = computeNeedFromMatrix(exposureLevel, coverageLevel)
 
   return {
     quadrant,
@@ -301,6 +471,8 @@ export function computeQuadrantScore(quadrant: Quadrant, answers: Answers): Quad
 }
 
 // === Weightings ===
+
+const WEIGHT_FLOOR = 15 // Minimum weight for any active quadrant (prevents invisibility)
 
 function computeWeightings(answers: Answers): Record<Quadrant, number> {
   const eligible = isFuturEligible(answers)
@@ -350,6 +522,11 @@ function computeWeightings(answers: Answers): Record<Quadrant, number> {
     futurWeight += 5
     biensWeight -= 5
   }
+
+  // Enforce floor on active quadrants and protect against negative weights
+  biensWeight = Math.max(biensWeight, WEIGHT_FLOOR)
+  personnesWeight = Math.max(personnesWeight, WEIGHT_FLOOR)
+  if (eligible) futurWeight = Math.max(futurWeight, WEIGHT_FLOOR)
 
   // Normalize to 100
   const total = biensWeight + personnesWeight + futurWeight

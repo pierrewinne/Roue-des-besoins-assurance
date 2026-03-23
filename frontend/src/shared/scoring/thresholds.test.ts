@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getNeedLevel, getNeedColor, NEED_MATRIX, computeNeedFromMatrix } from './thresholds'
+import { getNeedLevel, getNeedColor, NEED_MATRIX, computeNeedFromMatrix, toMatrixLevel } from './thresholds'
 
 describe('getNeedLevel', () => {
   it('returns low for scores 0-25', () => {
@@ -36,54 +36,125 @@ describe('getNeedColor', () => {
   })
 })
 
-describe('NEED_MATRIX', () => {
-  it('has correct dimensions (3x3)', () => {
-    expect(NEED_MATRIX).toHaveLength(3)
+describe('NEED_MATRIX (5×5)', () => {
+  it('has correct dimensions (5x5)', () => {
+    expect(NEED_MATRIX).toHaveLength(5)
     for (const row of NEED_MATRIX) {
-      expect(row).toHaveLength(3)
+      expect(row).toHaveLength(5)
     }
   })
 
   it('increases need when coverage decreases (left to right)', () => {
     for (const row of NEED_MATRIX) {
-      expect(row[0]).toBeLessThan(row[1])
-      expect(row[1]).toBeLessThan(row[2])
+      for (let col = 0; col < 4; col++) {
+        expect(row[col]).toBeLessThan(row[col + 1])
+      }
     }
   })
 
   it('increases need when exposure increases (top to bottom) for same coverage', () => {
-    for (let col = 0; col < 3; col++) {
-      expect(NEED_MATRIX[0][col]).toBeLessThanOrEqual(NEED_MATRIX[1][col])
-      expect(NEED_MATRIX[1][col]).toBeLessThanOrEqual(NEED_MATRIX[2][col])
+    for (let col = 0; col < 5; col++) {
+      for (let row = 0; row < 4; row++) {
+        expect(NEED_MATRIX[row][col]).toBeLessThanOrEqual(NEED_MATRIX[row + 1][col])
+      }
     }
+  })
+
+  it('all values in matrix are between 0 and 100', () => {
+    for (let row = 0; row < 5; row++) {
+      for (let col = 0; col < 5; col++) {
+        expect(NEED_MATRIX[row][col]).toBeGreaterThanOrEqual(0)
+        expect(NEED_MATRIX[row][col]).toBeLessThanOrEqual(100)
+      }
+    }
+  })
+
+  it('diagonal values increase from top-left to bottom-right', () => {
+    for (let i = 0; i < 4; i++) {
+      expect(NEED_MATRIX[i][i]).toBeLessThan(NEED_MATRIX[i + 1][i + 1])
+    }
+  })
+
+  it('corner values match expected needs', () => {
+    expect(NEED_MATRIX[0][0]).toBe(5)   // very low exposure, complete coverage
+    expect(NEED_MATRIX[4][4]).toBe(98)  // very high exposure, no coverage
+    expect(NEED_MATRIX[0][4]).toBe(45)  // very low exposure, no coverage
+    expect(NEED_MATRIX[4][0]).toBe(40)  // very high exposure, complete coverage
+  })
+
+  it('center value is moderate (55)', () => {
+    expect(NEED_MATRIX[2][2]).toBe(55)
+  })
+})
+
+describe('toMatrixLevel', () => {
+  it('maps 0-20 to level 0', () => {
+    expect(toMatrixLevel(0)).toBe(0)
+    expect(toMatrixLevel(10)).toBe(0)
+    expect(toMatrixLevel(20)).toBe(0)
+  })
+
+  it('maps 21-40 to level 1', () => {
+    expect(toMatrixLevel(21)).toBe(1)
+    expect(toMatrixLevel(30)).toBe(1)
+    expect(toMatrixLevel(40)).toBe(1)
+  })
+
+  it('maps 41-60 to level 2', () => {
+    expect(toMatrixLevel(41)).toBe(2)
+    expect(toMatrixLevel(50)).toBe(2)
+    expect(toMatrixLevel(60)).toBe(2)
+  })
+
+  it('maps 61-80 to level 3', () => {
+    expect(toMatrixLevel(61)).toBe(3)
+    expect(toMatrixLevel(70)).toBe(3)
+    expect(toMatrixLevel(80)).toBe(3)
+  })
+
+  it('maps 81-100 to level 4', () => {
+    expect(toMatrixLevel(81)).toBe(4)
+    expect(toMatrixLevel(90)).toBe(4)
+    expect(toMatrixLevel(100)).toBe(4)
   })
 })
 
 describe('computeNeedFromMatrix', () => {
   it('returns correct value for exact indices', () => {
-    expect(computeNeedFromMatrix(0, 0)).toBe(10)  // low exposure, complete coverage
-    expect(computeNeedFromMatrix(0, 2)).toBe(40)  // low exposure, no coverage
-    expect(computeNeedFromMatrix(2, 2)).toBe(95)  // high exposure, no coverage
-    expect(computeNeedFromMatrix(1, 1)).toBe(60)  // medium exposure, partial coverage
+    expect(computeNeedFromMatrix(0, 0)).toBe(5)   // very low exposure, complete coverage
+    expect(computeNeedFromMatrix(0, 4)).toBe(45)  // very low exposure, no coverage
+    expect(computeNeedFromMatrix(4, 4)).toBe(98)  // very high exposure, no coverage
+    expect(computeNeedFromMatrix(2, 2)).toBe(55)  // medium exposure, partial coverage
   })
 
   it('clamps out-of-range values', () => {
-    expect(computeNeedFromMatrix(-1, 0)).toBe(10)  // clamped to row 0
-    expect(computeNeedFromMatrix(5, 0)).toBe(35)   // clamped to row 2
-    expect(computeNeedFromMatrix(0, -1)).toBe(10)  // clamped to col 0
-    expect(computeNeedFromMatrix(0, 5)).toBe(40)   // clamped to col 2
+    expect(computeNeedFromMatrix(-1, 0)).toBe(5)   // clamped to row 0
+    expect(computeNeedFromMatrix(7, 0)).toBe(40)   // clamped to row 4
+    expect(computeNeedFromMatrix(0, -1)).toBe(5)   // clamped to col 0
+    expect(computeNeedFromMatrix(0, 7)).toBe(45)   // clamped to col 4
   })
 
   it('rounds fractional indices', () => {
-    expect(computeNeedFromMatrix(0.4, 0)).toBe(10)  // rounds to 0
-    expect(computeNeedFromMatrix(0.6, 0)).toBe(15)  // rounds to 1
-    expect(computeNeedFromMatrix(1.5, 1)).toBe(85)  // rounds to 2
+    expect(computeNeedFromMatrix(0.4, 0)).toBe(5)   // rounds to 0
+    expect(computeNeedFromMatrix(0.6, 0)).toBe(10)  // rounds to 1
+    expect(computeNeedFromMatrix(2.5, 2)).toBe(70)  // rounds to 3
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════
-// TESTS COMPLEMENTAIRES — SEUILS (THRESHOLDS)
-// ═══════════════════════════════════════════════════════════════════
+describe('computeNeedFromMatrix - edge cases extremes', () => {
+  it('negative indices are clamped to 0', () => {
+    expect(computeNeedFromMatrix(-100, -100)).toBe(NEED_MATRIX[0][0])
+  })
+
+  it('very large indices are clamped to 4', () => {
+    expect(computeNeedFromMatrix(1000, 1000)).toBe(NEED_MATRIX[4][4])
+  })
+
+  it('mixed extreme indices work correctly', () => {
+    expect(computeNeedFromMatrix(-5, 1000)).toBe(NEED_MATRIX[0][4])
+    expect(computeNeedFromMatrix(1000, -5)).toBe(NEED_MATRIX[4][0])
+  })
+})
 
 describe('getNeedLevel - bornes exactes', () => {
   it('returns low for score = 0 (minimum)', () => {
@@ -116,49 +187,6 @@ describe('getNeedLevel - bornes exactes', () => {
 
   it('returns critical for score = 100 (maximum)', () => {
     expect(getNeedLevel(100)).toBe('critical')
-  })
-})
-
-describe('NEED_MATRIX - valeurs specifiques', () => {
-  it('low exposure + complete coverage = minimal need (10)', () => {
-    expect(NEED_MATRIX[0][0]).toBe(10)
-  })
-
-  it('high exposure + no coverage = maximal need (95)', () => {
-    expect(NEED_MATRIX[2][2]).toBe(95)
-  })
-
-  it('medium exposure + partial coverage = moderate need (60)', () => {
-    expect(NEED_MATRIX[1][1]).toBe(60)
-  })
-
-  it('all values in matrix are between 0 and 100', () => {
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 3; col++) {
-        expect(NEED_MATRIX[row][col]).toBeGreaterThanOrEqual(0)
-        expect(NEED_MATRIX[row][col]).toBeLessThanOrEqual(100)
-      }
-    }
-  })
-
-  it('diagonal values increase from top-left to bottom-right', () => {
-    expect(NEED_MATRIX[0][0]).toBeLessThan(NEED_MATRIX[1][1])
-    expect(NEED_MATRIX[1][1]).toBeLessThan(NEED_MATRIX[2][2])
-  })
-})
-
-describe('computeNeedFromMatrix - edge cases extremes', () => {
-  it('negative indices are clamped to 0', () => {
-    expect(computeNeedFromMatrix(-100, -100)).toBe(NEED_MATRIX[0][0])
-  })
-
-  it('very large indices are clamped to 2', () => {
-    expect(computeNeedFromMatrix(1000, 1000)).toBe(NEED_MATRIX[2][2])
-  })
-
-  it('mixed extreme indices work correctly', () => {
-    expect(computeNeedFromMatrix(-5, 1000)).toBe(NEED_MATRIX[0][2])
-    expect(computeNeedFromMatrix(1000, -5)).toBe(NEED_MATRIX[2][0])
   })
 })
 
