@@ -5,7 +5,7 @@
  * CTA: "Savoir, c'est déjà se protéger."
  */
 import { useCurrentFrame, interpolate, Easing } from 'remotion'
-import { NAVY, WHITE, FONT_HEADLINE, FONT_BODY, SCORE_COLORS, QUADRANT_SEGMENTS, DEMO_FILL_TARGETS, DEMO_FILL_COLORS } from '../constants'
+import { WHITE, FONT_HEADLINE, SCORE_COLORS, DEMO_FILL_TARGETS, DEMO_FILL_COLORS } from '../constants'
 import { fadeIn, fadeOut, slideUp } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 

@@ -4,18 +4,13 @@
  * labels overlapping with arc construction, icons staggered.
  */
 import { useCurrentFrame, interpolate, Easing } from 'remotion'
-import { NAVY } from '../constants'
-import { fadeIn, arcDraw, scaleIn } from '../helpers'
+import { fadeIn, arcDraw } from '../helpers'
 import { WheelSVG } from './WheelSVG'
 
-const BALOISE_EASE = Easing.bezier(0.25, 0.8, 0.5, 1)
 const STAGGER = 15 // frames between each quadrant
 
 export function WheelBuild() {
   const frame = useCurrentFrame()
-
-  // Center appears first (0-20 relative)
-  const centerOpacity = fadeIn(frame, 0, 20)
 
   // Quadrant arcs build sequentially (15-90 relative) — order: biens→personnes→projets→futur
   const quadrantProgress = [0, 1, 2, 3].map(i =>

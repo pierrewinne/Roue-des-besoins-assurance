@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isQuestionVisible, QUESTIONS, type Question, type QuestionnaireAnswers } from './schema.ts'
+import { isQuestionVisible, QUESTIONS, type Question } from './schema.ts'
 
 function makeQ(dependsOn: Question['dependsOn']): Question {
   return { id: 'test_q', quadrant: 'biens', label: 'Test', type: 'select', required: true, dependsOn }

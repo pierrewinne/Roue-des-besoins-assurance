@@ -3,7 +3,7 @@
  * Staccato text — certainties then doubts — flash transition to wheel.
  */
 import { useCurrentFrame, interpolate, Easing } from 'remotion'
-import { NAVY, WHITE, FONT_HEADLINE } from '../constants'
+import { WHITE, FONT_HEADLINE } from '../constants'
 import { fadeIn, fadeOut } from '../helpers'
 
 const BALOISE_EASE = Easing.bezier(0.25, 0.8, 0.5, 1)

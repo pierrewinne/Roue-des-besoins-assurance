@@ -127,7 +127,7 @@ export async function computeAndSaveDiagnostic(questionnaireId: string, profileI
   if (diagError || !diag) return { data: null, error: diagError }
 
   // Insert actions + mark questionnaire completed (independent writes, parallel)
-  const writes: Promise<unknown>[] = [
+  const writes: PromiseLike<unknown>[] = [
     supabase
       .from('questionnaire_responses')
       .update({ completed: true })

@@ -1,6 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext.tsx'
-import Spinner from '../ui/Spinner.tsx'
+import { Outlet } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   requiredRole?: 'client' | 'advisor'

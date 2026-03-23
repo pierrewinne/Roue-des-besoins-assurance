@@ -12,7 +12,7 @@ afterEach(() => {
   console.error = originalConsoleError
 })
 
-function ThrowingChild() {
+function ThrowingChild(): React.ReactNode {
   throw new Error('Boom!')
 }
 
