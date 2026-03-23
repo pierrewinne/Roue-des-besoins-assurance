@@ -2,13 +2,13 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { supabase } from '../../lib/supabase.ts'
 import { fetchActiveQuestionnaire, saveAnswers as apiSaveAnswers, createQuestionnaire, markProfilCompleted } from '../../lib/api/questionnaire.ts'
+import { useAutoSave } from '../../hooks/useAutoSave.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
 import { getProfilQuestions, isProfilComplete } from '../../shared/questionnaire/quadrant-mapping.ts'
-import { isQuestionVisible, type QuestionnaireAnswers, type AnswerValue } from '../../shared/questionnaire/schema.ts'
+import { isQuestionVisible, type QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 
 export default function ProfilPage() {
   const { user } = useAuth()
@@ -18,11 +18,6 @@ export default function ProfilPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [consent, setConsent] = useState(false)
-  const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const answersRef = useRef(answers)
-  answersRef.current = answers
-
-  useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
 
   const questions = getProfilQuestions()
   const visibleQuestions = questions.filter(q => isQuestionVisible(q, answers))
@@ -67,37 +62,13 @@ export default function ProfilPage() {
     setError(null)
   }, [user])
 
-  // Flush pending save on tab close / hide (P2-07)
-  // visibilitychange is more reliable than beforeunload for async saves
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'hidden' && saveTimeout.current) {
-        clearTimeout(saveTimeout.current)
-        saveTimeout.current = undefined
-        saveAnswers(answersRef.current)
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [saveAnswers])
-
-  function handleAnswer(questionId: string, value: AnswerValue | undefined) {
-    const newAnswers: QuestionnaireAnswers = { ...answers, [questionId]: value }
-    setAnswers(newAnswers)
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
-  }
+  const { handleAnswer, flushPending } = useAutoSave(answers, saveAnswers, setAnswers)
 
   async function handleComplete() {
     if (!user) return
     setSaving(true)
     setError(null)
-
-    // Flush pending debounce
-    if (saveTimeout.current) {
-      clearTimeout(saveTimeout.current)
-      saveTimeout.current = undefined
-    }
+    await flushPending()
 
     try {
       const rid = responseIdRef.current
@@ -110,15 +81,6 @@ export default function ProfilPage() {
         if (data) responseIdRef.current = data.id
       }
 
-      // Record RGPD consent timestamp
-      if (rid || responseIdRef.current) {
-        await supabase
-          .from('questionnaire_responses')
-          .update({ consent_given_at: new Date().toISOString() })
-          .eq('id', rid || responseIdRef.current!)
-          .eq('profile_id', user.id)
-      }
-
       navigate('/dashboard')
     } catch {
       setError('Impossible de sauvegarder votre profil. Veuillez réessayer.')
@@ -128,7 +90,6 @@ export default function ProfilPage() {
   }
 
   const isValid = isProfilComplete(answers) && consent
-
 
   return (
     <div>

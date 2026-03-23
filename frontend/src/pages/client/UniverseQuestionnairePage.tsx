@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { fetchActiveQuestionnaire, saveAnswers as apiSaveAnswers, markQuadrantCompleted } from '../../lib/api/questionnaire.ts'
+import { useAutoSave } from '../../hooks/useAutoSave.ts'
 import QuestionField from '../../components/questionnaire/QuestionField.tsx'
 import Button from '../../components/ui/Button.tsx'
 import PageHeader from '../../components/ui/PageHeader.tsx'
@@ -33,15 +34,9 @@ export default function UniverseQuestionnairePage() {
   const [completedUniverses, setCompletedUniverses] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const saveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const answersRef = useRef(answers)
-  answersRef.current = answers
 
   const validUniverse = isValidQuadrant(universeParam)
   const universe: Quadrant = validUniverse ? universeParam : 'biens'
-
-  // Cleanup timeout on unmount
-  useEffect(() => () => { if (saveTimeout.current) clearTimeout(saveTimeout.current) }, [])
 
   // Load existing questionnaire
   useEffect(() => {
@@ -77,33 +72,10 @@ export default function UniverseQuestionnairePage() {
     }
   }, [user, validUniverse])
 
-  // Flush pending save on tab close / hide (P2-07)
-  // visibilitychange is more reliable than beforeunload for async saves
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'hidden' && saveTimeout.current) {
-        clearTimeout(saveTimeout.current)
-        saveTimeout.current = undefined
-        saveAnswers(answersRef.current)
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [saveAnswers])
-
-  function handleAnswer(questionId: string, value: AnswerValue | undefined) {
-    const newAnswers: QuestionnaireAnswers = { ...answers, [questionId]: value }
-    setAnswers(newAnswers)
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    saveTimeout.current = setTimeout(() => saveAnswers(newAnswers), 1500)
-  }
+  const { handleAnswer, flushPending } = useAutoSave(answers, saveAnswers, setAnswers)
 
   async function flushAndNavigate(path: string) {
-    if (saveTimeout.current) {
-      clearTimeout(saveTimeout.current)
-      saveTimeout.current = undefined
-    }
-    await saveAnswers(answers)
+    await flushPending()
     navigate(path)
   }
 

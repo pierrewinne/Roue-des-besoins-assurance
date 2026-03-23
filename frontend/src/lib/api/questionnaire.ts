@@ -8,6 +8,11 @@ export interface ActiveQuestionnaire {
   completed_universes: Record<string, boolean>
 }
 
+/** Returns true if the Supabase error is "no rows found" (expected for .single() queries) */
+function isNoRowsError(error: { code?: string } | null): boolean {
+  return error?.code === 'PGRST116'
+}
+
 /** Fetch the latest incomplete questionnaire for a user */
 export async function fetchActiveQuestionnaire(profileId: string): Promise<ActiveQuestionnaire | null> {
   const { data, error } = await supabase
@@ -19,8 +24,7 @@ export async function fetchActiveQuestionnaire(profileId: string): Promise<Activ
     .limit(1)
     .single()
   if (error) {
-    // PGRST116 = no rows found — not an error, just no active questionnaire
-    if (error.code === 'PGRST116') return null
+    if (isNoRowsError(error)) return null
     console.error('fetchActiveQuestionnaire failed:', error.message)
     return null
   }
@@ -43,7 +47,7 @@ export async function fetchCompletedAnswers(profileId: string): Promise<Question
     .order('created_at', { ascending: false })
     .limit(1)
     .single()
-  if (error && error.code !== 'PGRST116') {
+  if (error && !isNoRowsError(error)) {
     console.error('fetchCompletedAnswers failed:', error.message)
   }
   return data ? (data.responses as QuestionnaireAnswers) : null
@@ -57,7 +61,7 @@ export async function fetchAnswersByQuestionnaireId(questionnaireId: string, pro
     .eq('id', questionnaireId)
     .eq('profile_id', profileId)
     .single()
-  if (error && error.code !== 'PGRST116') {
+  if (error && !isNoRowsError(error)) {
     console.error('fetchAnswersByQuestionnaireId failed:', error.message)
   }
   return data ? (data.responses as QuestionnaireAnswers) : null
@@ -81,11 +85,11 @@ export async function createQuestionnaire(profileId: string, answers: Questionna
     .single()
 }
 
-/** Mark profil section as completed */
+/** Mark profil section as completed and record RGPD consent */
 export async function markProfilCompleted(id: string, profileId: string, answers: QuestionnaireAnswers) {
   return supabase
     .from('questionnaire_responses')
-    .update({ responses: answers, profil_completed: true })
+    .update({ responses: answers, profil_completed: true, consent_given_at: new Date().toISOString() })
     .eq('id', id)
     .eq('profile_id', profileId)
 }

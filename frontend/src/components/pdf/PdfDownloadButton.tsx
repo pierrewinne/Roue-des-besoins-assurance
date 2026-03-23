@@ -3,6 +3,7 @@ import { pdf } from '@react-pdf/renderer'
 import Button from '../ui/Button.tsx'
 import PdfClientReport from './PdfClientReport.tsx'
 import PdfAdvisorReport from './PdfAdvisorReport.tsx'
+import { logAuditEvent } from '../../lib/api/diagnostics.ts'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
 import type { AdvisorInfo } from './pdf-tokens.ts'
@@ -44,15 +45,12 @@ export default function PdfDownloadButton({ diagnostic, type, clientName, client
         ? <PdfClientReport diagnostic={diagnostic} clientName={clientName} wheelImageUri={wheelImageUri} advisor={advisor} />
         : <PdfAdvisorReport diagnostic={diagnostic} clientName={clientName} clientEmail={clientEmail} answers={answers} wheelImageUri={wheelImageUri} />
 
-      // Audit PDF generation (P3-07)
-      const { logAuditEvent } = await import('../../lib/api/diagnostics.ts')
-      if (type === 'advisor') {
-        await logAuditEvent('generate_pdf_advisor', 'diagnostics', diagnostic.id ?? '', { client_name: clientName }).catch(() => {})
-      } else {
-        await logAuditEvent('generate_pdf_client', 'diagnostics', diagnostic.id ?? '', {}).catch(() => {})
-      }
-
       const blob = await pdf(doc).toBlob()
+
+      // Audit PDF generation after successful blob creation (P3-07)
+      const auditAction = type === 'advisor' ? 'generate_pdf_advisor' : 'generate_pdf_client'
+      const auditDetails = type === 'advisor' ? { client_name: clientName } : {}
+      logAuditEvent(auditAction, 'diagnostics', diagnostic.id ?? '', auditDetails).catch(() => {})
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
