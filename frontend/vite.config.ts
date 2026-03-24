@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -24,7 +25,7 @@ export default defineConfig({
   },
   esbuild: {
     drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
-    pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace'] : [],
+    pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace', 'console.warn', 'console.error'] : [],
   },
   test: {
     globals: true,

@@ -65,7 +65,7 @@ export default function ClientDashboard() {
     setFinishError(null)
 
     try {
-      const { data: diagId, error } = await computeAndSaveDiagnostic(progress.responseId, user.id, progress.answers)
+      const { data: diagId, error } = await computeAndSaveDiagnostic(progress.responseId)
 
       if (error || !diagId) {
         throw new Error(error?.message || 'Échec de la création du diagnostic')

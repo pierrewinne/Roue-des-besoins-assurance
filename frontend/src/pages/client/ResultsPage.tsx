@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { fetchDiagnosticById, loadDiagnosticResult } from '../../lib/api/diagnostics.ts'
-import { fetchAnswersByQuestionnaireId } from '../../lib/api/questionnaire.ts'
 import NeedsWheel, { buildSegmentStates } from '../../components/landing/NeedsWheel.tsx'
 import WheelLegend from '../../components/wheel/WheelLegend.tsx'
 import UniverseCard from '../../components/diagnostic/UniverseCard.tsx'
@@ -35,8 +34,7 @@ export default function ResultsPage() {
       if (diagError) { setError('Impossible de charger votre diagnostic. Veuillez réessayer.'); setLoading(false); return }
       if (!diag) { setLoading(false); return }
 
-      const answers = await fetchAnswersByQuestionnaireId(diag.questionnaire_id, user.id)
-      setDiagnostic(await loadDiagnosticResult(diag, answers, user.id))
+      setDiagnostic(await loadDiagnosticResult(diag, user.id))
       setLoading(false)
     }
     load()

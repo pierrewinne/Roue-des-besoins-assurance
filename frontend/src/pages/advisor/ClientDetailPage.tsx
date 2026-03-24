@@ -40,17 +40,18 @@ export default function ClientDetailPage() {
     async function load() {
       if (!clientId || !user) return
 
+      // Verify advisor-client relationship BEFORE accessing client data
       const { data: relation, error: relError } = await verifyAdvisorRelation(user.id, clientId)
       if (relError || !relation) {
         navigate('/conseiller/dashboard', { replace: true })
         return
       }
 
-      // Parallelize independent queries (P3-05)
-      const [profResult, qrAnswers, diagResult] = await Promise.all([
+      // Only fetch client data after relationship is verified
+      const [profResult, diagResult, qrAnswers] = await Promise.all([
         fetchClientProfile(clientId),
-        fetchCompletedAnswers(clientId),
         fetchLatestDiagnostic(clientId),
+        fetchCompletedAnswers(clientId),
       ])
 
       if (profResult.error) {
@@ -65,7 +66,7 @@ export default function ClientDetailPage() {
       const diag = diagResult.data
       if (diag) {
         await logAuditEvent('view_client_diagnostic', 'diagnostics', diag.id, { client_id: clientId })
-        setDiagnostic(await loadDiagnosticResult(diag, qrAnswers, clientId))
+        setDiagnostic(await loadDiagnosticResult(diag, clientId))
       }
       setLoading(false)
     }

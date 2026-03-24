@@ -1,26 +1,20 @@
 import { supabase } from '../supabase.ts'
-import type { DiagnosticResult, QuadrantScore, Recommendation, Quadrant } from '../../shared/scoring/types.ts'
-import type { QuestionnaireAnswers } from '../../shared/questionnaire/schema.ts'
+import type { DiagnosticResult, Recommendation, Quadrant, QuadrantScore } from '../../shared/scoring/types.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
-import { computeDiagnostic } from '../../shared/scoring/engine.ts'
 
-/** Recalculate a diagnostic from questionnaire answers (for stale DB scores) */
-export function recalculateDiagnostic(
-  diagMeta: { id: string; created_at: string; scoring_version?: string },
-  answers: QuestionnaireAnswers,
-): DiagnosticResult {
-  const result = computeDiagnostic(answers)
-  return {
-    ...result,
-    id: diagMeta.id,
-    createdAt: diagMeta.created_at,
-    scoringVersion: diagMeta.scoring_version ?? 'v1',
-  }
+/** Raw diagnostic row as returned by Supabase queries */
+interface RawDiagnosticRow {
+  id: string
+  scores: unknown
+  global_score: number
+  weightings: unknown
+  created_at: string
+  scoring_version?: string
 }
 
 /** Hydrate raw DB diagnostic + actions into a DiagnosticResult */
 export function hydrateDiagnostic(
-  diag: { id: string; scores: unknown; global_score: number; weightings: unknown; created_at: string; scoring_version?: string },
+  diag: RawDiagnosticRow,
   actionsData: { id: string; type: string; universe: string | null; priority: number; title: string; description: string | null }[] = [],
 ): DiagnosticResult {
   const scores = diag.scores as Record<Quadrant, QuadrantScore>
@@ -90,79 +84,25 @@ export async function fetchActions(diagnosticId: string, profileId: string) {
     .order('priority', { ascending: false })
 }
 
-/** Load a diagnostic result — recalculates from answers if available, else hydrates from DB */
+/** Load a diagnostic result — always hydrates from DB (server-side scoring is authoritative) */
 export async function loadDiagnosticResult(
-  diag: { id: string; created_at: string; scoring_version?: string },
-  answers: QuestionnaireAnswers | null,
+  diag: RawDiagnosticRow,
   profileId: string,
 ): Promise<DiagnosticResult> {
-  if (answers && Object.keys(answers).length > 0) {
-    return recalculateDiagnostic(diag, answers)
-  }
   const { data: actionsData } = await fetchActions(diag.id, profileId)
-  return hydrateDiagnostic(diag as Parameters<typeof hydrateDiagnostic>[0], actionsData || [])
+  return hydrateDiagnostic(diag, actionsData || [])
 }
 
-// DB constraint limits universe to drive/home/travel/bsafe — map futur products accordingly
-const VALID_UNIVERSES = new Set(['drive', 'home', 'travel', 'bsafe'])
-
-/** Compute diagnostic server-side via RPC and save to DB (CRIT-02 fix) */
-export async function computeAndSaveDiagnostic(questionnaireId: string, profileId: string, answers: QuestionnaireAnswers) {
-  // Use server-side RPC for tamper-proof scoring
+/** Compute diagnostic server-side via RPC and save to DB */
+export async function computeAndSaveDiagnostic(questionnaireId: string) {
   const { data: diagId, error: rpcError } = await supabase
     .rpc('compute_and_save_diagnostic', { p_questionnaire_id: questionnaireId })
 
   if (rpcError || !diagId) {
-    console.error('Server-side scoring failed, falling back to client-side:', rpcError?.message)
-    return computeAndSaveDiagnosticClientSide(questionnaireId, profileId, answers)
+    return { data: null, error: rpcError }
   }
 
   return { data: diagId as string, error: null }
-}
-
-/** Client-side fallback — used only if server-side RPC is unavailable */
-async function computeAndSaveDiagnosticClientSide(questionnaireId: string, profileId: string, answers: QuestionnaireAnswers) {
-  const result = computeDiagnostic(answers)
-
-  const { data: diag, error: diagError } = await supabase
-    .from('diagnostics')
-    .insert({
-      questionnaire_id: questionnaireId,
-      profile_id: profileId,
-      scores: result.quadrantScores,
-      global_score: result.globalScore,
-      weightings: result.weightings,
-      scoring_version: 'v1',
-    })
-    .select('id')
-    .single()
-
-  if (diagError || !diag) return { data: null, error: diagError }
-
-  const writes: PromiseLike<unknown>[] = [
-    supabase
-      .from('questionnaire_responses')
-      .update({ completed: true })
-      .eq('id', questionnaireId)
-      .eq('profile_id', profileId),
-  ]
-
-  if (result.recommendations.length > 0) {
-    const actions = result.recommendations.map(r => ({
-      diagnostic_id: diag.id,
-      profile_id: profileId,
-      type: r.type,
-      universe: VALID_UNIVERSES.has(r.product) ? r.product : null,
-      priority: r.priority,
-      title: r.title,
-      description: r.message,
-    }))
-    writes.push(supabase.from('actions').insert(actions))
-  }
-
-  await Promise.all(writes)
-
-  return { data: diag.id as string, error: null }
 }
 
 /** Log an audit event */
