@@ -61,7 +61,7 @@ export default function ClientLayout() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10">
         {signOutError && (
-          <div className="mb-6 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
+          <div role="alert" className="mb-6 p-4 bg-danger-light rounded-xl ring-1 ring-danger/10">
             <p className="text-sm text-danger">Impossible de se déconnecter. Veuillez réessayer.</p>
           </div>
         )}
@@ -73,7 +73,10 @@ export default function ClientLayout() {
       <footer className="border-t border-grey-200 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <BaloiseLogo variant="light" height={16} className="opacity-40" />
-          <span className="text-xs text-grey-300">Diagnostic personnalisé</span>
+          <div className="flex items-center gap-4">
+            <Link to="/confidentialite" className="text-xs text-grey-300 hover:text-primary-700 transition-colors">Politique de confidentialité</Link>
+            <span className="text-xs text-grey-300">Diagnostic personnalisé</span>
+          </div>
         </div>
       </footer>
     </div>

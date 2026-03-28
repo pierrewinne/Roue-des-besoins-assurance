@@ -17,9 +17,10 @@ export function hydrateDiagnostic(
   diag: RawDiagnosticRow,
   actionsData: { id: string; type: string; universe: string | null; priority: number; title: string; description: string | null }[] = [],
 ): DiagnosticResult {
-  const scores = diag.scores as Record<Quadrant, QuadrantScore>
-  for (const key of Object.keys(scores) as Quadrant[]) {
-    scores[key].needLevel = getNeedLevel(scores[key].needScore)
+  const rawScores = diag.scores as Record<Quadrant, QuadrantScore>
+  const scores = {} as Record<Quadrant, QuadrantScore>
+  for (const key of Object.keys(rawScores) as Quadrant[]) {
+    scores[key] = { ...rawScores[key], needLevel: getNeedLevel(rawScores[key].needScore) }
   }
 
   const recommendations: Recommendation[] = actionsData.map(a => ({

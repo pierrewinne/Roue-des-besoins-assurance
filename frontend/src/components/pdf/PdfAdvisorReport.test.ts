@@ -233,7 +233,7 @@ describe('PdfAdvisorReport', () => {
     })
   })
 
-  describe('opportunités commerciales', () => {
+  describe('synthèse des besoins', () => {
     it('identifie les quadrants avec besoin élevé/critique', async () => {
       const diag = makeDiagnostic({
         quadrantScores: {

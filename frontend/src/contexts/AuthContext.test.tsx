@@ -16,6 +16,7 @@ const mockUnsubscribe = vi.fn()
 vi.mock('../lib/supabase.ts', () => ({
   supabase: {
     auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       onAuthStateChange: (cb: (event: string, session: unknown) => void) => {
         authStateCallback = cb
         return { data: { subscription: { unsubscribe: mockUnsubscribe } } }
@@ -59,9 +60,11 @@ beforeEach(() => {
 })
 
 describe('AuthProvider', () => {
-  it('starts in loading state', () => {
+  it('starts in loading state and resolves after getSession', async () => {
     render(<AuthProvider><TestConsumer /></AuthProvider>)
-    expect(screen.getByTestId('loading')).toHaveTextContent('true')
+    // Initially loading while getSession resolves
+    await act(async () => {})
+    expect(screen.getByTestId('loading')).toHaveTextContent('false')
   })
 
   it('sets user when onAuthStateChange fires with session', async () => {

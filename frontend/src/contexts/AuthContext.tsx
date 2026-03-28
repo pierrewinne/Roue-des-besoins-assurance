@@ -48,18 +48,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
-      setSession(s)
-      setUser(s?.user ?? null)
+    let ignore = false
+    let resolved = false
+
+    async function handleSession(s: { user: { id: string } } | null) {
+      setSession(s as Session | null)
+      setUser((s?.user as User) ?? null)
       if (s?.user) {
         await fetchProfile(s.user.id)
       } else {
         setProfile(null)
       }
       setIsLoading(false)
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, s) => {
+      if (ignore) return
+      resolved = true
+      await handleSession(s)
     })
 
-    return () => subscription.unsubscribe()
+    // Fallback: if onAuthStateChange hasn't fired yet, seed from getSession (MOD-2)
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      if (ignore || resolved) return
+      resolved = true
+      await handleSession(s)
+    })
+
+    return () => {
+      ignore = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function signInWithEmail(email: string, password: string) {

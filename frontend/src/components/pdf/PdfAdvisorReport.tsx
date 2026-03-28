@@ -247,11 +247,11 @@ export default function PdfAdvisorReport({ diagnostic, clientName, clientEmail, 
           </View>
 
           <View style={{ marginTop: 15, padding: 12, backgroundColor: '#e9fbf7', borderRadius: 6 }}>
-            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1b5951', marginBottom: 4 }}>Opportunités commerciales</Text>
+            <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', color: '#1b5951', marginBottom: 4 }}>Synth&egrave;se des besoins identifi&eacute;s</Text>
             <Text style={{ fontSize: 8, color: '#00b28f' }}>
-              {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length}{' univers avec besoin élevé/critique identifié.\n'}
-              {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}{' actions immédiates à proposer au client.\n'}
-              {'Potentiel de cross-selling : '}{activeUniverses.length > 2 ? 'Élevé' : 'Modéré'}.
+              {activeUniverses.filter(([, s]) => s.needLevel === 'critical' || s.needLevel === 'high').length}{' univers avec besoin &eacute;lev&eacute;/critique identifi&eacute;.\n'}
+              {diagnostic.recommendations.filter((a: Recommendation) => a.type === 'immediate').length}{' points d\u2019attention prioritaires.\n'}
+              {'Couverture multi-univers : '}{activeUniverses.length > 2 ? 'Large' : 'Cibl&eacute;e'}.
             </Text>
           </View>
 

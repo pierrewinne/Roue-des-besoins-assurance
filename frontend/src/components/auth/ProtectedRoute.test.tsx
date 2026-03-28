@@ -18,8 +18,8 @@ function renderWithRouter(requiredRole?: 'client' | 'advisor') {
         </Route>
         <Route path="/login" element={<div>Client Login Page</div>} />
         <Route path="/conseiller/login" element={<div>Advisor Login Page</div>} />
-        <Route path="/dashboard" element={<div>Client Dashboard</div>} />
-        <Route path="/conseiller/dashboard" element={<div>Advisor Dashboard</div>} />
+        <Route path="/" element={<div>Client Home</div>} />
+        <Route path="/conseiller" element={<div>Advisor Home</div>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -112,7 +112,7 @@ describe('ProtectedRoute', () => {
     })
 
     renderWithRouter('client')
-    expect(screen.getByText('Advisor Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Advisor Home')).toBeInTheDocument()
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
   })
 
@@ -125,7 +125,7 @@ describe('ProtectedRoute', () => {
     })
 
     renderWithRouter('advisor')
-    expect(screen.getByText('Client Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Client Home')).toBeInTheDocument()
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
   })
 
@@ -156,7 +156,7 @@ describe('ProtectedRoute', () => {
   it('renders children when authenticated with no requiredRole', () => {
     mockUseAuth.mockReturnValue({
       user: { id: 'user-1' },
-      profile: null,
+      profile: { id: 'user-1', role: 'client' },
       isLoading: false,
       profileError: false,
     })

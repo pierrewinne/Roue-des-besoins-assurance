@@ -22,6 +22,7 @@ const ClientDetailPage = lazy(() => import('./pages/advisor/ClientDetailPage.tsx
 const ProfilPage = lazy(() => import('./pages/client/ProfilPage.tsx'))
 const UniverseQuestionnairePage = lazy(() => import('./pages/client/UniverseQuestionnairePage.tsx'))
 const NotFoundPage = lazy(() => import('./pages/shared/NotFoundPage.tsx'))
+const PrivacyPolicyPage = lazy(() => import('./pages/shared/PrivacyPolicyPage.tsx'))
 
 function AuthRedirect() {
   const { profile } = useAuth()
@@ -42,6 +43,7 @@ export default function App() {
         <Routes>
           {/* ── Parcours 1: Client ── */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/confidentialite" element={<PrivacyPolicyPage />} />
           <Route path="/login" element={<ClientLoginPage />} />
           <Route path="/auth/callback" element={<CallbackPage />} />
 

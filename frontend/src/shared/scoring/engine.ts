@@ -76,11 +76,7 @@ const ACCIDENT_COV_SCORE: Record<string, number> = {
 }
 
 const STATUS_COV: Record<string, number> = {
-  civil_servant: 70, employee: 50, independent: 15, business_owner: 20, retired: 30,
-}
-
-const CONTRIBUTORS_COV: Record<string, number> = {
-  one: 20, two: 60, more: 80,
+  civil_servant: 80, employee: 65, independent: 20, business_owner: 25, retired: 40,
 }
 
 const PATRIMOINE_COV: Record<string, number> = {
@@ -442,24 +438,21 @@ function computeFuturCoverage(a: Answers): number {
 
   let score = 0
 
-  // Existing savings/protection devices (weight 50%)
+  // Existing savings/protection devices (weight 55%)
   const savingsItems = asStringArray(a.savings_protection)
   let devicesCov = 0
-  if (savingsItems.includes('pension_plan')) devicesCov += 35
-  if (savingsItems.includes('pension_employer')) devicesCov += 25
+  if (savingsItems.includes('pension_plan')) devicesCov += 45
+  if (savingsItems.includes('pension_employer')) devicesCov += 35
   if (savingsItems.includes('life_insurance')) devicesCov += 25
   if (savingsItems.includes('savings_regular')) devicesCov += 10
   if (savingsItems.includes('real_estate')) devicesCov += 15
-  score += Math.min(devicesCov, 100) * 0.50
+  score += Math.min(devicesCov, 100) * 0.55
 
-  // Professional status protection (weight 25%)
-  score += (STATUS_COV[asString(a.professional_status)] ?? 20) * 0.25
+  // Professional status protection (weight 30%) — reflects Luxembourg social security
+  score += (STATUS_COV[asString(a.professional_status)] ?? 20) * 0.30
 
-  // Income contributors (weight 15%) — more contributors = more resilience
-  score += (CONTRIBUTORS_COV[asString(a.income_contributors)] ?? 30) * 0.15
-
-  // Real estate patrimony (weight 10%)
-  score += (PATRIMOINE_COV[asString(a.other_properties)] ?? 0) * 0.10
+  // Real estate patrimony (weight 15%)
+  score += (PATRIMOINE_COV[asString(a.other_properties)] ?? 0) * 0.15
 
   return Math.round(score)
 }
