@@ -14,7 +14,7 @@ import PageHeader from '../../components/ui/PageHeader.tsx'
 import Spinner from '../../components/ui/Spinner.tsx'
 import EmptyState from '../../components/ui/EmptyState.tsx'
 import Icon from '../../components/ui/Icon.tsx'
-import { getScoreColorClass } from '../../lib/constants.ts'
+import { getScoreColorClass, getGlobalScoreMessage, IDD_DISCLAIMER_TEXT } from '../../lib/constants.ts'
 import { getNeedLevel } from '../../shared/scoring/thresholds.ts'
 import type { DiagnosticResult } from '../../shared/scoring/types.ts'
 
@@ -72,10 +72,7 @@ export default function ResultsPage() {
 
   const scoreColor = getScoreColorClass(diagnostic.globalScore)
 
-  const scoreLabel = diagnostic.globalScore <= 25 ? 'Votre protection est bien adaptée à votre situation.' :
-                     diagnostic.globalScore <= 50 ? 'Quelques points méritent votre attention.' :
-                     diagnostic.globalScore <= 75 ? 'Des lacunes significatives ont été identifiées.' :
-                     'Votre situation nécessite une action rapide.'
+  const scoreLabel = getGlobalScoreMessage(diagnostic.globalScore)
 
   const scoreIcon = diagnostic.globalScore <= 25 ? 'check-circle' as const :
                     diagnostic.globalScore <= 50 ? 'shield-check' as const :
@@ -137,7 +134,7 @@ export default function ResultsPage() {
           </section>
 
           <section className="bg-grey-50/60 rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-primary-700 mb-4">Actions recommandées</h2>
+            <h2 className="text-lg font-bold text-primary-700 mb-4">Points d'attention identifiés</h2>
             <ActionList actions={diagnostic.recommendations} />
           </section>
         </div>
@@ -167,13 +164,8 @@ export default function ResultsPage() {
 
       {/* IDD Disclaimer (CRIT-3) */}
       <div className="mt-4 p-5 bg-warning-light rounded-xl ring-1 ring-warning/10 text-sm text-grey-600 leading-relaxed">
-        <p className="font-bold text-grey-700 mb-2">⚠ Information importante</p>
-        <p>
-          Ce diagnostic est un <strong>outil d'aide à la réflexion</strong> et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d'Assurance (IDD — Directive (UE) 2016/97).
-          Les résultats présentés sont basés uniquement sur les informations que vous avez fournies et ne remplacent pas l'analyse personnalisée d'un conseiller en assurance qualifié.
-          Aucune garantie n'est apportée quant à l'exactitude ou l'exhaustivité de cette analyse.
-          Veuillez consulter votre conseiller Baloise pour obtenir des recommandations adaptées à votre situation personnelle.
-        </p>
+        <p className="font-bold text-grey-700 mb-2">Information importante</p>
+        <p>{IDD_DISCLAIMER_TEXT}</p>
       </div>
     </div>
   )

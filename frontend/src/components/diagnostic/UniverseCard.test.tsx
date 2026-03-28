@@ -54,7 +54,7 @@ describe('UniverseCard', () => {
 
   it('shows correct need level badge for high need', () => {
     render(<UniverseCard universe="biens" score={activeScore} />)
-    expect(screen.getByText('Action requise')).toBeInTheDocument()
+    expect(screen.getByText('À approfondir')).toBeInTheDocument()
   })
 
   it('shows correct need level badge for low need', () => {
@@ -70,7 +70,7 @@ describe('UniverseCard', () => {
   it('shows need message', () => {
     render(<UniverseCard universe="biens" score={activeScore} />)
     expect(
-      screen.getByText('Des lacunes ont été identifiées dans votre couverture.'),
+      screen.getByText('D\'après vos réponses, des écarts de couverture ont été identifiés dans ce domaine.'),
     ).toBeInTheDocument()
   })
 

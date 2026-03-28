@@ -39,8 +39,8 @@ export const NEED_LABELS = {
 export const NEED_BADGE_LABELS = {
   low: 'Bien couvert',
   moderate: 'À améliorer',
-  high: 'Action requise',
-  critical: 'Action requise',
+  high: 'À approfondir',
+  critical: 'Prioritaire',
 } as const
 
 export const NEED_BADGE_COLORS = {
@@ -51,17 +51,17 @@ export const NEED_BADGE_COLORS = {
 } as const
 
 export const NEED_MESSAGES = {
-  low: 'Votre protection est adaptée à votre situation.',
-  moderate: 'Quelques améliorations pourraient renforcer votre couverture.',
-  high: 'Des lacunes ont été identifiées dans votre couverture.',
-  critical: 'Votre couverture est insuffisante. Une action rapide est recommandée.',
+  low: 'D\'après vos réponses, votre couverture semble adaptée dans ce domaine.',
+  moderate: 'D\'après vos réponses, quelques aspects pourraient être approfondis avec votre conseiller.',
+  high: 'D\'après vos réponses, des écarts de couverture ont été identifiés dans ce domaine.',
+  critical: 'D\'après vos réponses, ce domaine présente des écarts importants qui méritent d\'être explorés.',
 } as const
 
 export const NEED_LEGEND_MESSAGES = {
-  low: 'Votre protection est adaptée',
-  moderate: 'Des améliorations sont possibles',
-  high: 'Action recommandée',
-  critical: 'Action recommandée',
+  low: 'Bien couvert',
+  moderate: 'À explorer',
+  high: 'À approfondir',
+  critical: 'Prioritaire',
 } as const
 
 export const ACTION_TYPE_LABELS = {
@@ -75,6 +75,23 @@ export function getScoreColorClass(score: number): string {
   if (score <= 25) return 'text-success'
   if (score <= 50) return 'text-warning'
   return 'text-danger'
+}
+
+export const GLOBAL_SCORE_MESSAGES = [
+  { max: 25, message: 'D\'après vos réponses, votre couverture semble adaptée.' },
+  { max: 50, message: 'D\'après vos réponses, quelques points méritent attention.' },
+  { max: 75, message: 'D\'après vos réponses, des écarts de couverture ont été identifiés.' },
+  { max: 100, message: 'D\'après vos réponses, des écarts importants ont été identifiés.' },
+] as const
+
+export function getGlobalScoreMessage(score: number): string {
+  return GLOBAL_SCORE_MESSAGES.find(m => score <= m.max)?.message ?? GLOBAL_SCORE_MESSAGES[3].message
+}
+
+export function getPriorityLabel(priority: number): string {
+  if (priority >= 4) return 'Priorité élevée'
+  if (priority >= 2) return 'Priorité modérée'
+  return 'Priorité faible'
 }
 
 export const PRODUCT_BADGE_COLORS: Record<Product, 'green' | 'orange' | 'red' | 'blue'> = {
@@ -166,6 +183,8 @@ export const PRODUCT_ICONS: Record<Product, IconName> = {
   solde_restant_du: 'home',
   kids_plan: 'users',
 }
+
+export const IDD_DISCLAIMER_TEXT = 'Ce document est un outil d\'aide à la réflexion et ne constitue en aucun cas un conseil en assurance au sens de la Directive sur la Distribution d\'Assurance (IDD — Directive (UE) 2016/97). Les résultats présentés sont basés uniquement sur les informations que vous avez fournies et ne remplacent pas l\'analyse personnalisée d\'un conseiller en assurance qualifié. Aucune garantie n\'est apportée quant à l\'exactitude ou l\'exhaustivité de cette analyse. Ce document est édité par Baloise Assurances Luxembourg S.A., 23 rue du Puits Romain, L-8070 Bertrange.' as const
 
 export const TRANSITION = {
   duration: '300ms',

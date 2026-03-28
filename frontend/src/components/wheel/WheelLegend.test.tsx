@@ -46,8 +46,8 @@ describe('WheelLegend', () => {
 
   it('renders need level messages', () => {
     render(<WheelLegend diagnostic={makeDiagnostic()} />)
-    // moderate → "Des améliorations sont possibles"
-    expect(screen.getAllByText('Des améliorations sont possibles')).toHaveLength(3)
+    // moderate → "À explorer"
+    expect(screen.getAllByText('À explorer')).toHaveLength(3)
   })
 
   it('does not render scores by default', () => {
